@@ -18,7 +18,8 @@ export const mockUsers: User[] = [
 
 ];
 
-export const currentUser: User = mockUsers[0]; // Mocking the logged-in user as Manu
+// We will replace this with a real logged-in user from Firebase Auth
+export const currentUser: User = mockUsers[0];
 
 function getFutureDate(days: number): string {
   const date = new Date();
@@ -95,5 +96,3 @@ export const mockDirectChats: DirectChat[] = [
         ],
     }
 ]
-
-    

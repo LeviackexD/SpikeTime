@@ -1,5 +1,7 @@
+
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,15 +16,34 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { app } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you'd handle authentication here.
-    // For this demo, we'll just navigate to the dashboard.
-    router.push('/');
+    setIsLoading(true);
+    try {
+      const auth = getAuth(app);
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/');
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      toast({
+        title: 'Login Failed',
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -40,10 +61,12 @@ export default function LoginPage() {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -57,10 +80,15 @@ export default function LoginPage() {
                   Forgot your password?
                 </Link>
               </div>
-              <Input id="password" type="password" required />
+              <Input 
+                id="password" 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required />
             </div>
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
@@ -73,8 +101,8 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline">Google</Button>
-              <Button variant="outline">Facebook</Button>
+              <Button variant="outline" disabled={isLoading}>Google</Button>
+              <Button variant="outline" disabled={isLoading}>Facebook</Button>
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
