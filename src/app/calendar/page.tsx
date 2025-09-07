@@ -17,6 +17,7 @@ import type { Session } from '@/lib/types';
 import SessionDetailsCard from '@/components/sessions/session-details-card';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type ToastInfo = {
   title: string;
@@ -26,10 +27,14 @@ type ToastInfo = {
 
 const CalendarPage: NextPage = () => {
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
-  const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
   const [skillFilter, setSkillFilter] = React.useState<string>('All');
   const [toastInfo, setToastInfo] = React.useState<ToastInfo | null>(null);
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
 
   React.useEffect(() => {
     if (toastInfo) {
@@ -118,6 +123,7 @@ const CalendarPage: NextPage = () => {
   };
   
   const filteredSessions = React.useMemo(() => {
+    if (!selectedDate) return [];
     return sessions.filter(session => {
         const sessionDate = new Date(session.date).toDateString();
         const isSameDay = sessionDate === selectedDate.toDateString();
@@ -141,13 +147,17 @@ const CalendarPage: NextPage = () => {
                   </CardDescription>
               </CardHeader>
               <CardContent>
-                  <SessionCalendar 
-                      sessions={sessions}
-                      selectedDate={selectedDate}
-                      onDateChange={setSelectedDate}
-                      skillFilter={skillFilter}
-                      currentUser={currentUser}
-                  />
+                  {selectedDate ? (
+                    <SessionCalendar 
+                        sessions={sessions}
+                        selectedDate={selectedDate}
+                        onDateChange={setSelectedDate}
+                        skillFilter={skillFilter}
+                        currentUser={currentUser}
+                    />
+                  ) : (
+                    <Skeleton className="w-full h-[375px]" />
+                  )}
                   <div className="mt-4 flex items-center gap-6 text-sm">
                     <h3 className="font-semibold text-muted-foreground">Legend:</h3>
                     <div className="flex items-center gap-2">
@@ -182,16 +192,21 @@ const CalendarPage: NextPage = () => {
           <Card>
               <CardHeader>
                   <CardTitle>
-                      Sessions on {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                      {selectedDate ? `Sessions on ${selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}` : 'Loading Sessions...'}
                   </CardTitle>
                   <CardDescription>
-                      {filteredSessions.length > 0 
+                      {selectedDate && (filteredSessions.length > 0 
                           ? `Found ${filteredSessions.length} session(s).` 
-                          : 'No sessions scheduled for this day.'}
+                          : 'No sessions scheduled for this day.')}
                   </CardDescription>
               </CardHeader>
               <CardContent>
-                  {filteredSessions.length > 0 ? (
+                  {!selectedDate ? (
+                     <div className="space-y-4">
+                        <Skeleton className="h-48 w-full" />
+                        <Skeleton className="h-48 w-full" />
+                     </div>
+                  ) : filteredSessions.length > 0 ? (
                       <div className="space-y-6">
                       {filteredSessions.map(session => (
                           <SessionDetailsCard
