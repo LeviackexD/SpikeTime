@@ -19,7 +19,7 @@ import type { Session, User } from '@/lib/types';
 
 interface SessionDetailsCardProps {
   session: Session;
-  currentUser: User;
+  currentUser: User | null;
   onBook: (sessionId: string) => void;
   onCancel: (sessionId: string) => void;
   onWaitlist: (sessionId: string) => void;
@@ -34,6 +34,10 @@ export default function SessionDetailsCard({
   onWaitlist,
   priority = false,
 }: SessionDetailsCardProps) {
+  if (!currentUser) {
+    return null;
+  }
+  
   const isFull = session.players.length >= session.maxPlayers;
   const isRegistered = session.players.some((p) => p.id === currentUser.id);
   const isOnWaitlist = session.waitlist.some((p) => p.id === currentUser.id);

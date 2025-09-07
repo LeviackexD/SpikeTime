@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { currentUser } from '@/lib/mock-data';
 import { Calendar as CalendarIcon, Info, Search, SlidersHorizontal } from 'lucide-react';
 import SessionDetailsCard from '@/components/sessions/session-details-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,9 +20,11 @@ import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/context/auth-context';
 
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
+  const { user: currentUser } = useAuth();
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
   const [skillFilter, setSkillFilter] = React.useState<string>('All');
   const [locationFilter, setLocationFilter] = React.useState<string>('');
@@ -46,6 +47,10 @@ const CalendarPage: NextPage = () => {
         return dateMatch && skillMatch && locationMatch && isUpcoming;
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [sessions, selectedDate, skillFilter, locationFilter]);
+  
+  if (!currentUser) {
+    return null; // Or a loading spinner
+  }
 
 
   return (
