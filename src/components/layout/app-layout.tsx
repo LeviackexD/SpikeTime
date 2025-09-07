@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Calendar,
   Settings,
@@ -14,6 +14,7 @@ import {
   Menu,
   Home,
   MessageCircle,
+  Loader2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
-import { currentUser } from '@/lib/mock-data';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { VolleyballIcon } from '../icons/volleyball-icon';
@@ -38,6 +38,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import Footer from './footer';
+import { useAuth } from '@/context/auth-context';
+import { getAuth } from 'firebase/auth';
 
 
 const navItems = [
@@ -51,11 +53,22 @@ const navItems = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user, loading } = useAuth();
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
-  if (isAuthPage) {
-    return <main className="min-h-screen bg-background">{children}</main>;
+  if (isAuthPage || loading) {
+    return (
+        <main className="min-h-screen bg-background flex items-center justify-center">
+            {loading && <div className="flex items-center gap-2"><Loader2 className="h-6 w-6 animate-spin" /> <span>Loading...</span></div>}
+            {!loading && children}
+        </main>
+    );
   }
+  
+  if (!user) {
+    return null; // Or a redirect component, handled by the AuthProvider
+  }
+
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-app-background">
@@ -69,6 +82,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 function AppHeader() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
@@ -93,7 +107,7 @@ function AppHeader() {
                 </div>
                 <nav className="grid gap-2 p-4 text-lg font-medium">
                 {navItems.map((item) => {
-                    if (item.adminOnly && currentUser.role !== 'admin') {
+                    if (item.adminOnly && user?.role !== 'admin') {
                         return null;
                     }
                     return (
@@ -131,7 +145,7 @@ function AppHeader() {
 
       <nav className="hidden md:flex flex-1 justify-center md:items-center md:gap-5 lg:gap-6 text-sm lg:text-base font-medium">
         {!isMobile && navItems.map((item) => {
-            if (item.adminOnly && currentUser.role !== 'admin') {
+            if (item.adminOnly && user?.role !== 'admin') {
                 return null;
             }
             return (
@@ -157,20 +171,33 @@ function AppHeader() {
 }
 
 function UserNav() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const auth = getAuth();
+
+  const handleLogout = () => {
+    auth.signOut().then(() => {
+        router.push('/login');
+    });
+  }
+
+  if (!user) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-            <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={user.avatarUrl} alt={user.name} />
+            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{currentUser.name}</p>
+            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -180,7 +207,7 @@ function UserNav() {
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
-        {currentUser.role === 'admin' && (
+        {user.role === 'admin' && (
           <DropdownMenuItem asChild>
             <Link href="/admin">
               <Shield className="mr-2 h-4 w-4" />
@@ -195,11 +222,9 @@ function UserNav() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/login">
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
-          </Link>
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

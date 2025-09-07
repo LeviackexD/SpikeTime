@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { SessionProvider } from '@/context/session-context';
 import { ThemeProvider } from '@/context/theme-provider';
+import { AuthProvider } from '@/context/auth-context';
 
 export const metadata: Metadata = {
   title: 'Inverness Eagles',
@@ -25,9 +26,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SessionProvider>
-            <AppLayout>{children}</AppLayout>
-          </SessionProvider>
+          <AuthProvider>
+            <SessionProvider>
+              <AppLayout>{children}</AppLayout>
+            </SessionProvider>
+          </AuthProvider>
           <Toaster />
         </ThemeProvider>
       </body>
