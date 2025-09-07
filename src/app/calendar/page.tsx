@@ -17,6 +17,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSessions } from '@/context/session-context';
 import { currentUser } from '@/lib/mock-data';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { skillLevelColors } from '@/lib/types';
+
+
+const skillLevels = ['All', 'Beginner', 'Intermediate', 'Advanced', 'All-Rounder'];
 
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
@@ -59,7 +64,7 @@ const CalendarPage: NextPage = () => {
                         Session Calendar
                     </CardTitle>
                     <CardDescription>
-                        Click on a day to view available sessions.
+                        Click on a day to view available sessions. Colors indicate session levels.
                     </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
@@ -69,11 +74,16 @@ const CalendarPage: NextPage = () => {
                             <SelectValue placeholder="Filter by skill level" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="All">All Levels</SelectItem>
-                            <SelectItem value="Beginner">Beginner</SelectItem>
-                            <SelectItem value="Intermediate">Intermediate</SelectItem>
-                            <SelectItem value="Advanced">Advanced</SelectItem>
-                            <SelectItem value="All-Rounder">All-Rounder</SelectItem>
+                            {skillLevels.map(level => (
+                                <SelectItem key={level} value={level}>
+                                    <div className="flex items-center gap-2">
+                                        {level !== 'All' && (
+                                            <div className={cn("h-3 w-3 rounded-full", skillLevelColors[level as keyof typeof skillLevelColors])} />
+                                        )}
+                                        {level === 'All' ? 'All Levels' : level}
+                                    </div>
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>

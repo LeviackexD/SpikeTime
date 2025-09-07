@@ -3,14 +3,15 @@
 
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import type { Session } from '@/lib/types';
-import { currentUser } from '@/lib/mock-data';
+import type { Session, SkillLevel } from '@/lib/types';
+import { skillLevelColors } from '@/lib/types';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from '@/lib/utils';
 
 interface SessionCalendarProps {
   sessions: Session[];
@@ -48,18 +49,17 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
     const dateString = day.toISOString().split('T')[0];
     const daySessions = filteredSessionsByDate[dateString] || [];
     
-    const bookedSessions = currentUser ? daySessions.filter(s => s.players.includes(currentUser.id)) : [];
-    const availableSessions = currentUser ? daySessions.filter(s => 
-      !s.players.includes(currentUser.id) && s.players.length < s.maxPlayers
-    ) : daySessions.filter(s => s.players.length < s.maxPlayers);
+    // Get unique skill levels for the day to display dots
+    const uniqueLevels = [...new Set(daySessions.map(s => s.level))] as SkillLevel[];
 
     const content = (
         <div className="relative flex h-full w-full flex-col items-center justify-center">
             {day.getDate()}
-            {(bookedSessions.length > 0 || availableSessions.length > 0) && (
+            {uniqueLevels.length > 0 && (
               <div className="absolute bottom-1 flex gap-1">
-                {bookedSessions.length > 0 && <div className="h-1.5 w-1.5 rounded-full bg-orange-500" />}
-                {availableSessions.length > 0 && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                {uniqueLevels.map(level => (
+                  <div key={level} className={cn("h-1.5 w-1.5 rounded-full", skillLevelColors[level])} />
+                ))}
               </div>
             )}
         </div>
@@ -76,31 +76,16 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
                     {content}
                 </TooltipTrigger>
                 <TooltipContent>
-                    <div className="p-2 text-sm">
-                        {bookedSessions.length > 0 && (
-                            <div className='mb-2'>
-                                <h4 className="font-semibold mb-1">My Sessions:</h4>
-                                <ul className="space-y-1 list-disc list-inside">
-                                {bookedSessions.map(session => (
-                                    <li key={session.id}>
-                                    <span className="font-semibold">{session.level}:</span> {session.startTime} - {session.endTime}
-                                    </li>
-                                ))}
-                                </ul>
-                            </div>
-                        )}
-                        {availableSessions.length > 0 && (
-                             <div>
-                                <h4 className="font-semibold mb-1">Available Sessions:</h4>
-                                <ul className="space-y-1 list-disc list-inside">
-                                {availableSessions.map(session => (
-                                    <li key={session.id}>
-                                    <span className="font-semibold">{session.level}:</span> {session.startTime} - {session.endTime}
-                                    </li>
-                                ))}
-                                </ul>
-                            </div>
-                        )}
+                    <div className="p-2 text-sm space-y-2">
+                        <h4 className="font-semibold mb-1">Sessions on this day:</h4>
+                         <ul className="space-y-1 list-none p-0">
+                          {daySessions.map(session => (
+                              <li key={session.id} className="flex items-center gap-2">
+                                <div className={cn("h-2 w-2 rounded-full", skillLevelColors[session.level])} />
+                                <span className="font-semibold">{session.level}:</span> {session.startTime} - {session.endTime}
+                              </li>
+                          ))}
+                        </ul>
                     </div>
                 </TooltipContent>
             </Tooltip>
