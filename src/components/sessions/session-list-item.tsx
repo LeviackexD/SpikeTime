@@ -52,7 +52,7 @@ export default function SessionListItem({
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-xl w-full h-full">
-        <CardHeader className="p-0 relative h-40">
+        <CardHeader className="p-0 relative h-32">
             <Image
                 src={`https://picsum.photos/seed/${session.id}/400/300`}
                 alt="Volleyball session"
@@ -67,9 +67,9 @@ export default function SessionListItem({
                 {isFull ? 'Full' : `${session.maxPlayers - session.players.length} spots left`}
             </Badge>
         </CardHeader>
-        <div className="flex flex-col flex-grow p-4 space-y-3">
-            <CardTitle className="font-headline text-lg">{session.level} Level</CardTitle>
-            <div className="space-y-1 text-sm text-muted-foreground flex-grow">
+        <div className="flex flex-col flex-grow p-3 space-y-2">
+            <CardTitle className="font-headline text-base">{session.level} Level</CardTitle>
+            <div className="space-y-1 text-xs text-muted-foreground flex-grow">
                 <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     <span>{formatDate(session.date)}</span>
@@ -80,13 +80,13 @@ export default function SessionListItem({
                 </div>
             </div>
              <div>
-                <div className="mb-2 flex justify-between items-center text-xs text-muted-foreground">
+                <div className="mb-1 flex justify-between items-center text-xs text-muted-foreground">
                     <span className="font-semibold flex items-center gap-1"><Users className="h-3 w-3" /> Players</span>
                     <span>{session.players.length}/{session.maxPlayers}</span>
                 </div>
-                <Progress value={progressValue} className="h-2" />
+                <Progress value={progressValue} className="h-1.5" />
              </div>
-             <div className="flex -space-x-2 overflow-hidden">
+             <div className="flex -space-x-2 overflow-hidden pt-1">
                 {session.players.slice(0, 8).map(p => <PlayerAvatar key={p.id} player={p} />)}
                 {session.players.length > 8 && (
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground border-2 border-background">
