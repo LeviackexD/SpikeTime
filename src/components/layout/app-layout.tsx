@@ -70,13 +70,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 function AppHeader() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
+  const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
       <div className="flex items-center gap-4">
         {isMobile ? (
           <div className="flex items-center gap-2">
-           <Sheet>
+           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
@@ -101,6 +103,7 @@ function AppHeader() {
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={() => setIsSheetOpen(false)}
                             className={cn(
                                 'flex items-center gap-3 rounded-lg px-3 py-2 text-primary-foreground/80 transition-all hover:text-primary-foreground',
                                 pathname === item.href && 'bg-white/10 text-primary-foreground'
