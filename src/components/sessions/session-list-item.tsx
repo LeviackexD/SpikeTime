@@ -52,30 +52,25 @@ export default function SessionListItem({
   };
 
   return (
-    <Card className="flex flex-col md:flex-row overflow-hidden transition-all hover:shadow-xl w-full h-full">
-        <div className="relative h-48 md:h-auto md:w-1/3">
+    <Card className="flex flex-col overflow-hidden transition-all hover:shadow-xl w-full h-full">
+        <div className="relative h-48">
             <Image
                 src={`https://picsum.photos/seed/${session.id}/400/300`}
                 alt="Volleyball session"
                 fill
-                sizes="(max-width: 768px) 33vw, 100vw"
+                sizes="(max-width: 768px) 100vw, 33vw"
                 priority={priority}
                 style={{ objectFit: 'cover' }}
-                className="rounded-t-lg md:rounded-l-lg md:rounded-t-none"
+                className="rounded-t-lg"
                 data-ai-hint="volleyball action"
             />
-             <Badge className="absolute top-2 right-2 md:hidden" variant={isFull ? 'destructive' : 'secondary'}>
+             <Badge className="absolute top-2 right-2" variant={isFull ? 'destructive' : 'secondary'}>
                 {isFull ? 'Full' : `${session.maxPlayers - session.players.length} spots left`}
             </Badge>
         </div>
         <div className="flex flex-col flex-grow">
             <CardHeader className="p-4 pb-2">
-                <div className="flex justify-between items-start">
-                    <CardTitle className="font-headline text-lg">{session.level} Level</CardTitle>
-                    <Badge className="hidden md:inline-flex" variant={isFull ? 'destructive' : 'secondary'}>
-                        {isFull ? 'Full' : `${session.maxPlayers - session.players.length} spots left`}
-                    </Badge>
-                </div>
+                <CardTitle className="font-headline text-lg">{session.level} Level</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0 flex-grow space-y-3">
                 <div className="space-y-1 text-sm text-muted-foreground">
@@ -91,7 +86,7 @@ export default function SessionListItem({
                 <div>
                     <div className="mb-1 flex justify-between items-center text-xs text-muted-foreground">
                         <span className="font-semibold flex items-center gap-1"><Users className="h-3 w-3" /> Players</span>
-                        <span>{session.players.length}/{session.maxPlayers}</span>
+                        <span>{session.players.length}/{session.players.length}</span>
                     </div>
                     <Progress value={progressValue} className="h-1.5" />
                 </div>
