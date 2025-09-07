@@ -1,23 +1,18 @@
+
 'use client';
 
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import type { Session } from '@/lib/types';
-import SessionDetailsModal from '../sessions/session-details-modal';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface SessionCalendarProps {
   sessions: Session[];
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
+  skillFilter: string;
 }
 
-export default function SessionCalendar({ sessions }: SessionCalendarProps) {
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
-  const [selectedSession, setSelectedSession] = React.useState<Session | null>(null);
-  const [skillFilter, setSkillFilter] = React.useState<string>('All');
-
-  React.useEffect(() => {
-    setDate(new Date());
-  }, []);
+export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter }: SessionCalendarProps) {
 
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
@@ -50,13 +45,13 @@ export default function SessionCalendar({ sessions }: SessionCalendarProps) {
     const getDotColor = (level: string) => {
       switch (level.toLowerCase()) {
         case 'beginner':
-          return 'bg-secondary';
+          return 'bg-green-500';
         case 'intermediate':
-          return 'bg-primary';
+          return 'bg-blue-500';
         case 'advanced':
-          return 'bg-destructive';
+          return 'bg-red-500';
         default:
-          return 'bg-accent';
+          return 'bg-purple-500';
       }
     }
 
@@ -75,52 +70,32 @@ export default function SessionCalendar({ sessions }: SessionCalendarProps) {
     );
   };
 
-  const handleDayClick = (day: Date) => {
-    const dateString = day.toISOString().split('T')[0];
-    const daySessions = filteredSessionsByDate[dateString];
-    if (daySessions && daySessions.length > 0) {
-      // For simplicity, we open the first session of the day. A real app might show a list.
-      setSelectedSession(daySessions[0]);
+  const handleDayClick = (day: Date | undefined) => {
+    if (day) {
+      onDateChange(day);
     }
-    setDate(day);
   };
   
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Filter by Skill Level</h3>
-        <Select value={skillFilter} onValueChange={setSkillFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select skill level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Levels</SelectItem>
-            <SelectItem value="Beginner">Beginner</SelectItem>
-            <SelectItem value="Intermediate">Intermediate</SelectItem>
-            <SelectItem value="Advanced">Advanced</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <Calendar
         mode="single"
-        selected={date}
-        onSelect={setDate}
-        onDayClick={handleDayClick}
-        className="rounded-md border"
+        selected={selectedDate}
+        onSelect={handleDayClick}
+        className="rounded-md border p-0"
+        classNames={{
+            root: "w-full",
+            month: "w-full space-y-4",
+            table: "w-full border-collapse space-y-1",
+            head_row: "flex justify-around",
+            head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
+            row: "flex w-full mt-2 justify-around",
+            cell: "h-12 w-12 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+            day: "h-12 w-12 p-0 font-normal aria-selected:opacity-100",
+            day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        }}
         components={{
           DayContent: ({ date }) => DayContent(date),
         }}
-        disabled={!date}
       />
-      
-      {selectedSession && (
-        <SessionDetailsModal
-          session={selectedSession}
-          isOpen={!!selectedSession}
-          onClose={() => setSelectedSession(null)}
-        />
-      )}
-    </div>
   );
 }

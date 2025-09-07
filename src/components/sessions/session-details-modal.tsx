@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -26,19 +27,24 @@ interface SessionDetailsModalProps {
 
 export default function SessionDetailsModal({ session, isOpen, onClose }: SessionDetailsModalProps) {
   const { toast } = useToast();
+  const [currentSession, setCurrentSession] = React.useState(session);
 
-  if (!session) return null;
+  React.useEffect(() => {
+    setCurrentSession(session);
+  }, [session, isOpen]);
+  
+  if (!currentSession) return null;
 
-  const spotsFilled = session.players.length;
-  const spotsLeft = session.maxPlayers - spotsFilled;
-  const progressValue = (spotsFilled / session.maxPlayers) * 100;
-  const isCurrentUserRegistered = session.players.some(p => p.id === currentUser.id);
+  const spotsFilled = currentSession.players.length;
+  const spotsLeft = currentSession.maxPlayers - spotsFilled;
+  const progressValue = (spotsFilled / currentSession.maxPlayers) * 100;
+  const isCurrentUserRegistered = currentSession.players.some(p => p.id === currentUser.id);
   const isSessionFull = spotsLeft <= 0;
 
   const handleBooking = () => {
     toast({
       title: "Booking Confirmed!",
-      description: `You're all set for the ${session.level} session.`,
+      description: `You're all set for the ${currentSession.level} session.`,
     });
     onClose();
   };
@@ -53,7 +59,12 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      // Handle invalid date string
+      return 'Invalid Date';
+    }
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -66,7 +77,7 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle className="font-headline text-2xl">{session.level} Session</DialogTitle>
+          <DialogTitle className="font-headline text-2xl">{currentSession.level} Session</DialogTitle>
           <DialogDescription>
             Session details and registered players.
           </DialogDescription>
@@ -75,11 +86,11 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>{formatDate(session.date)}</span>
+              <span>{formatDate(currentSession.date)}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>{session.time}</span>
+              <span>{currentSession.time}</span>
             </div>
           </div>
           
@@ -89,7 +100,7 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <span>Spots Filled</span>
               </div>
-              <span>{spotsFilled} / {session.maxPlayers}</span>
+              <span>{spotsFilled} / {currentSession.maxPlayers}</span>
             </div>
             <Progress value={progressValue} className="h-2" />
           </div>
@@ -100,7 +111,7 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
               Registered Players ({spotsFilled})
             </h3>
             <div className="flex flex-wrap gap-3">
-              {session.players.map((player) => (
+              {currentSession.players.map((player) => (
                 <Avatar key={player.id} className="h-12 w-12 border-2 border-background">
                   <AvatarImage src={player.avatarUrl} alt={player.name} />
                   <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
@@ -114,14 +125,14 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
             </div>
           </div>
 
-           {session.waitlist.length > 0 && (
+           {currentSession.waitlist.length > 0 && (
              <div>
                 <h3 className="mb-3 font-semibold flex items-center gap-2">
                     <Users className="h-5 w-5 text-muted-foreground" />
-                    Waitlist ({session.waitlist.length})
+                    Waitlist ({currentSession.waitlist.length})
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                    {session.waitlist.map((player) => (
+                    {currentSession.waitlist.map((player) => (
                         <span key={player.id} className="text-sm text-muted-foreground">{player.name}</span>
                     ))}
                 </div>
@@ -134,7 +145,7 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
                     <BarChart2 className="h-5 w-5 text-muted-foreground" />
                     Admin Actions
                 </h3>
-                <SuggestLevelButton playerSkillLevels={session.players.map(p => p.skillLevel.toLowerCase() as "beginner" | "intermediate" | "advanced")}/>
+                <SuggestLevelButton playerSkillLevels={currentSession.players.map(p => p.skillLevel.toLowerCase() as "beginner" | "intermediate" | "advanced")}/>
              </div>
           )}
 

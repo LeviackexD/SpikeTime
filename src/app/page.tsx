@@ -6,20 +6,16 @@ import type { NextPage } from 'next';
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { mockSessions, currentUser } from '@/lib/mock-data';
-import { Calendar, Clock, Users, CheckCircle, UserPlus, XCircle, MapPin } from 'lucide-react';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
 import type { Session } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-
+import SessionCard from '@/components/sessions/session-card';
 
 const DashboardPage: NextPage = () => {
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
@@ -83,6 +79,14 @@ const DashboardPage: NextPage = () => {
     });
   };
 
+  const upcomingSessions = sessions.filter(session => 
+    new Date(session.date) >= new Date() && session.players.some(p => p.id === currentUser.id)
+  ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
+  const availableSessions = sessions.filter(session =>
+    new Date(session.date) >= new Date() && !session.players.some(p => p.id === currentUser.id)
+  ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -92,110 +96,72 @@ const DashboardPage: NextPage = () => {
         <p className="text-muted-foreground">Here's what's happening in your volleyball world.</p>
       </div>
 
-      {/* My Upcoming Sessions */}
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2">
-            <VolleyballIcon className="h-6 w-6 text-primary" />
-            My Upcoming Sessions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {sessions.length > 0 ? (
-             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {sessions.map((session, index) => {
-                 const isFull = session.players.length >= session.maxPlayers;
-                 const isRegistered = session.players.some(p => p.id === currentUser.id);
-                 const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
-
-                 return (
-                    <Card key={session.id} className="flex flex-col overflow-hidden transition-all hover:scale-105">
-                        <div className="relative h-48 w-full">
-                            <Image 
-                              src={`https://picsum.photos/seed/${session.id}/600/400`} 
-                              alt="Volleyball session" 
-                              fill
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                              priority={index === 0}
-                              style={{ objectFit: 'cover' }}
-                              data-ai-hint="volleyball action"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                            <div className="absolute top-2 right-2">
-                               <Badge variant={isFull ? 'destructive' : 'secondary'}>
-                                {isFull ? 'Full' : 'Open'}
-                               </Badge>
-                            </div>
-                            <div className="absolute bottom-0 left-0 p-4">
-                            <h3 className="font-headline text-2xl font-bold text-white">
-                                Beach Volleyball
-                            </h3>
-                            <p className="font-semibold text-primary">{session.level} Level</p>
-                            </div>
-                        </div>
-                        <CardContent className="flex-grow p-4 space-y-3">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Calendar className="h-4 w-4" />
-                                <span className="text-sm font-semibold">
-                                {new Date(session.date).toLocaleDateString('en-US', {
-                                    month: 'long',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                    timeZone: 'UTC',
-                                })}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Clock className="h-4 w-4" />
-                                <span className="text-sm font-semibold">{session.time}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <MapPin className="h-4 w-4" />
-                                <span className="text-sm font-semibold">{session.location}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Users className="h-4 w-4" />
-                                <span className="text-sm font-semibold">{session.players.length} / {session.maxPlayers} players</span>
-                            </div>
-                        </CardContent>
-                        <CardFooter className="p-4 pt-0">
-                            {isRegistered ? (
-                                <Button className="w-full" variant="outline" onClick={() => handleCancelBooking(session.id)}>
-                                    <XCircle className="mr-2 h-4 w-4" />
-                                    Cancel My Spot
-                                </Button>
-                            ) : isFull ? (
-                                isOnWaitlist ? (
-                                    <Button className="w-full" variant="outline" disabled>
-                                        <CheckCircle className="mr-2 h-4 w-4" />
-                                        On Waitlist
-                                    </Button>
-                                ) : (
-                                    <Button className="w-full" variant="secondary" onClick={() => handleJoinWaitlist(session.id)}>
-                                        <UserPlus className="mr-2 h-4 w-4" />
-                                        Join Waitlist
-                                    </Button>
-                                )
-                            ) : (
-                                <Button className="w-full" onClick={() => handleBooking(session.id)}>
-                                    Book My Spot
-                                </Button>
-                            )}
-                        </CardFooter>
-                    </Card>
-                 );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">You have no upcoming sessions.</p>
-              <Button asChild>
-                <Link href="/calendar">Browse Sessions</Link>
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2 flex flex-col gap-8">
+          {/* My Upcoming Sessions */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2">
+                <VolleyballIcon className="h-6 w-6 text-primary" />
+                My Upcoming Sessions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {upcomingSessions.length > 0 ? (
+                <div className="space-y-6">
+                  {upcomingSessions.map((session) => (
+                     <SessionCard 
+                        key={session.id}
+                        session={session}
+                        currentUser={currentUser}
+                        onBook={handleBooking}
+                        onCancel={handleCancelBooking}
+                        onWaitlist={handleJoinWaitlist}
+                     />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 rounded-lg bg-muted/50">
+                  <p className="text-muted-foreground mb-4">You have no upcoming sessions booked.</p>
+                  <Button asChild>
+                    <Link href="/calendar">Browse Sessions</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Available Sessions */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2">
+                <VolleyballIcon className="h-6 w-6 text-primary" />
+                Available Sessions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {availableSessions.length > 0 ? (
+                <div className="space-y-6">
+                  {availableSessions.map((session) => (
+                     <SessionCard 
+                        key={session.id}
+                        session={session}
+                        currentUser={currentUser}
+                        onBook={handleBooking}
+                        onCancel={handleCancelBooking}
+                        onWaitlist={handleJoinWaitlist}
+                     />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 rounded-lg bg-muted/50">
+                  <p className="text-muted-foreground">No other sessions available at the moment.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
