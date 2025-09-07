@@ -12,6 +12,7 @@ import {
   Shield,
   LogOut,
   Bell,
+  Megaphone,
 } from 'lucide-react';
 
 import {
@@ -44,6 +45,8 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/calendar', icon: Calendar, label: 'Calendar' },
+  { href: '/announcements', icon: Megaphone, label: 'Announcements' },
   { href: '/profile', icon: User, label: 'Profile' },
   { href: '/admin', icon: Shield, label: 'Admin Panel', adminOnly: true },
 ];
@@ -113,10 +116,8 @@ function AppHeader() {
   const pathname = usePathname();
 
   const getPageTitle = () => {
-    if (pathname === '/') return 'Dashboard';
-    if (pathname.startsWith('/profile')) return 'My Profile';
-    if (pathname.startsWith('/admin')) return 'Admin Panel';
-    return 'SpikeTime';
+    const item = navItems.find(item => item.href === pathname);
+    return item ? item.label : 'SpikeTime';
   }
 
   return (
