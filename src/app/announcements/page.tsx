@@ -26,6 +26,10 @@ const AnnouncementsPage: NextPage = () => {
   const handleCloseModal = () => {
     setSelectedAnnouncement(null);
   };
+  
+  const announcementText = React.useMemo(() => {
+    return mockAnnouncements.map(a => `${a.title}: ${a.content}`).join('\n\n');
+  }, []);
 
   return (
     <>
@@ -39,7 +43,7 @@ const AnnouncementsPage: NextPage = () => {
             Stay up-to-date with the latest news, events, and updates from the Inverness Eagles Volleyball Club.
           </p>
           <div className="mt-4">
-            <SummarizeButton announcements={mockAnnouncements.map(a => `${a.title}: ${a.content}`).join('\n\n')} />
+            <SummarizeButton announcements={announcementText} />
           </div>
         </div>
 
