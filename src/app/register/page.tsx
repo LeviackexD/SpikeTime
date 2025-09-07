@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SpikeTimeLogo } from '@/components/icons/spiketime-logo';
+import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
@@ -35,11 +35,11 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center">
-            <SpikeTimeLogo className="h-12 w-auto" />
+            <InvernessEaglesLogo className="h-12 w-auto" />
           </div>
           <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
           <CardDescription>
-            Join the SpikeTime community today!
+            Join the Inverness Eagles community today!
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleRegister}>

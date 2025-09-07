@@ -4,8 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SpikeTime',
-  description: 'Your ultimate volleyball session booking app.',
+  title: 'Inverness Eagles',
+  description: 'Inverness Eagles Volleyball Club',
 };
 
 export default function RootLayout({

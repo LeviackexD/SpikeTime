@@ -38,7 +38,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { SpikeTimeLogo } from '@/components/icons/spiketime-logo';
+import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { currentUser } from '@/lib/mock-data';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -68,7 +68,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         className="border-sidebar-border"
       >
         <SidebarHeader>
-          <SpikeTimeLogo className="h-8 w-auto" />
+          <InvernessEaglesLogo className="h-8 w-auto" />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
@@ -118,7 +118,7 @@ function AppHeader() {
 
   const getPageTitle = () => {
     const item = navItems.find(item => item.href === pathname);
-    return item ? item.label : 'SpikeTime';
+    return item ? item.label : 'Inverness Eagles';
   }
 
   return (

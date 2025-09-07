@@ -1,11 +1,11 @@
 import React from 'react';
 
-export function SpikeTimeLogo(props: React.SVGProps<SVGSVGElement>) {
+export function InvernessEaglesLogo(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 200 40"
-      aria-label="SpikeTime Logo"
+      viewBox="0 0 250 40"
+      aria-label="Inverness Eagles Logo"
       {...props}
     >
       <defs>
@@ -24,12 +24,12 @@ export function SpikeTimeLogo(props: React.SVGProps<SVGSVGElement>) {
         x="45"
         y="27"
         fontFamily="Poppins, sans-serif"
-        fontSize="24"
+        fontSize="20"
         fontWeight="600"
         fill="hsl(var(--foreground))"
         className="font-headline"
       >
-        SpikeTime
+        INVERNESS EAGLES
       </text>
     </svg>
   );
