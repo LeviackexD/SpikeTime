@@ -2,8 +2,6 @@
 'use client';
 
 import * as React from 'react';
-import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -22,10 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import type { Session, SkillLevel } from '@/lib/types';
-import { cn } from '@/lib/utils';
 
 interface SessionFormModalProps {
   isOpen: boolean;
@@ -43,7 +38,6 @@ const emptySession: Omit<Session, 'id' | 'players' | 'waitlist'> = {
   maxPlayers: 12,
   imageUrl: '',
 };
-
 
 export default function SessionFormModal({ isOpen, onClose, onSave, session }: SessionFormModalProps) {
     const [formData, setFormData] = React.useState<Omit<Session, 'id' | 'players' | 'waitlist'>>({ ...emptySession });
@@ -67,22 +61,23 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     }, [session, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = e.target;
-        setFormData(prev => ({...prev, [id]: value}));
+        const { id, value, type } = e.target;
+        if (type === 'date') {
+            // When the input is a date, the value is in YYYY-MM-DD format.
+            // We need to convert it to an ISO string to match the data type.
+            const newDate = new Date(value);
+            // Adjust for timezone offset to prevent the date from changing
+            const timezoneOffset = newDate.getTimezoneOffset() * 60000;
+            const adjustedDate = new Date(newDate.getTime() + timezoneOffset);
+            setFormData(prev => ({...prev, date: adjustedDate.toISOString()}));
+        } else {
+            setFormData(prev => ({...prev, [id]: value}));
+        }
     };
 
     const handleSelectChange = (value: SkillLevel) => {
         setFormData(prev => ({ ...prev, level: value }));
     };
-
-    const handleDateChange = (date: Date | undefined) => {
-      if (date) {
-        // To keep the time zone consistent, we get the UTC date parts and create a new Date object from them.
-        const newDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-        // Then convert to ISO string to store as a string.
-        setFormData(prev => ({...prev, date: newDate.toISOString()}));
-      }
-    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -91,6 +86,10 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
             ...formData,
         });
     }
+    
+    // The date from formData is an ISO string. We need to format it to YYYY-MM-DD for the input.
+    const dateForInput = formData.date ? formData.date.split('T')[0] : '';
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -105,28 +104,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
             <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="col-span-2 space-y-2">
                     <Label htmlFor="date">Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !formData.date && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.date ? format(new Date(formData.date), "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={formData.date ? new Date(formData.date) : undefined}
-                          onSelect={handleDateChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <Input id="date" type="date" value={dateForInput} onChange={handleChange} required />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="startTime">Start Time</Label>
@@ -172,4 +150,3 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     </Dialog>
   );
 }
-
