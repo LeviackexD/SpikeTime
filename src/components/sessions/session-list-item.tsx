@@ -23,7 +23,7 @@ interface SessionListItemProps {
   onBook: (sessionId: string) => void;
   onCancel: (sessionId: string) => void;
   onWaitlist: (sessionId: string) => void;
-  onViewPlayers: () => void;
+  onViewPlayers: (session: Session) => void;
   priority?: boolean;
 }
 
@@ -86,14 +86,14 @@ export default function SessionListItem({
                 <div>
                     <div className="mb-1 flex justify-between items-center text-xs text-muted-foreground">
                         <span className="font-semibold flex items-center gap-1"><Users className="h-3 w-3" /> Players</span>
-                        <span>{session.players.length}/{session.players.length}</span>
+                        <span>{session.players.length}/{session.maxPlayers}</span>
                     </div>
                     <Progress value={progressValue} className="h-1.5" />
                 </div>
                 <Button 
                 variant="link" 
                 className="text-xs justify-start p-0 h-auto"
-                onClick={onViewPlayers}
+                onClick={() => onViewPlayers(session)}
                 >
                 View Players
                 </Button>

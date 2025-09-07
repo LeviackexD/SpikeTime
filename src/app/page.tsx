@@ -74,7 +74,7 @@ const DashboardPage: NextPage = () => {
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
-                      onViewPlayers={() => handleViewPlayers(session)}
+                      onViewPlayers={handleViewPlayers}
                       priority={index === 0}
                   />
                 ))}
@@ -105,7 +105,7 @@ const DashboardPage: NextPage = () => {
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
-                      onViewPlayers={() => handleViewPlayers(session)}
+                      onViewPlayers={handleViewPlayers}
                   />
                 ))}
               </div>
