@@ -15,7 +15,7 @@ import {
 interface SessionCalendarProps {
   sessions: Session[];
   selectedDate: Date;
-  onDateChange: (date: Date) => void;
+  onDateChange: (date: Date | undefined) => void;
   skillFilter: string;
 }
 
@@ -107,27 +107,24 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
         </TooltipProvider>
     );
   };
-
-  const handleDayClick = (day: Date | undefined) => {
-    if (day) {
-      const utcDate = new Date(Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()));
-      onDateChange(utcDate);
-    }
-  };
   
   return (
       <Calendar
         mode="single"
         selected={selectedDate}
-        onSelect={handleDayClick}
-        className="rounded-md border p-0 w-full"
+        onSelect={onDateChange}
+        className="rounded-md border p-0"
         classNames={{
-            root: "w-full",
-            month: "w-full space-y-4",
-            table: "w-full border-collapse space-y-1",
-            head_row: "flex justify-around",
-            head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
-            row: "flex w-full mt-2 justify-around",
+            months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
+            month: 'space-y-4 w-full',
+            caption: 'flex justify-center pt-1 relative items-center',
+            caption_label: 'text-lg font-medium',
+            nav: 'space-x-1 flex items-center',
+            nav_button: 'h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100',
+            table: 'w-full border-collapse space-y-1',
+            head_row: 'flex justify-around',
+            head_cell: 'text-muted-foreground rounded-md w-full font-normal text-[0.8rem]',
+            row: 'flex w-full mt-2 justify-around',
             cell: "h-14 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
             day: "h-14 w-full p-0 font-normal aria-selected:opacity-100",
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
