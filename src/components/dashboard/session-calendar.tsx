@@ -43,6 +43,19 @@ export default function SessionCalendar({ sessions }: SessionCalendarProps) {
     const dateString = day.toISOString().split('T')[0];
     const daySessions = filteredSessionsByDate[dateString] || [];
     if (daySessions.length === 0) return <div>{day.getDate()}</div>;
+    
+    const getDotColor = (level: string) => {
+        switch (level) {
+          case 'Beginner':
+            return 'bg-green-500'; // Let's keep a distinct color for beginners
+          case 'Intermediate':
+            return 'bg-primary';
+          case 'Advanced':
+            return 'bg-destructive';
+          default:
+            return 'bg-accent';
+        }
+    }
 
     return (
       <div className="relative flex h-full w-full flex-col items-center justify-center">
@@ -51,11 +64,7 @@ export default function SessionCalendar({ sessions }: SessionCalendarProps) {
           {daySessions.map((session) => (
             <span
               key={session.id}
-              className={`h-1.5 w-1.5 rounded-full ${
-                session.level === 'Beginner' ? 'bg-green-500' :
-                session.level === 'Intermediate' ? 'bg-yellow-500' :
-                session.level === 'Advanced' ? 'bg-red-500' : 'bg-blue-500'
-              }`}
+              className={`h-1.5 w-1.5 rounded-full ${getDotColor(session.level)}`}
             ></span>
           ))}
         </div>
