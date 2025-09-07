@@ -158,9 +158,9 @@ const DashboardPage: NextPage = () => {
         <p className="text-muted-foreground">Here's what's happening in your volleyball world.</p>
       </div>
       
-      <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
-        <AccordionItem value="item-1">
-          <AccordionTrigger className="hover:no-underline">
+      <Accordion type="multiple" defaultValue={['item-1', 'item-2']} className="w-full space-y-8">
+        <AccordionItem value="item-1" className="border-b-0">
+          <AccordionTrigger className="hover:no-underline p-0">
               <SectionHeader icon={Volleyball} title="My Upcoming Sessions" />
           </AccordionTrigger>
           <AccordionContent className="pt-4">
@@ -189,31 +189,34 @@ const DashboardPage: NextPage = () => {
             )}
           </AccordionContent>
         </AccordionItem>
+
+        <AccordionItem value="item-2" className="border-b-0">
+          <AccordionTrigger className="hover:no-underline p-0">
+            <SectionHeader icon={Volleyball} title="Available Sessions" />
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
+            {availableSessions.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {availableSessions.map((session) => (
+                  <SessionListItem 
+                      key={session.id}
+                      session={session}
+                      currentUser={currentUser}
+                      onBook={handleBooking}
+                      onCancel={handleCancelBooking}
+                      onWaitlist={handleJoinWaitlist}
+                      onViewPlayers={() => handleViewPlayers(session)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed">
+                <p className="text-muted-foreground">No other sessions available at the moment.</p>
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
-
-
-      <div className="flex flex-col gap-8">
-         <SectionHeader icon={Volleyball} title="Available Sessions" />
-        {availableSessions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {availableSessions.map((session) => (
-               <SessionListItem 
-                  key={session.id}
-                  session={session}
-                  currentUser={currentUser}
-                  onBook={handleBooking}
-                  onCancel={handleCancelBooking}
-                  onWaitlist={handleJoinWaitlist}
-                  onViewPlayers={() => handleViewPlayers(session)}
-               />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed">
-            <p className="text-muted-foreground">No other sessions available at the moment.</p>
-          </div>
-        )}
-      </div>
 
       <SessionDetailsModal
         session={sessionToView}
