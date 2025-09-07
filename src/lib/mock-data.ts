@@ -2,7 +2,7 @@
 import type { User, Session, Announcement } from './types';
 
 export const mockUsers: User[] = [
-  { id: 'u1', name: 'Manu', email: 'alex@example.com', avatarUrl: 'https://picsum.photos/seed/u1/100/100', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Hitter', stats: { sessionsPlayed: 25, sessionsCancelled: 2 } },
+  { id: 'u1', name: 'Manu', email: 'alex@example.com', avatarUrl: 'https://picsum.photos/seed/u1/100/100', role: 'admin', skillLevel: 'Intermediate', favoritePosition: 'Hitter', stats: { sessionsPlayed: 25, sessionsCancelled: 2 } },
   { id: 'u2', name: 'Maria Garcia', email: 'maria@example.com', avatarUrl: 'https://picsum.photos/seed/u2/100/100', role: 'user', skillLevel: 'Advanced', favoritePosition: 'Setter', stats: { sessionsPlayed: 42, sessionsCancelled: 1 } },
   { id: 'u3', name: 'Sam Chen', email: 'sam@example.com', avatarUrl: 'https://picsum.photos/seed/u3/100/100', role: 'admin', skillLevel: 'Advanced', favoritePosition: 'All-Rounder', stats: { sessionsPlayed: 89, sessionsCancelled: 5 } },
   { id: 'u4', name: 'Emily White', email: 'emily@example.com', avatarUrl: 'https://picsum.photos/seed/u4/100/100', role: 'user', skillLevel: 'Beginner', favoritePosition: 'Libero', stats: { sessionsPlayed: 10, sessionsCancelled: 0 } },
