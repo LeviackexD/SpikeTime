@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { Badge } from '@/components/ui/badge';
 import type { Session } from '@/lib/types';
 import SessionDetailsModal from '../sessions/session-details-modal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,9 +11,13 @@ interface SessionCalendarProps {
 }
 
 export default function SessionCalendar({ sessions }: SessionCalendarProps) {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
   const [selectedSession, setSelectedSession] = React.useState<Session | null>(null);
   const [skillFilter, setSkillFilter] = React.useState<string>('All');
+
+  React.useEffect(() => {
+    setDate(new Date());
+  }, []);
 
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
@@ -45,16 +48,16 @@ export default function SessionCalendar({ sessions }: SessionCalendarProps) {
     if (daySessions.length === 0) return <div>{day.getDate()}</div>;
     
     const getDotColor = (level: string) => {
-        switch (level) {
-          case 'Beginner':
-            return 'bg-green-500'; // Let's keep a distinct color for beginners
-          case 'Intermediate':
-            return 'bg-primary';
-          case 'Advanced':
-            return 'bg-destructive';
-          default:
-            return 'bg-accent';
-        }
+      switch (level.toLowerCase()) {
+        case 'beginner':
+          return 'bg-secondary';
+        case 'intermediate':
+          return 'bg-primary';
+        case 'advanced':
+          return 'bg-destructive';
+        default:
+          return 'bg-accent';
+      }
     }
 
     return (
@@ -108,6 +111,7 @@ export default function SessionCalendar({ sessions }: SessionCalendarProps) {
         components={{
           DayContent: ({ date }) => DayContent(date),
         }}
+        disabled={!date}
       />
       
       {selectedSession && (
