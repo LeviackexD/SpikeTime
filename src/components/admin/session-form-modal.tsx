@@ -116,7 +116,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="time">Time</Label>
-                    <Input id="time" value={formData.time} onChange={handleChange} placeholder="e.g., 18:00 - 20:00" required/>
+                    <Input id="time" type="time" value={formData.time} onChange={handleChange} placeholder="e.g., 18:00" required/>
                 </div>
                 <div className="col-span-2 space-y-2">
                     <Label htmlFor="location">Location</Label>
