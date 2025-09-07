@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { mockSessions, currentUser } from '@/lib/mock-data';
-import { Calendar, Clock, Users, CheckCircle, UserPlus, XCircle } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle, UserPlus, XCircle, MapPin } from 'lucide-react';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -139,6 +139,10 @@ const DashboardPage: NextPage = () => {
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <Clock className="h-4 w-4" />
                                 <span className="text-sm font-semibold">{session.time}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <MapPin className="h-4 w-4" />
+                                <span className="text-sm font-semibold">{session.location}</span>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <Users className="h-4 w-4" />

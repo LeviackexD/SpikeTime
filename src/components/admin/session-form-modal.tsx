@@ -32,6 +32,7 @@ interface SessionFormModalProps {
 const emptySession: Omit<Session, 'id' | 'players' | 'waitlist'> = {
   date: '',
   time: '',
+  location: '',
   level: 'Beginner',
   maxPlayers: 12,
 };
@@ -87,6 +88,12 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     Time
                     </Label>
                     <Input id="time" value={formData.time} onChange={handleChange} placeholder="e.g., 18:00 - 20:00" className="col-span-3" required/>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="location" className="text-right">
+                    Location
+                    </Label>
+                    <Input id="location" value={formData.location} onChange={handleChange} placeholder="e.g., Beach Court 1" className="col-span-3" required/>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="level" className="text-right">

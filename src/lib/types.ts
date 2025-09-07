@@ -20,6 +20,7 @@ export interface Session {
   id: string;
   date: string;
   time: string;
+  location: string;
   level: SkillLevel;
   players: User[];
   maxPlayers: number;
