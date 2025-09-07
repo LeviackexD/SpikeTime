@@ -137,7 +137,7 @@ const CalendarPage: NextPage = () => {
                   Session Calendar
                   </CardTitle>
                   <CardDescription>
-                      Find and book your next volleyball session.
+                      Find and book your next volleyball session. Use the legend below to guide you.
                   </CardDescription>
               </CardHeader>
               <CardContent>
@@ -146,7 +146,19 @@ const CalendarPage: NextPage = () => {
                       selectedDate={selectedDate}
                       onDateChange={setSelectedDate}
                       skillFilter={skillFilter}
+                      currentUser={currentUser}
                   />
+                  <div className="mt-4 flex items-center gap-6 text-sm">
+                    <h3 className="font-semibold text-muted-foreground">Legend:</h3>
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full bg-orange-500" />
+                      <span>My Booked Sessions</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full bg-primary" />
+                      <span>Available Sessions</span>
+                    </div>
+                  </div>
                   <div className="mt-4">
                     <h3 className="mb-2 text-sm font-medium text-muted-foreground">Filter by Skill Level</h3>
                     <Select value={skillFilter} onValueChange={setSkillFilter}>

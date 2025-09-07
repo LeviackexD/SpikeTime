@@ -3,23 +3,24 @@
 
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import type { Session } from '@/lib/types';
-import { Badge } from '@/components/ui/badge';
+import type { Session, User } from '@/lib/types';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from '@/lib/utils';
 
 interface SessionCalendarProps {
   sessions: Session[];
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   skillFilter: string;
+  currentUser: User;
 }
 
-export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter }: SessionCalendarProps) {
+export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter, currentUser }: SessionCalendarProps) {
 
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
@@ -48,15 +49,17 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
     const dateString = day.toISOString().split('T')[0];
     const daySessions = filteredSessionsByDate[dateString] || [];
     
+    const bookedSessions = daySessions.filter(s => s.players.some(p => p.id === currentUser.id));
+    const availableSessions = daySessions.filter(s => !s.players.some(p => p.id === currentUser.id));
+
     const content = (
         <div className="relative flex h-full w-full flex-col items-center justify-center">
             {day.getDate()}
-            {daySessions.length > 0 && (
-                <div className="absolute bottom-1">
-                <Badge variant="secondary" className="px-1 py-0 text-xs">
-                    {daySessions.length} session{daySessions.length > 1 ? 's' : ''}
-                </Badge>
-                </div>
+            {(bookedSessions.length > 0 || availableSessions.length > 0) && (
+              <div className="absolute bottom-1 flex gap-1">
+                {bookedSessions.length > 0 && <div className="h-1.5 w-1.5 rounded-full bg-orange-500" />}
+                {availableSessions.length > 0 && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+              </div>
             )}
         </div>
     );
@@ -73,14 +76,30 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
                 </TooltipTrigger>
                 <TooltipContent>
                     <div className="p-2 text-sm">
-                        <h4 className="font-semibold mb-2">Sessions for this day:</h4>
-                        <ul className="space-y-1">
-                        {daySessions.map(session => (
-                            <li key={session.id}>
-                            <span className="font-semibold">{session.level}:</span> {session.time}
-                            </li>
-                        ))}
-                        </ul>
+                        {bookedSessions.length > 0 && (
+                            <div className='mb-2'>
+                                <h4 className="font-semibold mb-1">My Sessions:</h4>
+                                <ul className="space-y-1 list-disc list-inside">
+                                {bookedSessions.map(session => (
+                                    <li key={session.id}>
+                                    <span className="font-semibold">{session.level}:</span> {session.time}
+                                    </li>
+                                ))}
+                                </ul>
+                            </div>
+                        )}
+                        {availableSessions.length > 0 && (
+                             <div>
+                                <h4 className="font-semibold mb-1">Available Sessions:</h4>
+                                <ul className="space-y-1 list-disc list-inside">
+                                {availableSessions.map(session => (
+                                    <li key={session.id}>
+                                    <span className="font-semibold">{session.level}:</span> {session.time}
+                                    </li>
+                                ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 </TooltipContent>
             </Tooltip>
