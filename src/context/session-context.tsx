@@ -51,9 +51,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
           ...data,
           id: doc.id,
           // Convert Firestore Timestamps to ISO strings
-          date: (data.date as Timestamp).toDate().toISOString(),
+          date: (data.date as Timestamp)?.toDate().toISOString(),
         } as Session;
-      }).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      }).filter(s => s.date) // Filter out any sessions that might have invalid dates
+      .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       setSessions(sessionsData);
     });
 

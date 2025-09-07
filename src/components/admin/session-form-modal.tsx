@@ -32,7 +32,7 @@ interface SessionFormModalProps {
 }
 
 const emptySession: SessionFormData = {
-  date: new Date().toISOString(),
+  date: new Date().toISOString().split('T')[0],
   startTime: '',
   endTime: '',
   location: '',
@@ -48,7 +48,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
         if (isOpen) {
             if(session) {
                 setFormData({
-                    date: session.date,
+                    date: new Date(session.date).toISOString().split('T')[0],
                     startTime: session.startTime,
                     endTime: session.endTime,
                     location: session.location,
@@ -57,23 +57,14 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     imageUrl: session.imageUrl,
                 });
             } else {
-                // Reset to default for new session, ensuring date is current
-                setFormData({ ...emptySession, date: new Date().toISOString() });
+                setFormData({ ...emptySession, date: new Date().toISOString().split('T')[0] });
             }
         }
     }, [session, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value, type } = e.target;
-        if (type === 'date') {
-            // When the input is a date, the value is in YYYY-MM-DD format.
-            // We need to convert it to an ISO string to match the data type.
-            const newDate = new Date(value);
-            // Adjust for timezone offset to prevent the date from changing
-            const timezoneOffset = newDate.getTimezoneOffset() * 60000;
-            const adjustedDate = new Date(newDate.getTime() + timezoneOffset);
-            setFormData(prev => ({...prev, date: adjustedDate.toISOString()}));
-        } else if (type === 'number') {
+        if (type === 'number') {
             setFormData(prev => ({ ...prev, [id]: Number(value) }));
         } else {
             setFormData(prev => ({...prev, [id]: value}));
@@ -86,20 +77,18 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (session) { // Editing existing session
+        const dataToSave = { ...formData };
+        
+        if (session) {
              onSave({
                 ...session,
-                ...formData,
+                ...dataToSave,
             });
-        } else { // Creating new session
-            onSave(formData);
+        } else {
+            onSave(dataToSave);
         }
     }
     
-    // The date from formData is an ISO string. We need to format it to YYYY-MM-DD for the input.
-    const dateForInput = formData.date ? new Date(formData.date).toISOString().split('T')[0] : '';
-
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
@@ -113,7 +102,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
             <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="col-span-2 space-y-2">
                     <Label htmlFor="date">Date</Label>
-                    <Input id="date" type="date" value={dateForInput} onChange={handleChange} required />
+                    <Input id="date" type="date" value={formData.date} onChange={handleChange} required />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="startTime">Start Time</Label>
