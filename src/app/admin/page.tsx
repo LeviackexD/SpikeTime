@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -29,6 +30,94 @@ import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dia
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    timeZone: 'UTC',
+  });
+};
+
+const SessionCards = ({ sessions, handleEditSession, handleViewPlayers, handleDeleteSessionClick }: {
+    sessions: Session[];
+    handleEditSession: (session: Session) => void;
+    handleViewPlayers: (session: Session) => void;
+    handleDeleteSessionClick: (session: Session) => void;
+}) => (
+    <div className="space-y-4">
+      {sessions.map((session) => (
+        <Card key={session.id}>
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle>{session.level}</CardTitle>
+                        <div className="text-sm text-muted-foreground">{formatDate(session.date)} - {session.time}</div>
+                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditSession(session)}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewPlayers(session)}>View Players</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteSessionClick(session)}>Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+                 <div>
+                    <span className="font-semibold">Players: </span> 
+                    {session.players.length} / {session.maxPlayers}
+                    {session.waitlist.length > 0 && ` (+${session.waitlist.length} waitlist)`}
+                </div>
+                <div>
+                    <span className="font-semibold">Status: </span>
+                    <Badge variant={session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'}>
+                    {session.players.length >= session.maxPlayers ? 'Full' : 'Open'}
+                    </Badge>
+                </div>
+            </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
+const AnnouncementCards = ({ announcements, handleEditAnnouncement, handleDeleteAnnouncementClick }: {
+    announcements: Announcement[];
+    handleEditAnnouncement: (announcement: Announcement) => void;
+    handleDeleteAnnouncementClick: (announcement: Announcement) => void;
+}) => (
+    <div className="space-y-4">
+        {announcements.map((ann) => (
+             <Card key={ann.id}>
+                <CardHeader>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle>{ann.title}</CardTitle>
+                            <div className="text-sm text-muted-foreground">{formatDate(ann.date)}</div>
+                        </div>
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>Edit</DropdownMenuItem>
+                                <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteAnnouncementClick(ann)}>Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div>{ann.content}</div>
+                </CardContent>
+            </Card>
+        ))}
+    </div>
+  );
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = React.useState('sessions');
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
@@ -58,12 +147,6 @@ export default function AdminPage() {
     React.useState<Announcement | null>(null);
 
   const isMobile = useIsMobile();
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      timeZone: 'UTC',
-    });
-  };
 
   const handleCreateNew = () => {
     if (activeTab === 'sessions') {
@@ -224,48 +307,6 @@ export default function AdminPage() {
     </div>
   );
 
-  const renderSessionCards = () => (
-    <div className="space-y-4">
-      {sessions.map((session) => (
-        <Card key={session.id}>
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle>{session.level}</CardTitle>
-                        <div className="text-sm text-muted-foreground">{formatDate(session.date)} - {session.time}</div>
-                    </div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditSession(session)}>Edit</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleViewPlayers(session)}>View Players</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteSessionClick(session)}>Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-                 <div>
-                    <span className="font-semibold">Players: </span> 
-                    {session.players.length} / {session.maxPlayers}
-                    {session.waitlist.length &gt; 0 && ` (+${session.waitlist.length} waitlist)`}
-                </div>
-                <div>
-                    <span className="font-semibold">Status: </span>
-                    <Badge variant={session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'}>
-                    {session.players.length >= session.maxPlayers ? 'Full' : 'Open'}
-                    </Badge>
-                </div>
-            </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-
   const renderAnnouncementTable = () => (
     <div className="rounded-lg border">
         <Table>
@@ -310,37 +351,6 @@ export default function AdminPage() {
     </div>
   );
 
-  const renderAnnouncementCards = () => (
-    <div className="space-y-4">
-        {announcements.map((ann) => (
-             <Card key={ann.id}>
-                <CardHeader>
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle>{ann.title}</CardTitle>
-                            <div>{formatDate(ann.date)}</div>
-                        </div>
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>Edit</DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteAnnouncementClick(ann)}>Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div>{ann.content}</div>
-                </CardContent>
-            </Card>
-        ))}
-    </div>
-  )
-
   return (
     <Tabs defaultValue="sessions" onValueChange={setActiveTab}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -354,10 +364,10 @@ export default function AdminPage() {
         </Button>
       </div>
       <TabsContent value="sessions" className="mt-6">
-        {isMobile ? renderSessionCards() : renderSessionTable()}
+        {isMobile ? <SessionCards sessions={sessions} handleEditSession={handleEditSession} handleViewPlayers={handleViewPlayers} handleDeleteSessionClick={handleDeleteSessionClick} /> : renderSessionTable()}
       </TabsContent>
       <TabsContent value="announcements" className="mt-6">
-       {isMobile ? renderAnnouncementCards() : renderAnnouncementTable()}
+       {isMobile ? <AnnouncementCards announcements={announcements} handleEditAnnouncement={handleEditAnnouncement} handleDeleteAnnouncementClick={handleDeleteAnnouncementClick} /> : renderAnnouncementTable()}
       </TabsContent>
 
       <SessionFormModal
