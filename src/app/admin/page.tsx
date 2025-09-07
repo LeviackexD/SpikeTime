@@ -355,8 +355,8 @@ export default function AdminPage() {
     <Tabs defaultValue="sessions" onValueChange={setActiveTab}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <TabsList className="grid w-full grid-cols-2 sm:w-auto">
-          <TabsTrigger value="sessions">Manage Sessions</TabsTrigger>
-          <TabsTrigger value="announcements">Manage Announcements</TabsTrigger>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="announcements">Announcements</TabsTrigger>
         </TabsList>
         <Button onClick={handleCreateNew} className="w-full sm:w-auto">
           <PlusCircle className="mr-2 h-4 w-4" />
