@@ -104,7 +104,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="bg-background">
+      <SidebarInset className="bg-app-background">
         <AppHeader />
         <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </SidebarInset>

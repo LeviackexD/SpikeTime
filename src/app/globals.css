@@ -8,8 +8,9 @@ body {
 
 @layer base {
   :root {
-    --background: 39 51% 95%;
+    --background: 38 100% 98%;
     --foreground: 25 35% 15%;
+    --app-background: 39 51% 95%;
     --card: 38 100% 98%;
     --card-foreground: 25 35% 15%;
     --popover: 38 100% 98%;
@@ -27,11 +28,11 @@ body {
     --border: 38 16% 86%;
     --input: 38 16% 86%;
     --ring: 18 84% 44%;
-    --radius: 0.5rem;
   }
   .dark {
     --background: 25 35% 10%;
     --foreground: 38 100% 98%;
+    --app-background: 25 35% 8%;
     --card: 25 35% 15%;
     --card-foreground: 38 100% 98%;
     --popover: 25 35% 10%;

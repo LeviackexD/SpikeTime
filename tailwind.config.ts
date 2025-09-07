@@ -16,6 +16,7 @@ export default {
       },
       colors: {
         background: 'hsl(var(--background))',
+        'app-background': 'hsl(var(--app-background))',
         foreground: 'hsl(var(--foreground))',
         card: {
           DEFAULT: 'hsl(var(--card))',
