@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { SessionProvider } from '@/context/session-context';
+import { ThemeProvider } from '@/context/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Inverness Eagles',
@@ -23,10 +24,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <SessionProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <SessionProvider>
             <AppLayout>{children}</AppLayout>
-        </SessionProvider>
-        <Toaster />
+          </SessionProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

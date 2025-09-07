@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { mockAnnouncements } from '@/lib/mock-data';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, QrCode } from 'lucide-react';
 import type { Session, Announcement } from '@/lib/types';
 import SessionFormModal from '@/components/admin/session-form-modal';
 import DeleteSessionDialog from '@/components/admin/delete-session-dialog';
@@ -30,6 +30,7 @@ import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dia
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSessions } from '@/context/session-context';
+import SessionQRCodeModal from '@/components/sessions/session-qr-code-modal';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -37,11 +38,12 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const SessionCards = ({ sessions, handleEditSession, handleViewPlayers, handleDeleteSessionClick }: {
+const SessionCards = ({ sessions, handleEditSession, handleViewPlayers, handleDeleteSessionClick, handleQRCodeClick }: {
     sessions: Session[];
     handleEditSession: (session: Session) => void;
     handleViewPlayers: (session: Session) => void;
     handleDeleteSessionClick: (session: Session) => void;
+    handleQRCodeClick: (session: Session) => void;
 }) => (
     <div className="space-y-4">
       {sessions.map((session) => (
@@ -61,6 +63,7 @@ const SessionCards = ({ sessions, handleEditSession, handleViewPlayers, handleDe
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEditSession(session)}>Edit</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleViewPlayers(session)}>View Players</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleQRCodeClick(session)}>QR Code</DropdownMenuItem>
                             <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteSessionClick(session)}>Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -146,6 +149,9 @@ export default function AdminPage() {
     React.useState(false);
   const [announcementToDelete, setAnnouncementToDelete] =
     React.useState<Announcement | null>(null);
+    
+  const [isQRCodeModalOpen, setIsQRCodeModalOpen] = React.useState(false);
+  const [sessionForQRCode, setSessionForQRCode] = React.useState<Session | null>(null);
 
   const isMobile = useIsMobile();
 
@@ -172,6 +178,11 @@ export default function AdminPage() {
   const handleViewPlayers = (session: Session) => {
     setSessionToView(session);
     setIsViewModalOpen(true);
+  };
+
+  const handleQRCodeClick = (session: Session) => {
+    setSessionForQRCode(session);
+    setIsQRCodeModalOpen(true);
   };
 
   const confirmDeleteSession = () => {
@@ -287,6 +298,10 @@ export default function AdminPage() {
                         <DropdownMenuItem onClick={() => handleViewPlayers(session)}>
                         View Players
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleQRCodeClick(session)}>
+                          <QrCode className="mr-2 h-4 w-4" />
+                          QR Code
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                         className="text-red-500"
                         onClick={() => handleDeleteSessionClick(session)}
@@ -360,7 +375,7 @@ export default function AdminPage() {
         </Button>
       </div>
       <TabsContent value="sessions" className="mt-6">
-        {isMobile ? <SessionCards sessions={sessions} handleEditSession={handleEditSession} handleViewPlayers={handleViewPlayers} handleDeleteSessionClick={handleDeleteSessionClick} /> : renderSessionTable()}
+        {isMobile ? <SessionCards sessions={sessions} handleEditSession={handleEditSession} handleViewPlayers={handleViewPlayers} handleDeleteSessionClick={handleDeleteSessionClick} handleQRCodeClick={handleQRCodeClick} /> : renderSessionTable()}
       </TabsContent>
       <TabsContent value="announcements" className="mt-6">
        {isMobile ? <AnnouncementCards announcements={announcements} handleEditAnnouncement={handleEditAnnouncement} handleDeleteAnnouncementClick={handleDeleteAnnouncementClick} /> : renderAnnouncementTable()}
@@ -400,6 +415,13 @@ export default function AdminPage() {
         onClose={() => setIsDeleteAnnouncementDialogOpen(false)}
         onConfirm={confirmDeleteAnnouncement}
       />
+
+      <SessionQRCodeModal
+        isOpen={isQRCodeModalOpen}
+        onClose={() => setIsQRCodeModalOpen(false)}
+        session={sessionForQRCode}
+      />
+
     </Tabs>
   );
 }

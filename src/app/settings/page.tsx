@@ -2,6 +2,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTheme } from 'next-themes';
 import {
   Card,
   CardContent,
@@ -12,10 +13,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bell, Palette, UserCircle, ShieldAlert } from 'lucide-react';
-import SectionHeader from '@/components/layout/section-header';
+import { Bell, Palette, UserCircle, Moon, Sun } from 'lucide-react';
 
 export default function SettingsPage() {
+  const { setTheme, theme } = useTheme();
   const [notifications, setNotifications] = React.useState({
     email: true,
     push: false,
@@ -23,6 +24,10 @@ export default function SettingsPage() {
 
   const handleNotificationChange = (key: 'email' | 'push') => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (
@@ -82,11 +87,16 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
              <div className="flex items-center justify-between rounded-lg border p-4">
-               <div>
-                <Label htmlFor="dark-mode" className="font-semibold">Dark Mode</Label>
-                <p className="text-sm text-muted-foreground">Switch between light and dark themes.</p>
+               <div className='flex items-center gap-2'>
+                <Sun className="h-5 w-5 transition-all scale-100 dark:scale-0" />
+                <Moon className="absolute h-5 w-5 transition-all scale-0 dark:scale-100" />
+                <Label htmlFor="dark-mode" className="font-semibold pl-4">Dark Mode</Label>
                </div>
-              <Switch id="dark-mode" />
+              <Switch 
+                id="dark-mode"
+                checked={theme === 'dark'}
+                onCheckedChange={toggleTheme}
+              />
             </div>
           </CardContent>
         </Card>
