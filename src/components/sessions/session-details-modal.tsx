@@ -96,6 +96,7 @@ export default function SessionDetailsModal({
   const handleAction = (action: (id: string) => void) => {
     if (session) {
       action(session.id);
+      onClose(); // Close modal after action
     }
   }
 

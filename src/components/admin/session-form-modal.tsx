@@ -47,8 +47,11 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     React.useEffect(() => {
         if (isOpen) {
             if(session) {
+                // When editing, ensure date is in 'YYYY-MM-DD' format for the input
+                const sessionDate = new Date(session.date);
+                const formattedDate = sessionDate.toISOString().split('T')[0];
                 setFormData({
-                    date: new Date(session.date).toISOString().split('T')[0],
+                    date: formattedDate,
                     startTime: session.startTime,
                     endTime: session.endTime,
                     location: session.location,
@@ -57,6 +60,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     imageUrl: session.imageUrl,
                 });
             } else {
+                 // For new sessions, use today's date in 'YYYY-MM-DD' format
                 setFormData({ ...emptySession, date: new Date().toISOString().split('T')[0] });
             }
         }
@@ -77,7 +81,14 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const dataToSave = { ...formData };
+        // The date is already in 'YYYY-MM-DD' string format.
+        // We combine it with time before saving.
+        const dateWithTime = `${formData.date}T00:00:00.000Z`;
+        const dataToSave = { 
+            ...formData,
+            // The context will handle converting this ISO string to a Firestore Timestamp
+            date: dateWithTime,
+        };
         
         if (session) {
              onSave({

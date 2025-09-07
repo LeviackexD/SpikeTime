@@ -47,12 +47,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const unsubscribe = onSnapshot(sessionsCollection, (snapshot) => {
       const sessionsData = snapshot.docs.map(doc => {
         const data = doc.data();
-        const date = (data.date as Timestamp)?.toDate();
+        // Firestore Timestamps need to be converted to a serializable format (ISO string)
+        const date = (data.date as Timestamp)?.toDate().toISOString();
         return {
           ...data,
           id: doc.id,
-          // Convert Firestore Timestamps to ISO strings for consistency
-          date: date ? date.toISOString() : new Date().toISOString(),
+          date: date,
         } as Session;
       }).filter(s => s.date) // Filter out any sessions that might have invalid dates
       .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -133,6 +133,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         const { id, ...dataToUpdate } = updatedSession;
         await updateDoc(sessionRef, {
             ...dataToUpdate,
+            // Ensure date is always a Timestamp when writing to Firestore
             date: Timestamp.fromDate(new Date(dataToUpdate.date)),
         });
         showToast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
@@ -161,6 +162,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const sessionRef = doc(db, 'sessions', sessionId);
     
     try {
+      // Use arrayUnion to safely add the current user.
       await updateDoc(sessionRef, {
         players: arrayUnion(currentUser)
       });
@@ -179,11 +181,35 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
+  const cancelBooking = async (sessionId: string) => {
+    if (!currentUser) return;
+    
+    const sessionRef = doc(db, 'sessions', sessionId);
+
+    try {
+      // Use arrayRemove to safely remove the current user.
+      // Firestore needs the exact object to remove it from an array.
+      await updateDoc(sessionRef, {
+        players: arrayRemove(currentUser)
+      });
+      showToast({
+            title: 'Booking Canceled',
+            description: 'Your spot has been successfully canceled.',
+            variant: 'success',
+      });
+    } catch (error) {
+        showToast({
+            title: 'Cancellation Failed',
+            description: 'Could not cancel your spot. Please try again.',
+            variant: 'destructive',
+        });
+        console.error("Error canceling booking: ", error);
+    }
+  };
+
   const joinWaitlist = async (sessionId: string) => {
     if (!currentUser) return;
-     const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
-
+    
     const sessionRef = doc(db, 'sessions', sessionId);
 
     try {
@@ -205,30 +231,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  const cancelBooking = async (sessionId: string) => {
-    if (!currentUser) return;
-    const sessionRef = doc(db, 'sessions', sessionId);
-
-    try {
-      await updateDoc(sessionRef, {
-        players: arrayRemove(currentUser)
-      });
-       showToast({
-            title: 'Booking Canceled',
-            description: 'Your spot has been successfully canceled.',
-            variant: 'destructive',
-        });
-    } catch (error) {
-        showToast({
-            title: 'Cancellation Failed',
-            description: 'Could not cancel your spot. Please try again.',
-            variant: 'destructive',
-        });
-        console.error("Error canceling booking: ", error);
-    }
-  };
-
   const addMessage = (sessionId: string, message: Message) => {
+    // This is a local update for now. For real-time chat,
+    // this would also be a Firestore write operation.
     setSessions(prevSessions =>
       prevSessions.map(session =>
         session.id === sessionId
