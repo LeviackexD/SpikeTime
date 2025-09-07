@@ -55,7 +55,7 @@ export default function SessionListItem({
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-xl w-full h-full">
         <div className="relative h-48">
             <Image
-                src={`https://picsum.photos/seed/${session.id}/400/300`}
+                src={session.imageUrl || `https://picsum.photos/seed/${session.id}/400/300`}
                 alt="Volleyball session"
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"

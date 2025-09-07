@@ -5,7 +5,7 @@ export type PlayerPosition = 'Setter' | 'Hitter' | 'Libero' | 'Blocker' | 'All-R
 export interface User {
   id: string;
   name: string;
-  email: string;
+  username: string;
   avatarUrl: string;
   role: UserRole;
   skillLevel: SkillLevel;
@@ -25,6 +25,7 @@ export interface Session {
   players: User[];
   maxPlayers: number;
   waitlist: User[];
+  imageUrl?: string;
 }
 
 export interface Announcement {

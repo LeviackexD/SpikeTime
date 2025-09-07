@@ -34,6 +34,7 @@ const emptySession: Omit<Session, 'id' | 'players' | 'waitlist'> = {
   location: '',
   level: 'Beginner',
   maxPlayers: 12,
+  imageUrl: '',
 };
 
 
@@ -93,6 +94,12 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     Location
                     </Label>
                     <Input id="location" value={formData.location} onChange={handleChange} placeholder="e.g., Beach Court 1" className="col-span-3" required/>
+                </div>
+                 <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="imageUrl" className="text-right">
+                    Cover Image URL
+                    </Label>
+                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png" className="col-span-3"/>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="level" className="text-right">
