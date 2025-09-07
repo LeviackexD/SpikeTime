@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import type { Session, SkillLevel } from '@/lib/types';
 
 interface SessionFormModalProps {
@@ -49,7 +48,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
         }
     }, [session, isOpen]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setFormData(prev => ({...prev, [id]: value}));
     };
@@ -99,7 +98,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     <Label htmlFor="level" className="text-right">
                     Level
                     </Label>
-                    <Select value={formData.level} onValueChange={handleSelectChange} required>
+                    <Select value={formData.level} onValueChange={handleSelectChange}>
                         <SelectTrigger className="col-span-3">
                             <SelectValue placeholder="Select a level" />
                         </SelectTrigger>

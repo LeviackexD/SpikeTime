@@ -53,14 +53,16 @@ export default function SuggestLevelButton({ playerSkillLevels }: SuggestLevelBu
               <Sparkles className="text-primary" />
               AI-Suggested Session Level
             </AlertDialogTitle>
-            {suggestion && (
-              <div className="pt-4 text-left">
-                <p className="font-semibold">Suggested Level: <span className="font-bold text-primary uppercase">{suggestion.suggestedLevel}</span></p>
-                <AlertDialogDescription className="mt-2">
-                  <span className="font-semibold">Reasoning:</span> {suggestion.reasoning}
-                </AlertDialogDescription>
-              </div>
-            )}
+            <AlertDialogDescription asChild>
+                {suggestion && (
+                <div className="pt-4 text-left">
+                    <p className="font-semibold">Suggested Level: <span className="font-bold text-primary uppercase">{suggestion.suggestedLevel}</span></p>
+                    <p className="mt-2">
+                    <span className="font-semibold">Reasoning:</span> {suggestion.reasoning}
+                    </p>
+                </div>
+                )}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setSuggestion(null)}>
