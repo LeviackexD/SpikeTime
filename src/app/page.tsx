@@ -147,7 +147,7 @@ const DashboardPage: NextPage = () => {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
+      <div className="text-center">
         <h1 className="text-3xl font-bold font-headline">Welcome back, {currentUser.name.split(' ')[0]}!</h1>
         <p className="text-muted-foreground">Here's what's happening in your volleyball world.</p>
       </div>
