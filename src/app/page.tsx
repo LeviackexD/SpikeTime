@@ -4,10 +4,9 @@
 import * as React from 'react';
 import type { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
-import { mockSessions, currentUser, mockAnnouncements } from '@/lib/mock-data';
+import { currentUser, mockAnnouncements } from '@/lib/mock-data';
 import Link from 'next/link';
 import type { Session, Announcement } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
 import SessionListItem from '@/components/sessions/session-list-item';
 import SectionHeader from '@/components/layout/section-header';
 import { Volleyball, Megaphone } from 'lucide-react';
@@ -18,127 +17,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import AnnouncementDetailsModal from '@/components/announcements/announcement-details-modal';
-
-type ToastInfo = {
-  title: string;
-  description: string;
-  variant: 'success' | 'destructive';
-};
+import { useSessions } from '@/context/session-context';
 
 const DashboardPage: NextPage = () => {
-  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
   const [sessionToView, setSessionToView] = React.useState<Session | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = React.useState(false);
-  const [toastInfo, setToastInfo] = React.useState<ToastInfo | null>(null);
-  const { toast } = useToast();
   const [selectedAnnouncement, setSelectedAnnouncement] = React.useState<Announcement | null>(null);
-
-  React.useEffect(() => {
-    if (toastInfo) {
-      toast({
-        title: toastInfo.title,
-        description: toastInfo.description,
-        variant: toastInfo.variant,
-      });
-      setToastInfo(null);
-    }
-  }, [toastInfo, toast]);
-
-  const handleBooking = (sessionId: string) => {
-    let bookedSession: Session | undefined;
-    setSessions((prevSessions) => {
-        const sessionToBook = prevSessions.find(s => s.id === sessionId);
-        if (!sessionToBook || sessionToBook.players.some(p => p.id === currentUser.id)) {
-            return prevSessions;
-        }
-
-        if (sessionToBook.players.length < sessionToBook.maxPlayers) {
-            bookedSession = sessionToBook;
-            const updatedSessions = prevSessions.map(session =>
-                session.id === sessionId
-                    ? { ...session, players: [...session.players, currentUser] }
-                    : session
-            );
-            if(sessionToView?.id === sessionId) {
-              setSessionToView(updatedSessions.find(s => s.id === sessionId) || null);
-            }
-            return updatedSessions;
-        }
-        return prevSessions;
-    });
-
-    if (bookedSession) {
-      setToastInfo({
-        title: 'Booking Confirmed!',
-        description: `You're all set for the ${bookedSession.level} session.`,
-        variant: 'success',
-      });
-    }
-  };
-
-  const handleJoinWaitlist = (sessionId: string) => {
-    let joinedSession: Session | undefined;
-    setSessions(prevSessions => {
-        const sessionToJoin = prevSessions.find(s => s.id === sessionId);
-        if (!sessionToJoin || sessionToJoin.waitlist.some(p => p.id === currentUser.id)) {
-            return prevSessions;
-        }
-
-        if (sessionToJoin.players.length >= sessionToJoin.maxPlayers) {
-            joinedSession = sessionToJoin;
-            const updatedSessions = prevSessions.map(session =>
-                session.id === sessionId
-                    ? { ...session, waitlist: [...session.waitlist, currentUser] }
-                    : session
-            );
-            if(sessionToView?.id === sessionId) {
-              setSessionToView(updatedSessions.find(s => s.id === sessionId) || null);
-            }
-            return updatedSessions;
-        }
-        return prevSessions;
-    });
-
-    if(joinedSession){
-      setToastInfo({
-        title: 'You are on the waitlist!',
-        description: "We'll notify you if a spot opens up.",
-        variant: 'success'
-      });
-    }
-  };
-
-  const handleCancelBooking = (sessionId: string) => {
-    let canceledSession: Session | undefined;
-    setSessions(prevSessions => {
-        const sessionToCancel = prevSessions.find(s => s.id === sessionId);
-        if (!sessionToCancel || !sessionToCancel.players.some(p => p.id === currentUser.id)) {
-            return prevSessions;
-        }
-        
-        canceledSession = sessionToCancel;
-        const updatedSessions = prevSessions.map(session =>
-            session.id === sessionId
-                ? { ...session, players: session.players.filter(p => p.id !== currentUser.id) }
-                : session
-        );
-
-        if(sessionToView?.id === sessionId) {
-            setSessionToView(updatedSessions.find(s => s.id === sessionId) || null);
-        }
-        return updatedSessions;
-    });
-
-    if (canceledSession) {
-      setToastInfo({
-        title: 'Booking Canceled',
-        description: 'Your spot has been successfully canceled.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const handleViewPlayers = (session: Session) => {
     setSessionToView(session);
@@ -184,9 +71,9 @@ const DashboardPage: NextPage = () => {
                       key={session.id}
                       session={session}
                       currentUser={currentUser}
-                      onBook={handleBooking}
-                      onCancel={handleCancelBooking}
-                      onWaitlist={handleJoinWaitlist}
+                      onBook={bookSession}
+                      onCancel={cancelBooking}
+                      onWaitlist={joinWaitlist}
                       onViewPlayers={() => handleViewPlayers(session)}
                       priority={index === 0}
                   />
@@ -215,9 +102,9 @@ const DashboardPage: NextPage = () => {
                       key={session.id}
                       session={session}
                       currentUser={currentUser}
-                      onBook={handleBooking}
-                      onCancel={handleCancelBooking}
-                      onWaitlist={handleJoinWaitlist}
+                      onBook={bookSession}
+                      onCancel={cancelBooking}
+                      onWaitlist={joinWaitlist}
                       onViewPlayers={() => handleViewPlayers(session)}
                   />
                 ))}
@@ -260,9 +147,9 @@ const DashboardPage: NextPage = () => {
         session={sessionToView}
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        onBook={handleBooking}
-        onCancel={handleCancelBooking}
-        onWaitlist={handleJoinWaitlist}
+        onBook={bookSession}
+        onCancel={cancelBooking}
+        onWaitlist={joinWaitlist}
       />
 
       <AnnouncementDetailsModal

@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { mockSessions, mockAnnouncements } from '@/lib/mock-data';
+import { mockAnnouncements } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import type { Session, Announcement } from '@/lib/types';
 import SessionFormModal from '@/components/admin/session-form-modal';
@@ -28,7 +28,8 @@ import SessionDetailsModal from '@/components/sessions/session-details-modal';
 import AnnouncementFormModal from '@/components/admin/announcement-form-modal';
 import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSessions } from '@/context/session-context';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -119,8 +120,8 @@ const AnnouncementCards = ({ announcements, handleEditAnnouncement, handleDelete
   );
 
 export default function AdminPage() {
+  const { sessions, createSession, updateSession, deleteSession, bookSession, cancelBooking, joinWaitlist } = useSessions();
   const [activeTab, setActiveTab] = React.useState('sessions');
-  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
   const [announcements, setAnnouncements] = React.useState<Announcement[]>(
     mockAnnouncements
   );
@@ -175,7 +176,7 @@ export default function AdminPage() {
 
   const confirmDeleteSession = () => {
     if (sessionToDelete) {
-      setSessions(sessions.filter((s) => s.id !== sessionToDelete.id));
+      deleteSession(sessionToDelete.id);
       setSessionToDelete(null);
       setIsDeleteSessionDialogOpen(false);
     }
@@ -184,15 +185,10 @@ export default function AdminPage() {
   const handleSaveSession = (sessionData: Session) => {
     if (selectedSession) {
       // Edit existing session
-      setSessions(
-        sessions.map((s) => (s.id === sessionData.id ? sessionData : s))
-      );
+      updateSession(sessionData);
     } else {
       // Create new session
-      setSessions([
-        ...sessions,
-        { ...sessionData, id: `s${sessions.length + 1}` },
-      ]);
+      createSession(sessionData);
     }
     setIsSessionModalOpen(false);
     setSelectedSession(null);
@@ -387,9 +383,9 @@ export default function AdminPage() {
         session={sessionToView}
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        onBook={() => {}}
-        onCancel={() => {}}
-        onWaitlist={() => {}}
+        onBook={bookSession}
+        onCancel={cancelBooking}
+        onWaitlist={joinWaitlist}
       />
 
       <AnnouncementFormModal

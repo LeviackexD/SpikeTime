@@ -11,117 +11,23 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import SessionCalendar from '@/components/dashboard/session-calendar';
-import { mockSessions, currentUser } from '@/lib/mock-data';
+import { currentUser } from '@/lib/mock-data';
 import { Calendar as CalendarIcon, Info } from 'lucide-react';
 import type { Session } from '@/lib/types';
 import SessionDetailsCard from '@/components/sessions/session-details-card';
-import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-
-type ToastInfo = {
-  title: string;
-  description: string;
-  variant: 'success' | 'destructive';
-};
+import { useSessions } from '@/context/session-context';
 
 const CalendarPage: NextPage = () => {
-  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
   const [skillFilter, setSkillFilter] = React.useState<string>('All');
-  const [toastInfo, setToastInfo] = React.useState<ToastInfo | null>(null);
-  const { toast } = useToast();
-
+  
   React.useEffect(() => {
     setSelectedDate(new Date());
   }, []);
 
-  React.useEffect(() => {
-    if (toastInfo) {
-      toast({
-        title: toastInfo.title,
-        description: toastInfo.description,
-        variant: toastInfo.variant,
-      });
-      setToastInfo(null); 
-    }
-  }, [toastInfo, toast]);
-
-  const handleBooking = (sessionId: string) => {
-    let bookedSession: Session | undefined;
-    setSessions(prevSessions => {
-      const sessionToBook = prevSessions.find(s => s.id === sessionId);
-      if (!sessionToBook || sessionToBook.players.some(p => p.id === currentUser.id)) return prevSessions;
-
-      if (sessionToBook.players.length < sessionToBook.maxPlayers) {
-        bookedSession = sessionToBook;
-        return prevSessions.map(session =>
-          session.id === sessionId
-            ? { ...session, players: [...session.players, currentUser] }
-            : session
-        );
-      }
-      return prevSessions;
-    });
-
-    if (bookedSession) {
-      setToastInfo({
-        title: 'Booking Confirmed!',
-        description: `You're all set for the ${bookedSession.level} session.`,
-        variant: 'success',
-      });
-    }
-  };
-
-  const handleJoinWaitlist = (sessionId: string) => {
-    let joinedSession: Session | undefined;
-    setSessions(prevSessions => {
-      const sessionToJoin = prevSessions.find(s => s.id === sessionId);
-      if (!sessionToJoin || sessionToJoin.waitlist.some(p => p.id === currentUser.id)) return prevSessions;
-
-      if (sessionToJoin.players.length >= sessionToJoin.maxPlayers) {
-        joinedSession = sessionToJoin;
-        return prevSessions.map(session =>
-          session.id === sessionId
-            ? { ...session, waitlist: [...session.waitlist, currentUser] }
-            : session
-        );
-      }
-      return prevSessions;
-    });
-
-    if(joinedSession){
-        setToastInfo({
-            title: 'You are on the waitlist!',
-            description: "We'll notify you if a spot opens up.",
-            variant: 'success'
-        });
-    }
-  };
-
-  const handleCancelBooking = (sessionId: string) => {
-    let canceledSession: Session | undefined;
-    setSessions(prevSessions => {
-      const sessionToCancel = prevSessions.find(s => s.id === sessionId);
-      if (!sessionToCancel || !sessionToCancel.players.some(p => p.id === currentUser.id)) return prevSessions;
-
-      canceledSession = sessionToCancel;
-      return prevSessions.map(session =>
-        session.id === sessionId
-          ? { ...session, players: session.players.filter(p => p.id !== currentUser.id) }
-          : session
-      );
-    });
-
-    if (canceledSession) {
-        setToastInfo({
-            title: 'Booking Canceled',
-            description: 'Your spot has been successfully canceled.',
-            variant: 'destructive',
-        });
-    }
-  };
-  
   const filteredSessions = React.useMemo(() => {
     if (!selectedDate) return [];
     return sessions.filter(session => {
@@ -213,9 +119,9 @@ const CalendarPage: NextPage = () => {
                               key={session.id}
                               session={session}
                               currentUser={currentUser}
-                              onBook={handleBooking}
-                              onCancel={handleCancelBooking}
-                              onWaitlist={handleJoinWaitlist}
+                              onBook={bookSession}
+                              onCancel={cancelBooking}
+                              onWaitlist={joinWaitlist}
                           />
                       ))}
                       </div>

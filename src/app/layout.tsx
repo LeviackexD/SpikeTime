@@ -1,7 +1,9 @@
+
 import type { Metadata } from 'next';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
+import { SessionProvider } from '@/context/session-context';
 
 export const metadata: Metadata = {
   title: 'Inverness Eagles',
@@ -21,7 +23,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <AppLayout>{children}</AppLayout>
+        <SessionProvider>
+            <AppLayout>{children}</AppLayout>
+        </SessionProvider>
         <Toaster />
       </body>
     </html>
