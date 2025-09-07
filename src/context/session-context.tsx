@@ -47,11 +47,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const unsubscribe = onSnapshot(sessionsCollection, (snapshot) => {
       const sessionsData = snapshot.docs.map(doc => {
         const data = doc.data();
+        const date = (data.date as Timestamp)?.toDate();
         return {
           ...data,
           id: doc.id,
-          // Convert Firestore Timestamps to ISO strings
-          date: (data.date as Timestamp)?.toDate().toISOString(),
+          // Convert Firestore Timestamps to ISO strings for consistency
+          date: date ? date.toISOString() : new Date().toISOString(),
         } as Session;
       }).filter(s => s.date) // Filter out any sessions that might have invalid dates
       .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());

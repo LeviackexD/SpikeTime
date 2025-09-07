@@ -44,16 +44,20 @@ const DashboardPage: NextPage = () => {
     return null; // Or a loading spinner
   }
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const upcomingSessions = sessions.filter(session => {
       const sessionDate = new Date(session.date);
-      // Ensure date is valid before comparing
-      return !isNaN(sessionDate.getTime()) && sessionDate >= new Date() && session.players.some(p => p.id === currentUser.id);
+      sessionDate.setHours(0, 0, 0, 0);
+      return sessionDate >= today && session.players.some(p => p.id === currentUser.id);
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const availableSessions = sessions.filter(session => {
     const sessionDate = new Date(session.date);
-    return !isNaN(sessionDate.getTime()) && sessionDate >= new Date() && !session.players.some(p => p.id === currentUser.id)
-  }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    sessionDate.setHours(0, 0, 0, 0);
+    return sessionDate >= today && !session.players.some(p => p.id === currentUser.id)
+  }).sort((a, b_1) => new Date(a.date).getTime() - new Date(b_1.date).getTime());
 
 
   const recentAnnouncements = mockAnnouncements.slice(0, 3);
