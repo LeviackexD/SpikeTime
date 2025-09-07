@@ -4,7 +4,7 @@
 import * as React from 'react';
 import type { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
-import { mockAnnouncements, currentUser, mockUsers } from '@/lib/mock-data';
+import { mockAnnouncements, currentUser } from '@/lib/mock-data';
 import Link from 'next/link';
 import type { Session, Announcement } from '@/lib/types';
 import SessionListItem from '@/components/sessions/session-list-item';
@@ -20,8 +20,6 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import AnnouncementDetailsModal from '@/components/announcements/announcement-details-modal';
 import { useSessions } from '@/context/session-context';
-import { TrophyIcon } from '@/components/icons/trophy-icon';
-import FeaturedPlayers from '@/components/dashboard/featured-players';
 
 const DashboardPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
@@ -55,24 +53,12 @@ const DashboardPage: NextPage = () => {
   ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const recentAnnouncements = mockAnnouncements.slice(0, 3);
-  
-  const featuredPlayers = [...mockUsers].sort((a, b) => b.stats.sessionsPlayed - a.stats.sessionsPlayed).slice(0, 3);
-
 
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold font-headline">Welcome back, {currentUser.name}!</h1>
         <p className="text-muted-foreground">Here's what's happening in your volleyball world.</p>
-      </div>
-
-      <div className="space-y-4">
-        <SectionHeader icon={TrophyIcon} title="Featured Players" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {featuredPlayers.map((player) => (
-            <FeaturedPlayers key={player.id} player={player} />
-          ))}
-        </div>
       </div>
       
       <Accordion type="multiple" defaultValue={['item-1', 'item-2']} className="w-full space-y-8">
