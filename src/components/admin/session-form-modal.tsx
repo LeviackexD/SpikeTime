@@ -52,9 +52,17 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     React.useEffect(() => {
         if (isOpen) {
             if(session) {
-                setFormData(session);
+                setFormData({
+                    date: session.date,
+                    startTime: session.startTime,
+                    endTime: session.endTime,
+                    location: session.location,
+                    level: session.level,
+                    maxPlayers: session.maxPlayers,
+                    imageUrl: session.imageUrl,
+                });
             } else {
-                setFormData({ ...emptySession });
+                setFormData({ ...emptySession, date: new Date().toISOString() });
             }
         }
     }, [session, isOpen]);
