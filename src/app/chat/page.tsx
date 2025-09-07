@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Send, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const ChatPage: NextPage = () => {
   const { sessions, addMessage } = useSessions();
@@ -112,6 +112,7 @@ const SessionList = ({ sessions, selectedSessionId, onSelectSession, isSheetOpen
     return (
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetContent side="left" className="p-0 w-80">
+                <SheetTitle className="sr-only">Session Chats</SheetTitle>
                 {sessionListContent}
             </SheetContent>
         </Sheet>
