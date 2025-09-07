@@ -71,7 +71,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-headline">{session ? 'Edit Session' : 'Create Session'}</DialogTitle>
           <DialogDescription>
@@ -79,7 +79,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                     <Label htmlFor="date">Date</Label>
                     <Input id="date" type="date" value={formData.date} onChange={handleChange} required />
@@ -88,11 +88,11 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     <Label htmlFor="time">Time</Label>
                     <Input id="time" value={formData.time} onChange={handleChange} placeholder="e.g., 18:00 - 20:00" required/>
                 </div>
-                <div className="space-y-2">
+                <div className="col-span-2 space-y-2">
                     <Label htmlFor="location">Location</Label>
                     <Input id="location" value={formData.location} onChange={handleChange} placeholder="e.g., Beach Court 1" required/>
                 </div>
-                 <div className="space-y-2">
+                 <div className="col-span-2 space-y-2">
                     <Label htmlFor="imageUrl">Cover Image URL</Label>
                     <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png"/>
                 </div>
