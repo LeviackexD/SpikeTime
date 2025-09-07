@@ -47,6 +47,7 @@ const emptySession: Omit<Session, 'id' | 'players' | 'waitlist'> = {
 
 export default function SessionFormModal({ isOpen, onClose, onSave, session }: SessionFormModalProps) {
     const [formData, setFormData] = React.useState<Omit<Session, 'id' | 'players' | 'waitlist'>>({ ...emptySession });
+    const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
 
     React.useEffect(() => {
         if (isOpen) {
@@ -70,6 +71,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     const handleDateChange = (date: Date | undefined) => {
       if (date) {
         setFormData(prev => ({...prev, date: date.toISOString()}));
+        setIsCalendarOpen(false);
       }
     }
 
@@ -94,7 +96,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
             <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="col-span-2 space-y-2">
                     <Label htmlFor="date">Date</Label>
-                    <Popover>
+                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           variant={"outline"}
