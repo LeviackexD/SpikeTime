@@ -17,9 +17,6 @@ export const mockUsers: User[] = [
   { id: 'u13', name: 'User 13', username: 'user13', email: 'user13@example.com', avatarUrl: 'https://picsum.photos/seed/u13/100/100', role: 'user', skillLevel: 'Beginner', favoritePosition: 'Hitter', stats: { sessionsPlayed: 18 } },
 ];
 
-export const currentUser: User = mockUsers[0];
-
-
 function getFutureDate(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() + days);
@@ -41,7 +38,7 @@ const mockSessionMessages: Message[] = [
     },
     {
       id: 'm3',
-      sender: currentUser,
+      sender: mockUsers[0],
       content: "Awesome, thanks David! I'll bring a big water cooler for everyone.",
       timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
     },
@@ -49,7 +46,7 @@ const mockSessionMessages: Message[] = [
 
 export const mockSessions: Session[] = [
   { id: 's1', date: getFutureDate(2), startTime: '18:00', endTime: '20:00', location: 'Main Beach Court', level: 'Intermediate', players: mockUsers.slice(0, 5).filter(u => u.id !== 'u3'), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s1/400/300`, messages: mockSessionMessages },
-  { id: 's2', date: getFutureDate(2), startTime: '20:00', endTime: '22:00', location: 'Side Court 2', level: 'Advanced', players: [currentUser, ...mockUsers.slice(1, 3).filter(u => u.id !== 'u3')], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s2/400/300`, messages: [] },
+  { id: 's2', date: getFutureDate(2), startTime: '20:00', endTime: '22:00', location: 'Side Court 2', level: 'Advanced', players: [mockUsers[0], ...mockUsers.slice(1, 3).filter(u => u.id !== 'u3')], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s2/400/300`, messages: [] },
   { id: 's3', date: getFutureDate(4), startTime: '19:00', endTime: '21:00', location: 'Community Center', level: 'Beginner', players: mockUsers.slice(3, 4), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s3/400/300`, messages: [] },
   { id: 's4', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Sunset Park', level: 'Intermediate', players: mockUsers.slice(0,12).filter(u => u.id !== 'u3'), maxPlayers: 12, waitlist: [mockUsers[12]], imageUrl: `https://picsum.photos/seed/s4/400/300`, messages: [] },
   { id: 's5', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Main Beach Court', level: 'Advanced', players: mockUsers.slice(0, 12), maxPlayers: 12, waitlist: mockUsers.slice(4, 5), imageUrl: `https://picsum.photos/seed/s5/400/300`, messages: [] },
@@ -66,7 +63,7 @@ export const mockAnnouncements: Announcement[] = [
 export const mockDirectChats: DirectChat[] = [
     {
         id: 'dc1',
-        participants: [currentUser, mockUsers[2]],
+        participants: [mockUsers[0], mockUsers[2]],
         messages: [
             {
                 id: 'dcm1',
@@ -76,7 +73,7 @@ export const mockDirectChats: DirectChat[] = [
             },
             {
                 id: 'dcm2',
-                sender: currentUser,
+                sender: mockUsers[0],
                 content: "Hey Sam! For sure, wouldn't miss it. You bringing your new ball?",
                 timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(),
             },
@@ -84,7 +81,7 @@ export const mockDirectChats: DirectChat[] = [
     },
      {
         id: 'dc2',
-        participants: [currentUser, mockUsers[3]],
+        participants: [mockUsers[0], mockUsers[3]],
         messages: [
             {
                 id: 'dcm3',

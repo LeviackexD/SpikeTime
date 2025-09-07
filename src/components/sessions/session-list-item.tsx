@@ -19,7 +19,7 @@ import { Progress } from '../ui/progress';
 
 interface SessionListItemProps {
   session: Session;
-  currentUser: User;
+  currentUser: User | null;
   onBook: (sessionId: string) => void;
   onCancel: (sessionId: string) => void;
   onWaitlist: (sessionId: string) => void;
@@ -36,6 +36,11 @@ export default function SessionListItem({
   onViewPlayers,
   priority = false,
 }: SessionListItemProps) {
+  if (!currentUser) {
+    // Or a loading skeleton
+    return null;
+  }
+  
   const isFull = session.players.length >= session.maxPlayers;
   const isRegistered = session.players.some((p) => p.id === currentUser.id);
   const isOnWaitlist = session.waitlist.some((p) => p.id === currentUser.id);
