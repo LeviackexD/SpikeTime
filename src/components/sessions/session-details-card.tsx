@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import type { Session, User } from '@/lib/types';
 
-interface SessionCardProps {
+interface SessionDetailsCardProps {
   session: Session;
   currentUser: User;
   onBook: (sessionId: string) => void;
@@ -26,14 +26,14 @@ interface SessionCardProps {
   priority?: boolean;
 }
 
-export default function SessionCard({
+export default function SessionDetailsCard({
   session,
   currentUser,
   onBook,
   onCancel,
   onWaitlist,
   priority = false,
-}: SessionCardProps) {
+}: SessionDetailsCardProps) {
   const isFull = session.players.length >= session.maxPlayers;
   const isRegistered = session.players.some((p) => p.id === currentUser.id);
   const isOnWaitlist = session.waitlist.some((p) => p.id === currentUser.id);
@@ -57,7 +57,7 @@ export default function SessionCard({
             <div className="flex justify-between items-start">
                 <div>
                     <Badge variant={isFull ? 'destructive' : 'secondary'}>
-                        {isFull ? 'Full' : `${session.maxPlayers - session.players.length} spots left`}
+                        {isFull ? 'Full' : `${session.maxPlayers - session.players.length} players left`}
                     </Badge>
                     <h3 className="font-headline text-xl font-bold mt-2">
                         {session.level} Level
@@ -130,4 +130,3 @@ export default function SessionCard({
     </Card>
   );
 }
-

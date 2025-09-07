@@ -14,7 +14,7 @@ import SessionCalendar from '@/components/dashboard/session-calendar';
 import { mockSessions, currentUser } from '@/lib/mock-data';
 import { Calendar as CalendarIcon, Info } from 'lucide-react';
 import type { Session } from '@/lib/types';
-import SessionCard from '@/components/sessions/session-card';
+import SessionDetailsCard from '@/components/sessions/session-details-card';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -152,7 +152,7 @@ const CalendarPage: NextPage = () => {
                   {filteredSessions.length > 0 ? (
                       <div className="space-y-6">
                       {filteredSessions.map(session => (
-                          <SessionCard
+                          <SessionDetailsCard
                               key={session.id}
                               session={session}
                               currentUser={currentUser}
