@@ -31,9 +31,9 @@ export interface Session {
   endTime: string;
   location: string;
   level: SkillLevel;
-  players: User[];
+  players: string[];
   maxPlayers: number;
-  waitlist: User[];
+  waitlist: string[];
   imageUrl?: string;
   messages: Message[];
   createdBy?: string; // Admin User ID

@@ -43,7 +43,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   React.useEffect(() => {
     if (isPermissionGranted && currentUser) {
       const upcomingSessions = sessions.filter(session =>
-        session.players.some(p => p.id === currentUser.id) && new Date(`${session.date}T${session.startTime}`) > new Date()
+        session.players.some(pId => pId === currentUser.id) && new Date(`${session.date}T${session.startTime}`) > new Date()
       );
 
       upcomingSessions.forEach(session => {
@@ -112,14 +112,26 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = (sessionId: string) => {
     if (!currentUser) return;
+
     const session = sessions.find(s => s.id === sessionId);
     if (!session) return;
     
+    // Prevent booking if already in the session
+    if (session.players.includes(currentUser.id)) {
+        showToast({
+            title: 'Already Registered',
+            description: 'You are already registered for this session.',
+            variant: 'destructive',
+        });
+        return;
+    }
+
     setSessions(prev => prev.map(s => 
         s.id === sessionId 
-        ? { ...s, players: [...s.players, currentUser] } 
+        ? { ...s, players: [...s.players, currentUser.id] } 
         : s
     ));
+
     showToast({
         title: 'Booking Confirmed!',
         description: `You're all set for the ${session.level} session.`,
@@ -132,7 +144,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     
     setSessions(prev => prev.map(s => 
         s.id === sessionId 
-        ? { ...s, players: s.players.filter(p => p.id !== currentUser.id) } 
+        ? { ...s, players: s.players.filter(pId => pId !== currentUser.id) } 
         : s
     ));
     showToast({
@@ -145,9 +157,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const joinWaitlist = (sessionId: string) => {
     if (!currentUser) return;
     
+    // Prevent joining waitlist if already on it
+    const session = sessions.find(s => s.id === sessionId);
+    if (session && session.waitlist.includes(currentUser.id)) {
+        showToast({
+            title: 'Already on Waitlist',
+            description: 'You are already on the waitlist for this session.',
+            variant: 'destructive'
+        });
+        return;
+    }
+
     setSessions(prev => prev.map(s => 
         s.id === sessionId 
-        ? { ...s, waitlist: [...s.waitlist, currentUser] } 
+        ? { ...s, waitlist: [...s.waitlist, currentUser.id] } 
         : s
     ));
     showToast({

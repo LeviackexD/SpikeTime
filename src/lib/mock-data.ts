@@ -48,13 +48,13 @@ const mockSessionMessages: Message[] = [
 ];
 
 export const mockSessions: Session[] = [
-  { id: 's1', date: getFutureDate(2), startTime: '18:00', endTime: '20:00', location: 'Main Beach Court', level: 'Intermediate', players: mockUsers.slice(0, 5), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s1/400/300`, messages: mockSessionMessages },
-  { id: 's2', date: getFutureDate(2), startTime: '20:00', endTime: '22:00', location: 'Side Court 2', level: 'Advanced', players: mockUsers.slice(1, 3), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s2/400/300`, messages: [] },
-  { id: 's3', date: getFutureDate(4), startTime: '19:00', endTime: '21:00', location: 'Community Center', level: 'Beginner', players: mockUsers.slice(3, 4), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s3/400/300`, messages: [] },
-  { id: 's4', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Sunset Park', level: 'Intermediate', players: mockUsers.slice(0,12), maxPlayers: 12, waitlist: [mockUsers[12]], imageUrl: `https://picsum.photos/seed/s4/400/300`, messages: [] },
-  { id: 's5', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Main Beach Court', level: 'Advanced', players: mockUsers.slice(0, 12), maxPlayers: 12, waitlist: mockUsers.slice(4, 5), imageUrl: `https://picsum.photos/seed/s5/400/300`, messages: [] },
+  { id: 's1', date: getFutureDate(2), startTime: '18:00', endTime: '20:00', location: 'Main Beach Court', level: 'Intermediate', players: mockUsers.slice(0, 5).map(u => u.id), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s1/400/300`, messages: mockSessionMessages },
+  { id: 's2', date: getFutureDate(2), startTime: '20:00', endTime: '22:00', location: 'Side Court 2', level: 'Advanced', players: mockUsers.slice(1, 3).map(u => u.id), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s2/400/300`, messages: [] },
+  { id: 's3', date: getFutureDate(4), startTime: '19:00', endTime: '21:00', location: 'Community Center', level: 'Beginner', players: mockUsers.slice(3, 4).map(u => u.id), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s3/400/300`, messages: [] },
+  { id: 's4', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Sunset Park', level: 'Intermediate', players: mockUsers.slice(0,12).map(u => u.id), maxPlayers: 12, waitlist: [mockUsers[12].id], imageUrl: `https://picsum.photos/seed/s4/400/300`, messages: [] },
+  { id: 's5', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Main Beach Court', level: 'Advanced', players: mockUsers.slice(0, 12).map(u => u.id), maxPlayers: 12, waitlist: mockUsers.slice(4, 5).map(u => u.id), imageUrl: `https://picsum.photos/seed/s5/400/300`, messages: [] },
   { id: 's6', date: getFutureDate(10), startTime: '10:00', endTime: '12:00', location: 'City Sports Complex', level: 'All-Rounder', players: [], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s6/400/300`, messages: [] },
-  { id: 's7', date: new Date().toISOString().split('T')[0], startTime: '18:00', endTime: '20:00', location: 'East Side Beach', level: 'Intermediate', players: mockUsers.slice(3, 11), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s7/400/300`, messages: [] },
+  { id: 's7', date: new Date().toISOString().split('T')[0], startTime: '18:00', endTime: '20:00', location: 'East Side Beach', level: 'Intermediate', players: mockUsers.slice(3, 11).map(u => u.id), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s7/400/300`, messages: [] },
 ];
 
 export const mockAnnouncements: Announcement[] = [
