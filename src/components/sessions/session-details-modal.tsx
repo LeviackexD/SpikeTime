@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -12,10 +13,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import type { Session } from '@/lib/types';
-import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus } from 'lucide-react';
+import type { Session, User } from '@/lib/types';
+import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus, Star } from 'lucide-react';
 import { currentUser } from '@/lib/mock-data';
 import SuggestLevelButton from '../ai/suggest-level-button';
+import { Badge } from '../ui/badge';
 
 interface SessionDetailsModalProps {
   session: Session | null;
@@ -61,7 +63,6 @@ export default function SessionDetailsModal({
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      // Handle invalid date string
       return 'Invalid Date';
     }
     return date.toLocaleDateString('en-US', {
@@ -110,24 +111,24 @@ export default function SessionDetailsModal({
               <Users className="h-5 w-5 text-muted-foreground" />
               Registered Players ({spotsFilled})
             </h3>
-            <div className="grid grid-cols-5 gap-4">
-              {currentSession.players.map((player) => (
-                <div key={player.id} className="flex flex-col items-center gap-1.5 text-center">
-                  <Avatar className="h-12 w-12 border-2 border-primary/50">
-                    <AvatarImage src={player.avatarUrl} alt={player.name} />
-                    <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs font-medium text-muted-foreground w-16 truncate">{player.name}</span>
-                </div>
-              ))}
-              {spotsLeft > 0 && Array.from({ length: spotsLeft }).map((_, i) => (
-                 <div key={`empty-${i}`} className="flex flex-col items-center gap-1.5 text-center">
-                   <Avatar className="h-12 w-12 border-2 border-dashed bg-muted">
-                     <AvatarFallback />
-                   </Avatar>
-                   <span className="text-xs font-medium text-muted-foreground w-16 truncate invisible">Empty</span>
-                 </div>
-              ))}
+            <div className="rounded-lg border max-h-56 overflow-y-auto">
+              <div className="divide-y">
+                {currentSession.players.map((player) => (
+                  <div key={player.id} className="flex items-center gap-4 p-3">
+                    <Avatar className="h-10 w-10 border-2 border-primary/50">
+                      <AvatarImage src={player.avatarUrl} alt={player.name} />
+                      <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow">
+                      <p className="font-semibold">{player.name}</p>
+                      <p className="text-sm text-muted-foreground">{player.skillLevel}</p>
+                    </div>
+                  </div>
+                ))}
+                 {currentSession.players.length === 0 && (
+                    <p className="text-muted-foreground text-center text-sm p-8">No players have registered yet.</p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -137,16 +138,21 @@ export default function SessionDetailsModal({
                     <Users className="h-5 w-5 text-muted-foreground" />
                     Waitlist ({currentSession.waitlist.length})
                 </h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="rounded-lg border max-h-40 overflow-y-auto">
+                  <div className="divide-y">
                     {currentSession.waitlist.map((player) => (
-                        <div key={player.id} className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm">
-                          <Avatar className="h-6 w-6">
+                        <div key={player.id} className="flex items-center gap-4 p-3">
+                          <Avatar className="h-10 w-10">
                              <AvatarImage src={player.avatarUrl} alt={player.name} />
                              <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
                           </Avatar>
-                          <span>{player.name}</span>
+                          <div>
+                            <p className="font-semibold">{player.name}</p>
+                            <p className="text-sm text-muted-foreground">{player.skillLevel}</p>
+                          </div>
                         </div>
                     ))}
+                  </div>
                 </div>
              </div>
            )}
