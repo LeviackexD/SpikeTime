@@ -48,9 +48,9 @@ const navItems = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/settings';
 
-  if (isAuthPage) {
+  if (isAuthPage && pathname !== '/settings') {
     return <main className="min-h-screen bg-background">{children}</main>;
   }
 
@@ -179,9 +179,11 @@ function UserNav() {
             </Link>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
+        <DropdownMenuItem asChild>
+          <Link href="/settings">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
