@@ -13,6 +13,7 @@ import {
   Megaphone,
   Menu,
   Home,
+  MessageCircle,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,7 @@ const navItems = [
   { href: '/', icon: VolleyballIcon, label: 'Sessions' },
   { href: '/calendar', icon: Calendar, label: 'Calendar' },
   { href: '/announcements', icon: Megaphone, label: 'Announcements' },
+  { href: '/chat', icon: MessageCircle, label: 'Chat' },
   { href: '/profile', icon: User, label: 'Profile' },
   { href: '/admin', icon: Shield, label: 'Admin Panel', adminOnly: true },
 ];

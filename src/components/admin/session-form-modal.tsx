@@ -29,7 +29,7 @@ interface SessionFormModalProps {
   session: Session | null;
 }
 
-const emptySession: Omit<Session, 'id' | 'players' | 'waitlist'> = {
+const emptySession: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'> = {
   date: new Date().toISOString(),
   startTime: '',
   endTime: '',
@@ -40,7 +40,7 @@ const emptySession: Omit<Session, 'id' | 'players' | 'waitlist'> = {
 };
 
 export default function SessionFormModal({ isOpen, onClose, onSave, session }: SessionFormModalProps) {
-    const [formData, setFormData] = React.useState<Omit<Session, 'id' | 'players' | 'waitlist'>>({ ...emptySession });
+    const [formData, setFormData] = React.useState<Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>>({ ...emptySession });
     
     React.useEffect(() => {
         if (isOpen) {
@@ -82,7 +82,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave({
-            ...(session || { id: '', players: [], waitlist: [] }),
+            ...(session || { id: '', players: [], waitlist: [], messages: [] }),
             ...formData,
         });
     }

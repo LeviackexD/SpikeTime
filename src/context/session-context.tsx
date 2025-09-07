@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import type { Session } from '@/lib/types';
+import type { Session, Message } from '@/lib/types';
 import { mockSessions, currentUser } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,6 +20,7 @@ interface SessionContextType {
   bookSession: (sessionId: string) => void;
   cancelBooking: (sessionId: string) => void;
   joinWaitlist: (sessionId: string) => void;
+  addMessage: (sessionId: string, message: Message) => void;
 }
 
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
@@ -36,12 +37,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     });
   };
 
-  const createSession = (sessionData: Omit<Session, 'id' | 'players' | 'waitlist'>) => {
+  const createSession = (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
     const newSession: Session = {
       ...sessionData,
       id: `s${Date.now()}`,
       players: [],
       waitlist: [],
+      messages: [],
     };
     setSessions(prevSessions => [...prevSessions, newSession]);
   };
@@ -133,9 +135,19 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
+  const addMessage = (sessionId: string, message: Message) => {
+    setSessions(prevSessions =>
+      prevSessions.map(session =>
+        session.id === sessionId
+          ? { ...session, messages: [...session.messages, message] }
+          : session
+      )
+    );
+  };
+
   return (
     <SessionContext.Provider
-      value={{ sessions, createSession, updateSession, deleteSession, bookSession, cancelBooking, joinWaitlist }}
+      value={{ sessions, createSession, updateSession, deleteSession, bookSession, cancelBooking, joinWaitlist, addMessage }}
     >
       {children}
     </SessionContext.Provider>

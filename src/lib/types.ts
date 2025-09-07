@@ -17,6 +17,13 @@ export interface User {
   };
 }
 
+export interface Message {
+  id: string;
+  sender: User;
+  content: string;
+  timestamp: string;
+}
+
 export interface Session {
   id: string;
   date: string;
@@ -28,6 +35,7 @@ export interface Session {
   maxPlayers: number;
   waitlist: User[];
   imageUrl?: string;
+  messages: Message[];
 }
 
 export interface Announcement {
