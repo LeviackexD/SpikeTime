@@ -23,7 +23,7 @@ import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import type { Session } from '@/lib/types';
 import SessionFormModal from '@/components/admin/session-form-modal';
 import DeleteSessionDialog from '@/components/admin/delete-session-dialog';
-
+import SessionDetailsModal from '@/components/sessions/session-details-modal';
 
 export default function AdminPage() {
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
@@ -31,6 +31,8 @@ export default function AdminPage() {
   const [selectedSession, setSelectedSession] = React.useState<Session | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = React.useState(false);
+  const [sessionToView, setSessionToView] = React.useState<Session | null>(null);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', { timeZone: 'UTC' });
@@ -50,6 +52,11 @@ export default function AdminPage() {
     setSessionToDelete(session);
     setIsDeleteDialogOpen(true);
   }
+
+  const handleViewPlayers = (session: Session) => {
+    setSessionToView(session);
+    setIsViewModalOpen(true);
+  };
 
   const confirmDelete = () => {
     if (sessionToDelete) {
@@ -105,6 +112,7 @@ export default function AdminPage() {
                   <TableCell>{session.level}</TableCell>
                   <TableCell>
                     {session.players.length} / {session.maxPlayers}
+                    {session.waitlist.length > 0 && ` (+${session.waitlist.length} waitlist)`}
                   </TableCell>
                   <TableCell>
                     <Badge variant={session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'}>
@@ -120,7 +128,7 @@ export default function AdminPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleEditSession(session)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View Players</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewPlayers(session)}>View Players</DropdownMenuItem>
                         <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteClick(session)}>
                           Delete
                         </DropdownMenuItem>
@@ -183,6 +191,12 @@ export default function AdminPage() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}
+      />
+
+      <SessionDetailsModal
+        session={sessionToView}
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
       />
 
     </Tabs>

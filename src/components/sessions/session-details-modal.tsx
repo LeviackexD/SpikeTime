@@ -133,7 +133,13 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
                 </h3>
                 <div className="flex flex-wrap gap-2">
                     {currentSession.waitlist.map((player) => (
-                        <span key={player.id} className="text-sm text-muted-foreground">{player.name}</span>
+                        <div key={player.id} className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm">
+                          <Avatar className="h-6 w-6">
+                             <AvatarImage src={player.avatarUrl} alt={player.name} />
+                             <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span>{player.name}</span>
+                        </div>
                     ))}
                 </div>
              </div>
