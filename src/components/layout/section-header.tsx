@@ -12,7 +12,7 @@ export default function SectionHeader({ icon: Icon, title, children }: SectionHe
         <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <Icon className="h-6 w-6 text-primary" />
+                    <Icon className="h-6 w-6 text-orange-500" />
                     <h2 className="text-xl font-bold font-headline">{title}</h2>
                 </div>
                 {children}
