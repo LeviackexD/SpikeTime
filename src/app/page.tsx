@@ -30,18 +30,18 @@ const DashboardPage: NextPage = () => {
     if (!sessionToBook || sessionToBook.players.some(p => p.id === currentUser.id)) return;
 
     if (sessionToBook.players.length < sessionToBook.maxPlayers) {
-        setSessions(prevSessions =>
-            prevSessions.map(session =>
-                session.id === sessionId
-                    ? { ...session, players: [...session.players, currentUser] }
-                    : session
-            )
-        );
-        toast({
-            title: 'Booking Confirmed!',
-            description: `You're all set for the ${sessionToBook.level} session.`,
-            variant: 'success',
-        });
+      setSessions(prevSessions =>
+        prevSessions.map(session =>
+          session.id === sessionId
+            ? { ...session, players: [...session.players, currentUser] }
+            : session
+        )
+      );
+      toast({
+        title: 'Booking Confirmed!',
+        description: `You're all set for the ${sessionToBook.level} session.`,
+        variant: 'success',
+      });
     }
   };
 
@@ -50,18 +50,18 @@ const DashboardPage: NextPage = () => {
     if (!sessionToJoin || sessionToJoin.waitlist.some(p => p.id === currentUser.id)) return;
 
     if (sessionToJoin.players.length >= sessionToJoin.maxPlayers) {
-        setSessions(prevSessions =>
-            prevSessions.map(session =>
-                session.id === sessionId
-                    ? { ...session, waitlist: [...session.waitlist, currentUser] }
-                    : session
-            )
-        );
-        toast({
-            title: 'You are on the waitlist!',
-            description: "We'll notify you if a spot opens up.",
-            variant: 'success'
-        });
+      setSessions(prevSessions =>
+        prevSessions.map(session =>
+          session.id === sessionId
+            ? { ...session, waitlist: [...session.waitlist, currentUser] }
+            : session
+        )
+      );
+      toast({
+        title: 'You are on the waitlist!',
+        description: "We'll notify you if a spot opens up.",
+        variant: 'success'
+      });
     }
   };
 
@@ -77,9 +77,9 @@ const DashboardPage: NextPage = () => {
       )
     );
     toast({
-        title: 'Booking Canceled',
-        description: 'Your spot has been successfully canceled.',
-        variant: 'destructive',
+      title: 'Booking Canceled',
+      description: 'Your spot has been successfully canceled.',
+      variant: 'destructive',
     });
   };
 
@@ -103,7 +103,7 @@ const DashboardPage: NextPage = () => {
         <CardContent>
           {sessions.length > 0 ? (
              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {sessions.map((session) => {
+              {sessions.map((session, index) => {
                  const isFull = session.players.length >= session.maxPlayers;
                  const isRegistered = session.players.some(p => p.id === currentUser.id);
                  const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
@@ -112,11 +112,13 @@ const DashboardPage: NextPage = () => {
                     <Card key={session.id} className="flex flex-col overflow-hidden transition-all hover:scale-105">
                         <div className="relative h-48 w-full">
                             <Image 
-                            src={`https://picsum.photos/seed/${session.id}/600/400`} 
-                            alt="Volleyball session" 
-                            fill
-                            style={{ objectFit: 'cover' }}
-                            data-ai-hint="volleyball action"
+                              src={`https://picsum.photos/seed/${session.id}/600/400`} 
+                              alt="Volleyball session" 
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              priority={index === 0}
+                              style={{ objectFit: 'cover' }}
+                              data-ai-hint="volleyball action"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                             <div className="absolute top-2 right-2">
