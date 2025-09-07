@@ -42,9 +42,10 @@ import { SpikeTimeLogo } from '@/components/icons/spiketime-logo';
 import { currentUser } from '@/lib/mock-data';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { VolleyballIcon } from '../icons/volleyball-icon';
 
 const navItems = [
-  { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/', icon: VolleyballIcon, label: 'Sessions' },
   { href: '/calendar', icon: Calendar, label: 'Calendar' },
   { href: '/announcements', icon: Megaphone, label: 'Announcements' },
   { href: '/profile', icon: User, label: 'Profile' },
