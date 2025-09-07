@@ -65,7 +65,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   React.useEffect(() => {
     if (isPermissionGranted && currentUser) {
       const upcomingSessions = sessions.filter(session =>
-        session.players.some(p => p.id === currentUser.id) && new Date(`${session.date.split('T')[0]}T${session.startTime}`) > new Date()
+        session.players.includes(currentUser.id) && new Date(`${session.date.split('T')[0]}T${session.startTime}`) > new Date()
       );
 
       upcomingSessions.forEach(session => {
@@ -102,6 +102,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const createSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
+     if (!currentUser || currentUser.role !== 'admin') {
+      showToast({ title: 'Unauthorized', description: 'Only admins can create sessions.', variant: 'destructive' });
+      return;
+    }
     try {
       const newSessionDoc = {
         ...sessionData,
@@ -109,6 +113,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         players: [],
         waitlist: [],
         messages: [],
+        createdBy: currentUser.id,
       };
       await addDoc(collection(db, "sessions"), newSessionDoc);
       showToast({
@@ -161,7 +166,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     
     try {
       await updateDoc(sessionRef, {
-        players: arrayUnion(currentUser)
+        players: arrayUnion(currentUser.id)
       });
       showToast({
         title: 'Booking Confirmed!',
@@ -182,24 +187,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (!currentUser) return;
     
     const sessionRef = doc(db, 'sessions', sessionId);
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
-    
-    // Find the exact player object in the array to remove.
-    const playerToRemove = session.players.find(p => p.id === currentUser.id);
-
-    if (!playerToRemove) {
-      showToast({
-        title: 'Cancellation Failed',
-        description: 'You were not found in this session.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     try {
       await updateDoc(sessionRef, {
-        players: arrayRemove(playerToRemove)
+        players: arrayRemove(currentUser.id)
       });
       showToast({
             title: 'Booking Canceled',
@@ -223,7 +213,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     try {
        await updateDoc(sessionRef, {
-        waitlist: arrayUnion(currentUser)
+        waitlist: arrayUnion(currentUser.id)
       });
       showToast({
           title: 'You are on the waitlist!',
@@ -241,13 +231,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const addMessage = (sessionId: string, message: Message) => {
-    setSessions(prevSessions =>
-      prevSessions.map(session =>
-        session.id === sessionId
-          ? { ...session, messages: [...session.messages, message] }
-          : session
-      )
-    );
+    // This needs to be implemented with Firestore in the future
+    console.log('Adding message to session:', sessionId, message);
   };
 
   const createDirectChat = (user: User) => {

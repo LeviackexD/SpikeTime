@@ -35,7 +35,7 @@ const ChatPage: NextPage = () => {
   const mySessions = React.useMemo(() => {
     if (!currentUser) return [];
     return sessions.filter(session => 
-      session.players.some(p => p.id === currentUser.id)
+      session.players.includes(currentUser.id)
     ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [sessions]
   );
@@ -190,7 +190,7 @@ const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheet
             <ScrollArea className="h-full">
                 <div className="p-2 pt-0 space-y-1">
                  {directChats.map(chat => {
-                    const otherUser = chat.participants.find(p => p.id !== currentUser.id);
+                    const otherUser = chat.participants.find(p => p.id !== currentUser?.id);
                     if (!otherUser) return null;
                     return (
                         <button
@@ -282,8 +282,10 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
   
   const currentChat = activeTab === 'sessions' ? session : directChat;
   const messages = currentChat?.messages ?? [];
-  const participants = activeTab === 'sessions' ? session?.players : directChat?.participants;
-  const avatarUrl = activeTab === 'sessions' ? session?.imageUrl : directChat?.participants.find(p => p.id !== currentUser.id)?.avatarUrl
+  const participants = activeTab === 'sessions' 
+    ? (currentChat as Session)?.players.map(pId => mockUsers.find(u => u.id === pId)).filter(Boolean) as User[]
+    : (currentChat as DirectChat)?.participants;
+  const avatarUrl = activeTab === 'sessions' ? session?.imageUrl : directChat?.participants.find(p => p.id !== currentUser?.id)?.avatarUrl;
   const avatarFallback = title.charAt(0);
 
 
@@ -318,7 +320,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
       <div className="flex-1 p-4 overflow-y-auto bg-muted/20">
         <div className="space-y-4">
           {messages.map((message, index) => {
-             const isCurrentUser = message.sender.id === currentUser.id;
+             const isCurrentUser = message.sender.id === currentUser?.id;
              const showAvatar = index === 0 || messages[index-1].sender.id !== message.sender.id;
 
              return (

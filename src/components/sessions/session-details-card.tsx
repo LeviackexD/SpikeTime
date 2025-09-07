@@ -37,8 +37,8 @@ export default function SessionDetailsCard({
     return null; // Or a loading skeleton
   }
   const isFull = session.players.length >= session.maxPlayers;
-  const isRegistered = session.players.some((p) => p.id === currentUser.id);
-  const isOnWaitlist = session.waitlist.some((p) => p.id === currentUser.id);
+  const isRegistered = session.players.includes(currentUser.id);
+  const isOnWaitlist = session.waitlist.includes(currentUser.id);
 
   return (
     <Card className="flex flex-col md:flex-row overflow-hidden transition-all hover:shadow-xl w-full">

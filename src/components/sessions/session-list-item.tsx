@@ -42,8 +42,8 @@ export default function SessionListItem({
   }
   
   const isFull = session.players.length >= session.maxPlayers;
-  const isRegistered = session.players.some((p) => p.id === currentUser.id);
-  const isOnWaitlist = session.waitlist.some((p) => p.id === currentUser.id);
+  const isRegistered = session.players.includes(currentUser.id);
+  const isOnWaitlist = session.waitlist.includes(currentUser.id);
   const progressValue = (session.players.length / session.maxPlayers) * 100;
 
 

@@ -31,11 +31,12 @@ export interface Session {
   endTime: string;
   location: string;
   level: SkillLevel;
-  players: User[];
+  players: string[]; // Array of user IDs
   maxPlayers: number;
-  waitlist: User[];
+  waitlist: string[]; // Array of user IDs
   imageUrl?: string;
   messages: Message[];
+  createdBy?: string; // Admin User ID
 }
 
 export interface Announcement {
@@ -50,5 +51,3 @@ export interface DirectChat {
     participants: User[];
     messages: Message[];
 }
-
-    

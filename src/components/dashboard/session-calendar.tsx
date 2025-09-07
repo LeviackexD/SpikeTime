@@ -11,7 +11,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from '@/lib/utils';
 
 interface SessionCalendarProps {
   sessions: Session[];
@@ -49,9 +48,9 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
     const dateString = day.toISOString().split('T')[0];
     const daySessions = filteredSessionsByDate[dateString] || [];
     
-    const bookedSessions = currentUser ? daySessions.filter(s => s.players.some(p => p.id === currentUser.id)) : [];
+    const bookedSessions = currentUser ? daySessions.filter(s => s.players.includes(currentUser.id)) : [];
     const availableSessions = currentUser ? daySessions.filter(s => 
-      !s.players.some(p => p.id === currentUser.id) && s.players.length < s.maxPlayers
+      !s.players.includes(currentUser.id) && s.players.length < s.maxPlayers
     ) : daySessions.filter(s => s.players.length < s.maxPlayers);
 
     const content = (

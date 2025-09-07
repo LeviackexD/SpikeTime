@@ -14,18 +14,22 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
-import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { currentUser } from '@/lib/mock-data';
+import { Users, Calendar, Clock, X, CheckCircle, UserPlus } from 'lucide-react';
+import { currentUser, mockUsers } from '@/lib/mock-data';
 
 
 interface PlayerListProps {
   title: string;
-  players: User[];
+  playerIds: string[];
   emptyMessage: string;
 }
 
-const PlayerList: React.FC<PlayerListProps> = ({ title, players, emptyMessage }) => {
+const PlayerList: React.FC<PlayerListProps> = ({ title, playerIds, emptyMessage }) => {
+  const players = React.useMemo(() => 
+    playerIds.map(id => mockUsers.find(user => user.id === id)).filter(Boolean) as User[],
+    [playerIds]
+  );
+
   if (players.length === 0) {
     return (
       <div>
@@ -89,8 +93,8 @@ export default function SessionDetailsModal({
   const spotsFilled = session.players.length;
   const progressValue = (spotsFilled / session.maxPlayers) * 100;
 
-  const isRegistered = session.players.some(p => p.id === currentUser.id);
-  const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
+  const isRegistered = session.players.includes(currentUser.id);
+  const isOnWaitlist = session.waitlist.includes(currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
   
   const handleAction = (action: (id: string) => void) => {
@@ -148,13 +152,13 @@ export default function SessionDetailsModal({
 
           <PlayerList 
             title="Registered Players"
-            players={session.players}
+            playerIds={session.players}
             emptyMessage="No players have registered yet."
           />
 
           <PlayerList 
             title="Waitlist"
-            players={session.waitlist}
+            playerIds={session.waitlist}
             emptyMessage="The waitlist is empty."
           />
 

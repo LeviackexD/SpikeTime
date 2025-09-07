@@ -50,13 +50,13 @@ const DashboardPage: NextPage = () => {
   const upcomingSessions = sessions.filter(session => {
       const sessionDate = new Date(session.date);
       sessionDate.setHours(0, 0, 0, 0);
-      return sessionDate >= today && session.players.some(p => p.id === currentUser.id);
+      return sessionDate >= today && session.players.includes(currentUser.id);
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const availableSessions = sessions.filter(session => {
     const sessionDate = new Date(session.date);
     sessionDate.setHours(0, 0, 0, 0);
-    return sessionDate >= today && !session.players.some(p => p.id === currentUser.id)
+    return sessionDate >= today && !session.players.includes(currentUser.id)
   }).sort((a, b_1) => new Date(a.date).getTime() - new Date(b_1.date).getTime());
 
 
