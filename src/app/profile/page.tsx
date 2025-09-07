@@ -1,3 +1,6 @@
+'use client';
+
+import * as React from 'react';
 import {
   Avatar,
   AvatarFallback,
@@ -12,8 +15,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { currentUser } from '@/lib/mock-data';
+import { currentUser as initialUser } from '@/lib/mock-data';
 import { BarChart, Edit, Medal, Star, Target } from 'lucide-react';
+import EditProfileModal from '@/components/profile/edit-profile-modal';
+import type { User } from '@/lib/types';
 
 const achievements = [
   { icon: Medal, label: '50+ Sessions', color: 'text-yellow-500' },
@@ -22,7 +27,16 @@ const achievements = [
 ];
 
 export default function ProfilePage() {
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [currentUser, setCurrentUser] = React.useState<User>(initialUser);
+
+  const handleSaveProfile = (updatedUser: User) => {
+    setCurrentUser(updatedUser);
+    setIsModalOpen(false);
+  };
+
   return (
+    <>
     <div className="grid gap-8 md:grid-cols-3">
       <div className="md:col-span-1">
         <Card>
@@ -37,7 +51,7 @@ export default function ProfilePage() {
             <CardDescription>{currentUser.email}</CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button>
+            <Button onClick={() => setIsModalOpen(true)}>
               <Edit className="mr-2 h-4 w-4" /> Edit Profile
             </Button>
           </CardContent>
@@ -94,5 +108,12 @@ export default function ProfilePage() {
         </Card>
       </div>
     </div>
+    <EditProfileModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveProfile}
+        user={currentUser}
+    />
+    </>
   );
 }
