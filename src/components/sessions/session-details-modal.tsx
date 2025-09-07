@@ -17,6 +17,55 @@ import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus } from 'lucide-react';
 import { currentUser } from '@/lib/mock-data';
 import SuggestLevelButton from '../ai/suggest-level-button';
+import { cn } from '@/lib/utils';
+
+
+interface PlayerListProps {
+  title: string;
+  players: User[];
+  emptyMessage: string;
+}
+
+const PlayerList: React.FC<PlayerListProps> = ({ title, players, emptyMessage }) => {
+  if (players.length === 0) {
+    return (
+      <div>
+        <h3 className="mb-3 font-semibold flex items-center gap-2">
+          <Users className="h-5 w-5 text-muted-foreground" />
+          {title} (0)
+        </h3>
+        <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
+            <p className="text-muted-foreground text-center text-sm">{emptyMessage}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+        <h3 className="mb-3 font-semibold flex items-center gap-2">
+            <Users className="h-5 w-5 text-muted-foreground" />
+            {title} ({players.length})
+        </h3>
+        <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {players.map((player) => (
+                <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                <Avatar className="h-10 w-10 border-2 border-primary/50">
+                    <AvatarImage src={player.avatarUrl} alt={player.name} />
+                    <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-grow">
+                    <p className="font-semibold text-sm">{player.name}</p>
+                    <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                </div>
+                </div>
+            ))}
+          </div>
+        </div>
+    </div>
+  );
+};
 
 interface SessionDetailsModalProps {
   session: Session | null;
@@ -104,59 +153,17 @@ export default function SessionDetailsModal({
             <Progress value={progressValue} className="h-2" />
           </div>
 
-          <div>
-            <h3 className="mb-3 font-semibold flex items-center gap-2">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              Registered Players ({spotsFilled})
-            </h3>
-            <div className="rounded-lg border max-h-56 overflow-y-auto">
-              <div className="divide-y">
-                {currentSession.players.length > 0 ? (
-                  currentSession.players.map((player) => (
-                    <div key={player.id} className="flex items-center gap-4 p-3">
-                      <Avatar className="h-10 w-10 border-2 border-primary/50">
-                        <AvatarImage src={player.avatarUrl} alt={player.name} />
-                        <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-grow">
-                        <p className="font-semibold">{player.name}</p>
-                        <p className="text-sm text-muted-foreground">{player.skillLevel}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="flex items-center justify-center p-8">
-                    <p className="text-muted-foreground text-center text-sm">No players have registered yet.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <PlayerList 
+            title="Registered Players"
+            players={currentSession.players}
+            emptyMessage="No players have registered yet."
+          />
 
-           {currentSession.waitlist.length > 0 && (
-             <div>
-                <h3 className="mb-3 font-semibold flex items-center gap-2">
-                    <Users className="h-5 w-5 text-muted-foreground" />
-                    Waitlist ({currentSession.waitlist.length})
-                </h3>
-                <div className="rounded-lg border max-h-40 overflow-y-auto">
-                  <div className="divide-y">
-                    {currentSession.waitlist.map((player) => (
-                        <div key={player.id} className="flex items-center gap-4 p-3">
-                          <Avatar className="h-10 w-10">
-                             <AvatarImage src={player.avatarUrl} alt={player.name} />
-                             <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold">{player.name}</p>
-                            <p className="text-sm text-muted-foreground">{player.skillLevel}</p>
-                          </div>
-                        </div>
-                    ))}
-                  </div>
-                </div>
-             </div>
-           )}
+          <PlayerList 
+            title="Waitlist"
+            players={currentSession.waitlist}
+            emptyMessage="The waitlist is empty."
+          />
 
           {currentUser.role === 'admin' && (
              <div>
