@@ -148,14 +148,14 @@ const DashboardPage: NextPage = () => {
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold font-headline">Welcome back, {currentUser.name.split(' ')[0]}!</h1>
+        <h1 className="text-3xl font-bold font-headline">Welcome back, Manu!</h1>
         <p className="text-muted-foreground">Here's what's happening in your volleyball world.</p>
       </div>
       
       <div className="flex flex-col gap-8">
         <SectionHeader icon={Volleyball} title="My Upcoming Sessions" />
         {upcomingSessions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {upcomingSessions.map((session, index) => (
                <SessionListItem 
                   key={session.id}
@@ -182,7 +182,7 @@ const DashboardPage: NextPage = () => {
       <div className="flex flex-col gap-8">
          <SectionHeader icon={Volleyball} title="Available Sessions" />
         {availableSessions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {availableSessions.map((session) => (
                <SessionListItem 
                   key={session.id}
