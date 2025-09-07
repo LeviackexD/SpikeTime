@@ -1,7 +1,7 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   projectId: 'spiketime-8retn',
@@ -17,17 +17,5 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
-
-// Connect to emulators if in development
-if (process.env.NODE_ENV === 'development') {
-    try {
-        console.log('Connecting to Firebase Emulators...');
-        connectFirestoreEmulator(db, 'localhost', 8080);
-        connectAuthEmulator(auth, 'http://localhost:9099');
-        console.log('Successfully connected to Firebase Emulators.');
-    } catch(e) {
-        console.error('Error connecting to Firebase Emulators: ', e);
-    }
-}
 
 export { app, db, auth };
