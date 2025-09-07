@@ -1,36 +1,26 @@
 import React from 'react';
+import Image from 'next/image';
 
-export function InvernessEaglesLogo(props: React.SVGProps<SVGSVGElement>) {
+export function InvernessEaglesLogo(props: React.SVGProps<SVGSVGElement> & { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 250 40"
-      aria-label="Inverness Eagles Logo"
-      {...props}
-    >
-      <defs>
-        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" style={{ stopColor: 'hsl(25 95% 53%)', stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: 'hsl(35, 95%, 63%)', stopOpacity: 1 }} />
-        </linearGradient>
-      </defs>
-      <circle cx="20" cy="20" r="16" fill="url(#grad1)" />
-      <path d="M12,14 C16,10 24,10 28,14" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth="1.5" strokeOpacity="0.7" />
-      <path d="M12,26 C16,30 24,30 28,26" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth="1.5" strokeOpacity="0.7" />
-      <path d="M14,12 C10,16 10,24 14,28" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth="1.5" strokeOpacity="0.7" transform="rotate(90 20 20)" />
-      <path d="M26,12 C30,16 30,24 26,28" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth="1.5" strokeOpacity="0.7" transform="rotate(90 20 20)" />
-
-      <text
-        x="45"
-        y="27"
-        fontFamily="Poppins, sans-serif"
-        fontSize="20"
-        fontWeight="600"
-        fill="currentColor"
-        className="font-headline"
+    <div className={`flex items-center gap-2 ${props.className}`}>
+        {/* 
+            Este componente ahora usa una imagen. 
+            Para cambiar el logo, reemplaza el archivo en /public/images/logo.png con tu propio logo.
+            Asegúrate de que el tamaño (width y height) sea el adecuado.
+        */}
+      <Image 
+        src="/images/logo.png" 
+        alt="Inverness Eagles Logo" 
+        width={32} 
+        height={32} 
+        data-ai-hint="eagle logo"
+      />
+      <span
+        className="font-headline text-xl font-semibold text-foreground"
       >
         InvernessEagles
-      </text>
-    </svg>
+      </span>
+    </div>
   );
 }
