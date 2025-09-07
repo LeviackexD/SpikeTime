@@ -5,29 +5,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Calendar,
-  LayoutDashboard,
-  PanelLeft,
   Settings,
   User,
   Shield,
   LogOut,
   Bell,
   Megaphone,
+  Menu,
 } from 'lucide-react';
 
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  SidebarTrigger,
-  SidebarInset,
-  useSidebar,
-} from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -43,6 +29,12 @@ import { currentUser } from '@/lib/mock-data';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { VolleyballIcon } from '../icons/volleyball-icon';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+
 
 const navItems = [
   { href: '/', icon: VolleyballIcon, label: 'Sessions' },
@@ -61,71 +53,82 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SidebarProvider defaultOpen>
-      <Sidebar
-        variant="sidebar"
-        collapsible="icon"
-        className="border-sidebar-border bg-sidebar text-sidebar-foreground"
-      >
-        <SidebarHeader>
-          <InvernessEaglesLogo className="h-8 w-auto" />
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => {
-              if (item.adminOnly && currentUser.role !== 'admin') {
-                return null;
-              }
-              return (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.label}
-                  >
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-               <SidebarMenuButton tooltip="Settings">
-                  <Settings />
-                  <span>Settings</span>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset className="bg-app-background">
+    <div className="min-h-screen w-full flex flex-col bg-app-background">
         <AppHeader />
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
-      </SidebarInset>
-    </SidebarProvider>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+    </div>
   );
 }
 
 function AppHeader() {
-  const { isMobile } = useSidebar();
+  const isMobile = useIsMobile();
   const pathname = usePathname();
 
-  const getPageTitle = () => {
-    const item = navItems.find(item => item.href === pathname);
-    return item ? item.label : 'Inverness Eagles';
-  }
-
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
-      <div className="flex items-center gap-2">
-        {isMobile && <SidebarTrigger />}
-        <h1 className="text-xl font-semibold font-headline">{getPageTitle()}</h1>
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
+      <div className="flex items-center gap-4">
+        {isMobile ? (
+           <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="flex flex-col p-0">
+               <div className="p-4 border-b">
+                 <InvernessEaglesLogo className="h-8 w-auto" />
+               </div>
+               <nav className="grid gap-2 p-4 text-lg font-medium">
+                {navItems.map((item) => {
+                    if (item.adminOnly && currentUser.role !== 'admin') {
+                        return null;
+                    }
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn(
+                                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+                                pathname === item.href && 'bg-muted text-primary'
+                            )}
+                        >
+                            <item.icon className="h-5 w-5" />
+                            {item.label}
+                        </Link>
+                    );
+                })}
+               </nav>
+            </SheetContent>
+          </Sheet>
+        ) : (
+            <>
+                <InvernessEaglesLogo className="h-8 w-auto" />
+                <nav className="hidden md:flex md:items-center md:gap-5 lg:gap-6 text-sm font-medium">
+                {navItems.map((item) => {
+                    if (item.adminOnly && currentUser.role !== 'admin') {
+                        return null;
+                    }
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn(
+                                'transition-colors hover:text-foreground',
+                                pathname === item.href ? 'text-foreground' : 'text-muted-foreground'
+                            )}
+                        >
+                            {item.label}
+                        </Link>
+                    );
+                })}
+                </nav>
+            </>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
