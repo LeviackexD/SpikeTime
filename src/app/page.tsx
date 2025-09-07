@@ -6,7 +6,7 @@ import type { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
 import { mockSessions, currentUser, mockAnnouncements } from '@/lib/mock-data';
 import Link from 'next/link';
-import type { Session } from '@/lib/types';
+import type { Session, Announcement } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import SessionListItem from '@/components/sessions/session-list-item';
 import SectionHeader from '@/components/layout/section-header';
@@ -19,6 +19,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AnnouncementDetailsModal from '@/components/announcements/announcement-details-modal';
 
 type ToastInfo = {
   title: string;
@@ -32,6 +33,7 @@ const DashboardPage: NextPage = () => {
   const [isViewModalOpen, setIsViewModalOpen] = React.useState(false);
   const [toastInfo, setToastInfo] = React.useState<ToastInfo | null>(null);
   const { toast } = useToast();
+  const [selectedAnnouncement, setSelectedAnnouncement] = React.useState<Announcement | null>(null);
 
   React.useEffect(() => {
     if (toastInfo) {
@@ -142,6 +144,14 @@ const DashboardPage: NextPage = () => {
     setSessionToView(session);
     setIsViewModalOpen(true);
   };
+  
+  const handleOpenAnnouncementModal = (announcement: Announcement) => {
+    setSelectedAnnouncement(announcement);
+  };
+
+  const handleCloseAnnouncementModal = () => {
+    setSelectedAnnouncement(null);
+  };
 
   const upcomingSessions = sessions.filter(session => 
     new Date(session.date) >= new Date() && session.players.some(p => p.id === currentUser.id)
@@ -231,9 +241,13 @@ const DashboardPage: NextPage = () => {
             <CardContent className="p-6">
                  <ul className="space-y-4">
                     {recentAnnouncements.map((announcement) => (
-                    <li key={announcement.id} className="border-l-4 border-primary pl-4">
+                    <li 
+                      key={announcement.id} 
+                      className="border-l-4 border-primary pl-4 cursor-pointer hover:bg-muted/50 rounded-r-md transition-colors"
+                      onClick={() => handleOpenAnnouncementModal(announcement)}
+                    >
                         <h3 className="font-semibold text-foreground">{announcement.title}</h3>
-                        <p className="text-sm text-muted-foreground">{announcement.content}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
                         <p className="text-xs text-muted-foreground mt-1">{new Date(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>
                     </li>
                     ))}
@@ -249,6 +263,12 @@ const DashboardPage: NextPage = () => {
         onBook={handleBooking}
         onCancel={handleCancelBooking}
         onWaitlist={handleJoinWaitlist}
+      />
+
+      <AnnouncementDetailsModal
+        isOpen={!!selectedAnnouncement}
+        onClose={handleCloseAnnouncementModal}
+        announcement={selectedAnnouncement}
       />
     </div>
   );
