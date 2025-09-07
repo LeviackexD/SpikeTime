@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -7,7 +8,7 @@ import { Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react'
 export default function Footer() {
   return (
     <footer className="bg-primary text-primary-foreground/80 border-t border-primary-foreground/10">
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-4 py-12 sm:px-6 lg:px-8">
         {/* About Section */}
         <div className="md:col-span-1">
           <InvernessEaglesLogo className="h-8 w-auto mb-4" />
@@ -35,17 +36,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Quick Links */}
-        <div>
-          <h3 className="text-lg font-semibold text-primary-foreground mb-4">Quick Links</h3>
-          <ul className="space-y-2 text-sm">
-            <li><Link href="/" className="hover:text-primary-foreground transition-colors">Sessions</Link></li>
-            <li><Link href="/calendar" className="hover:text-primary-foreground transition-colors">Calendar</Link></li>
-            <li><Link href="/announcements" className="hover:text-primary-foreground transition-colors">Announcements</Link></li>
-            <li><Link href="/profile" className="hover:text-primary-foreground transition-colors">Profile</Link></li>
-          </ul>
-        </div>
-        
         {/* Social Media */}
         <div>
            <h3 className="text-lg font-semibold text-primary-foreground mb-4">Follow Us</h3>
