@@ -80,7 +80,7 @@ export default function SessionDetailsCard({
             <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    <span className="font-semibold">{session.time}</span>
+                    <span className="font-semibold">{session.startTime} - {session.endTime}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin className="h-4 w-4" />

@@ -82,7 +82,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
                                 <ul className="space-y-1 list-disc list-inside">
                                 {bookedSessions.map(session => (
                                     <li key={session.id}>
-                                    <span className="font-semibold">{session.level}:</span> {session.time}
+                                    <span className="font-semibold">{session.level}:</span> {session.startTime} - {session.endTime}
                                     </li>
                                 ))}
                                 </ul>
@@ -94,7 +94,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
                                 <ul className="space-y-1 list-disc list-inside">
                                 {availableSessions.map(session => (
                                     <li key={session.id}>
-                                    <span className="font-semibold">{session.level}:</span> {session.time}
+                                    <span className="font-semibold">{session.level}:</span> {session.startTime} - {session.endTime}
                                     </li>
                                 ))}
                                 </ul>

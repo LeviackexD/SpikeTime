@@ -6,6 +6,7 @@ export interface User {
   id: string;
   name: string;
   username: string;
+  email?: string;
   avatarUrl: string;
   role: UserRole;
   skillLevel: SkillLevel;
@@ -19,7 +20,8 @@ export interface User {
 export interface Session {
   id: string;
   date: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   location: string;
   level: SkillLevel;
   players: User[];

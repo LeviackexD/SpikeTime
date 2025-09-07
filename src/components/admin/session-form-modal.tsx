@@ -35,8 +35,9 @@ interface SessionFormModalProps {
 }
 
 const emptySession: Omit<Session, 'id' | 'players' | 'waitlist'> = {
-  date: '',
-  time: '',
+  date: new Date().toISOString(),
+  startTime: '',
+  endTime: '',
   location: '',
   level: 'Beginner',
   maxPlayers: 12,
@@ -45,13 +46,15 @@ const emptySession: Omit<Session, 'id' | 'players' | 'waitlist'> = {
 
 
 export default function SessionFormModal({ isOpen, onClose, onSave, session }: SessionFormModalProps) {
-    const [formData, setFormData] = React.useState<Omit<Session, 'id' | 'players' | 'waitlist'>>(session || emptySession);
+    const [formData, setFormData] = React.useState<Omit<Session, 'id' | 'players' | 'waitlist'>>({ ...emptySession });
 
     React.useEffect(() => {
-        if(session) {
-            setFormData(session);
-        } else {
-            setFormData(emptySession);
+        if (isOpen) {
+            if(session) {
+                setFormData(session);
+            } else {
+                setFormData({ ...emptySession });
+            }
         }
     }, [session, isOpen]);
 
@@ -89,7 +92,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
         </DialogHeader>
         <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
+                <div className="col-span-2 space-y-2">
                     <Label htmlFor="date">Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -115,8 +118,12 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     </Popover>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="time">Time</Label>
-                    <Input id="time" type="time" value={formData.time} onChange={handleChange} placeholder="e.g., 18:00" required/>
+                    <Label htmlFor="startTime">Start Time</Label>
+                    <Input id="startTime" type="time" value={formData.startTime} onChange={handleChange} required/>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="endTime">End Time</Label>
+                    <Input id="endTime" type="time" value={formData.endTime} onChange={handleChange} required/>
                 </div>
                 <div className="col-span-2 space-y-2">
                     <Label htmlFor="location">Location</Label>

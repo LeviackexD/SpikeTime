@@ -49,7 +49,7 @@ const SessionCards = ({ sessions, handleEditSession, handleViewPlayers, handleDe
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle>{session.level}</CardTitle>
-                        <div className="text-sm text-muted-foreground">{formatDate(session.date)} - {session.time}</div>
+                        <div className="text-sm text-muted-foreground">{formatDate(session.date)} - {session.startTime} - {session.endTime}</div>
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -258,7 +258,7 @@ export default function AdminPage() {
                 <TableRow key={session.id}>
                 <TableCell>
                     <div className="font-medium">{formatDate(session.date)}</div>
-                    <div className="text-sm text-muted-foreground">{session.time}</div>
+                    <div className="text-sm text-muted-foreground">{session.startTime} - {session.endTime}</div>
                 </TableCell>
                 <TableCell>{session.level}</TableCell>
                 <TableCell>
