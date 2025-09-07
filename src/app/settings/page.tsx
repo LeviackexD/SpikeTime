@@ -103,23 +103,6 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button variant="outline">Change Password</Button>
-            <Card className="border-destructive/50 bg-destructive/5 text-destructive">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                        <ShieldAlert className="h-5 w-5"/>
-                        Danger Zone
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="font-semibold">Delete Account</p>
-                            <p className="text-sm text-destructive/80">Permanently delete your account and all associated data. This action cannot be undone.</p>
-                        </div>
-                        <Button variant="destructive">Delete My Account</Button>
-                    </div>
-                </CardContent>
-            </Card>
           </CardContent>
         </Card>
       </div>
