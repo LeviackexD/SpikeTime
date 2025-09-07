@@ -15,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus } from 'lucide-react';
-import SuggestLevelButton from '../ai/suggest-level-button';
 import { cn } from '@/lib/utils';
 import { currentUser } from '@/lib/mock-data';
 
@@ -157,16 +156,6 @@ export default function SessionDetailsModal({
             players={session.waitlist}
             emptyMessage="The waitlist is empty."
           />
-
-          {currentUser.role === 'admin' && (
-             <div>
-                <h3 className="mb-3 font-semibold flex items-center gap-2">
-                    <BarChart2 className="h-5 w-5 text-muted-foreground" />
-                    Admin Actions
-                </h3>
-                <SuggestLevelButton playerSkillLevels={session.players.map(p => p.skillLevel.toLowerCase() as "beginner" | "intermediate" | "advanced")}/>
-             </div>
-          )}
 
         </div>
         <DialogFooter className='sm:justify-between items-center flex-shrink-0 pt-4'>
