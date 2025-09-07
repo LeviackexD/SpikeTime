@@ -76,7 +76,10 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     const handleDateChange = (date: Date | undefined) => {
       if (date) {
-        setFormData(prev => ({...prev, date: date.toISOString()}));
+        // To keep the time zone consistent, we get the UTC date parts and create a new Date object from them.
+        const newDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        // Then convert to ISO string to store as a string.
+        setFormData(prev => ({...prev, date: newDate.toISOString()}));
       }
     }
 
