@@ -66,70 +66,75 @@ function AppHeader() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
-      <div className="flex items-center gap-4">
-        {isMobile ? (
-           <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0"
-              >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col p-0">
-               <div className="p-4 border-b">
-                 <InvernessEaglesLogo className="h-8 w-auto" />
-               </div>
-               <nav className="grid gap-2 p-4 text-lg font-medium">
-                {navItems.map((item) => {
-                    if (item.adminOnly && currentUser.role !== 'admin') {
-                        return null;
-                    }
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
-                                pathname === item.href && 'bg-muted text-primary'
-                            )}
-                        >
-                            <item.icon className="h-5 w-5" />
-                            {item.label}
-                        </Link>
-                    );
-                })}
-               </nav>
-            </SheetContent>
-          </Sheet>
-        ) : (
-            <>
+      {isMobile ? (
+        <>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="shrink-0"
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="flex flex-col p-0">
+              <div className="p-4 border-b">
                 <InvernessEaglesLogo className="h-8 w-auto" />
-                <nav className="hidden md:flex md:items-center md:gap-5 lg:gap-6 text-sm font-medium">
-                {navItems.map((item) => {
-                    if (item.adminOnly && currentUser.role !== 'admin') {
-                        return null;
-                    }
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                'transition-colors hover:text-foreground',
-                                pathname === item.href ? 'text-foreground' : 'text-muted-foreground'
-                            )}
-                        >
-                            {item.label}
-                        </Link>
-                    );
-                })}
-                </nav>
-            </>
-        )}
-      </div>
+              </div>
+              <nav className="grid gap-2 p-4 text-lg font-medium">
+              {navItems.map((item) => {
+                  if (item.adminOnly && currentUser.role !== 'admin') {
+                      return null;
+                  }
+                  return (
+                      <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                              'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+                              pathname === item.href && 'bg-muted text-primary'
+                          )}
+                      >
+                          <item.icon className="h-5 w-5" />
+                          {item.label}
+                      </Link>
+                  );
+              })}
+              </nav>
+          </SheetContent>
+        </Sheet>
+        <div className="flex-1 flex justify-center">
+            <InvernessEaglesLogo className="h-8 w-auto" />
+        </div>
+        </>
+      ) : (
+        <>
+          <div className="flex items-center gap-4">
+            <InvernessEaglesLogo className="h-8 w-auto" />
+          </div>
+          <nav className="hidden md:flex flex-1 justify-center md:items-center md:gap-5 lg:gap-6 text-sm font-medium">
+            {navItems.map((item) => {
+                if (item.adminOnly && currentUser.role !== 'admin') {
+                    return null;
+                }
+                return (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                            'transition-colors hover:text-foreground',
+                            pathname === item.href ? 'text-foreground' : 'text-muted-foreground'
+                        )}
+                    >
+                        {item.label}
+                    </Link>
+                );
+            })}
+          </nav>
+        </>
+      )}
 
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon">
