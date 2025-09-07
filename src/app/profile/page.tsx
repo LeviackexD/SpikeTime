@@ -96,7 +96,7 @@ export default function ProfilePage() {
           <CardContent>
             <div className="flex flex-wrap gap-4">
               {achievements.map((ach, index) => (
-                <div key={index} className="flex flex-col items-center gap-2 rounded-lg border p-4 w-32">
+                <div key={`${ach.label}-${index}`} className="flex flex-col items-center gap-2 rounded-lg border p-4 w-32">
                    <ach.icon className={`h-8 w-8 ${ach.color}`} />
                    <span className="text-xs font-medium text-center">{ach.label}</span>
                 </div>
