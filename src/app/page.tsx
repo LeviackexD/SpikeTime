@@ -26,54 +26,61 @@ const DashboardPage: NextPage = () => {
   const { toast } = useToast();
 
   const handleBooking = (sessionId: string) => {
-    setSessions(prevSessions =>
-      prevSessions.map(session => {
-        if (session.id === sessionId && session.players.length < session.maxPlayers) {
-          if (session.players.some(p => p.id === currentUser.id)) return session;
-          toast({
+    const sessionToBook = sessions.find(s => s.id === sessionId);
+    if (!sessionToBook || sessionToBook.players.some(p => p.id === currentUser.id)) return;
+
+    if (sessionToBook.players.length < sessionToBook.maxPlayers) {
+        setSessions(prevSessions =>
+            prevSessions.map(session =>
+                session.id === sessionId
+                    ? { ...session, players: [...session.players, currentUser] }
+                    : session
+            )
+        );
+        toast({
             title: 'Booking Confirmed!',
-            description: `You're all set for the ${session.level} session.`,
+            description: `You're all set for the ${sessionToBook.level} session.`,
             variant: 'success',
-          });
-          return { ...session, players: [...session.players, currentUser] };
-        }
-        return session;
-      })
-    );
+        });
+    }
   };
 
   const handleJoinWaitlist = (sessionId: string) => {
-     setSessions(prevSessions =>
-      prevSessions.map(session => {
-        if (session.id === sessionId && session.players.length >= session.maxPlayers) {
-          if (session.waitlist.some(p => p.id === currentUser.id)) return session;
-          toast({
+    const sessionToJoin = sessions.find(s => s.id === sessionId);
+    if (!sessionToJoin || sessionToJoin.waitlist.some(p => p.id === currentUser.id)) return;
+
+    if (sessionToJoin.players.length >= sessionToJoin.maxPlayers) {
+        setSessions(prevSessions =>
+            prevSessions.map(session =>
+                session.id === sessionId
+                    ? { ...session, waitlist: [...session.waitlist, currentUser] }
+                    : session
+            )
+        );
+        toast({
             title: 'You are on the waitlist!',
-            description: `We'll notify you if a spot opens up.`,
+            description: "We'll notify you if a spot opens up.",
             variant: 'success'
-          });
-          return { ...session, waitlist: [...session.waitlist, currentUser] };
-        }
-        return session;
-      })
-    );
+        });
+    }
   };
 
   const handleCancelBooking = (sessionId: string) => {
+    const sessionToCancel = sessions.find(s => s.id === sessionId);
+    if (!sessionToCancel || !sessionToCancel.players.some(p => p.id === currentUser.id)) return;
+
     setSessions(prevSessions =>
-      prevSessions.map(session => {
-        if (session.id === sessionId) {
-           if (!session.players.some(p => p.id === currentUser.id)) return session;
-            toast({
-              title: 'Booking Canceled',
-              description: 'Your spot has been successfully canceled.',
-              variant: 'destructive',
-            });
-           return { ...session, players: session.players.filter(p => p.id !== currentUser.id) };
-        }
-        return session;
-      })
+      prevSessions.map(session =>
+        session.id === sessionId
+          ? { ...session, players: session.players.filter(p => p.id !== currentUser.id) }
+          : session
+      )
     );
+    toast({
+        title: 'Booking Canceled',
+        description: 'Your spot has been successfully canceled.',
+        variant: 'destructive',
+    });
   };
 
 
