@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -171,3 +172,4 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     </Dialog>
   );
 }
+
