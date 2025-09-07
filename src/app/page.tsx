@@ -31,11 +31,16 @@ const DashboardPage: NextPage = () => {
                 description: `You're all set for the ${sessionToBook.level} session.`,
                 variant: 'success',
             });
-            return prevSessions.map(session =>
+            const updatedSessions = prevSessions.map(session =>
                 session.id === sessionId
                     ? { ...session, players: [...session.players, currentUser] }
                     : session
             );
+            // Also update the session in the modal if it's open
+            if(sessionToView?.id === sessionId) {
+              setSessionToView(updatedSessions.find(s => s.id === sessionId) || null);
+            }
+            return updatedSessions;
         }
         return prevSessions;
     });
@@ -54,11 +59,15 @@ const DashboardPage: NextPage = () => {
                 description: "We'll notify you if a spot opens up.",
                 variant: 'success'
             });
-            return prevSessions.map(session =>
+            const updatedSessions = prevSessions.map(session =>
                 session.id === sessionId
                     ? { ...session, waitlist: [...session.waitlist, currentUser] }
                     : session
             );
+            if(sessionToView?.id === sessionId) {
+              setSessionToView(updatedSessions.find(s => s.id === sessionId) || null);
+            }
+            return updatedSessions;
         }
         return prevSessions;
     });
@@ -76,11 +85,16 @@ const DashboardPage: NextPage = () => {
             description: 'Your spot has been successfully canceled.',
             variant: 'destructive',
         });
-        return prevSessions.map(session =>
+        const updatedSessions = prevSessions.map(session =>
             session.id === sessionId
                 ? { ...session, players: session.players.filter(p => p.id !== currentUser.id) }
                 : session
         );
+
+        if(sessionToView?.id === sessionId) {
+            setSessionToView(updatedSessions.find(s => s.id === sessionId) || null);
+        }
+        return updatedSessions;
     });
   };
 
@@ -159,6 +173,9 @@ const DashboardPage: NextPage = () => {
         session={sessionToView}
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
+        onBook={handleBooking}
+        onCancel={handleCancelBooking}
+        onWaitlist={handleJoinWaitlist}
       />
     </div>
   );

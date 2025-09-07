@@ -12,20 +12,29 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import type { Session, User } from '@/lib/types';
-import { Users, Calendar, Clock, BarChart2, Info, X } from 'lucide-react';
+import type { Session } from '@/lib/types';
+import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus } from 'lucide-react';
 import { currentUser } from '@/lib/mock-data';
-import { useToast } from '@/hooks/use-toast';
 import SuggestLevelButton from '../ai/suggest-level-button';
 
 interface SessionDetailsModalProps {
   session: Session | null;
   isOpen: boolean;
   onClose: () => void;
+  onBook: (sessionId: string) => void;
+  onCancel: (sessionId: string) => void;
+  onWaitlist: (sessionId: string) => void;
 }
 
-export default function SessionDetailsModal({ session, isOpen, onClose }: SessionDetailsModalProps) {
-  const { toast } = useToast();
+export default function SessionDetailsModal({ 
+  session, 
+  isOpen, 
+  onClose,
+  onBook,
+  onCancel,
+  onWaitlist,
+}: SessionDetailsModalProps) {
+  
   const [currentSession, setCurrentSession] = React.useState(session);
 
   React.useEffect(() => {
@@ -37,25 +46,17 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
   const spotsFilled = currentSession.players.length;
   const spotsLeft = currentSession.maxPlayers - spotsFilled;
   const progressValue = (spotsFilled / currentSession.maxPlayers) * 100;
-  const isCurrentUserRegistered = currentSession.players.some(p => p.id === currentUser.id);
-  const isSessionFull = spotsLeft <= 0;
 
-  const handleBooking = () => {
-    toast({
-      title: "Booking Confirmed!",
-      description: `You're all set for the ${currentSession.level} session.`,
-    });
-    onClose();
-  };
+  const isRegistered = currentSession.players.some(p => p.id === currentUser.id);
+  const isOnWaitlist = currentSession.waitlist.some(p => p.id === currentUser.id);
+  const isFull = spotsFilled >= currentSession.maxPlayers;
+  
 
-  const handleCancellation = () => {
-    toast({
-      title: "Cancellation Confirmed",
-      description: "You have been removed from the session.",
-      variant: 'destructive',
-    });
-    onClose();
-  };
+  const handleAction = (action: (id: string) => void) => {
+    if (currentSession) {
+      action(currentSession.id);
+    }
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -109,7 +110,7 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
               <Users className="h-5 w-5 text-muted-foreground" />
               Registered Players ({spotsFilled})
             </h3>
-            <div className="flex flex-wrap gap-4">
+            <div className="grid grid-cols-5 gap-4">
               {currentSession.players.map((player) => (
                 <div key={player.id} className="flex flex-col items-center gap-1.5 text-center">
                   <Avatar className="h-12 w-12 border-2 border-primary/50">
@@ -161,16 +162,30 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
           )}
 
         </div>
-        <DialogFooter className='sm:justify-between'>
-          {isCurrentUserRegistered ? (
-             <Button variant="destructive" onClick={handleCancellation}>
-              <X className="mr-2 h-4 w-4" /> Cancel My Spot
-            </Button>
-          ) : (
-            <Button onClick={handleBooking} disabled={isSessionFull}>
-              {isSessionFull ? 'Join Waitlist' : 'Book My Spot'}
-            </Button>
-          )}
+        <DialogFooter className='sm:justify-between items-center'>
+            <div className='flex items-center gap-2'>
+            {isRegistered ? (
+              <Button variant="destructive" onClick={() => handleAction(onCancel)}>
+                <X className="mr-2 h-4 w-4" /> Cancel My Spot
+              </Button>
+            ) : isFull ? (
+              isOnWaitlist ? (
+                <Button variant="outline" disabled>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  On Waitlist
+                </Button>
+              ) : (
+                <Button variant="secondary" onClick={() => handleAction(onWaitlist)}>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Join Waitlist
+                </Button>
+              )
+            ) : (
+              <Button onClick={() => handleAction(onBook)}>
+                Book My Spot
+              </Button>
+            )}
+            </div>
            <Button variant="outline" onClick={onClose}>
             Close
           </Button>
