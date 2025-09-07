@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import type { NextPage } from 'next';
+import dynamic from 'next/dynamic';
 import {
   Card,
   CardContent,
@@ -11,22 +12,27 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Calendar as CalendarIcon, Filter } from 'lucide-react';
-import SessionCalendar from '@/components/dashboard/session-calendar';
 import SessionDetailsCard from '@/components/sessions/session-details-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSessions } from '@/context/session-context';
 import { currentUser } from '@/lib/mock-data';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { skillLevelColors } from '@/lib/types';
+import { skillLevelColors, type SkillLevel } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const SessionCalendar = dynamic(() => import('@/components/dashboard/session-calendar'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[380px] w-full" />,
+});
 
 
-const skillLevels = ['All', 'Beginner', 'Intermediate', 'Advanced', 'All-Rounder'];
+const skillLevels: (SkillLevel | 'All')[] = ['All', 'Beginner', 'Intermediate', 'Advanced', 'All-Rounder'];
 
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
   const [selectedDate, setSelectedDate] = React.useState(new Date());
-  const [skillFilter, setSkillFilter] = React.useState('All');
+  const [skillFilter, setSkillFilter] = React.useState<SkillLevel | 'All'>('All');
   
   const handleDateChange = (date: Date | undefined) => {
     if(date) {
@@ -67,25 +73,36 @@ const CalendarPage: NextPage = () => {
                         Click on a day to view available sessions. Colors indicate session levels.
                     </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
-                     <Filter className="h-4 w-4 text-muted-foreground" />
-                     <Select value={skillFilter} onValueChange={setSkillFilter}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by skill level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {skillLevels.map(level => (
-                                <SelectItem key={level} value={level}>
-                                    <div className="flex items-center gap-2">
-                                        {level !== 'All' && (
-                                            <div className={cn("h-3 w-3 rounded-full", skillLevelColors[level as keyof typeof skillLevelColors])} />
-                                        )}
-                                        {level === 'All' ? 'All Levels' : level}
-                                    </div>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                <div className="flex items-center flex-wrap gap-2">
+                     <div className='flex items-center gap-2'>
+                        <Filter className="h-4 w-4 text-muted-foreground" />
+                        <Select value={skillFilter} onValueChange={(value) => setSkillFilter(value as SkillLevel | 'All')}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Filter by skill level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {skillLevels.map(level => (
+                                    <SelectItem key={level} value={level}>
+                                        <div className="flex items-center gap-2">
+                                            {level !== 'All' && (
+                                                <div className={cn("h-3 w-3 rounded-full", skillLevelColors[level as keyof typeof skillLevelColors])} />
+                                            )}
+                                            {level === 'All' ? 'All Levels' : level}
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                     </div>
+                     <div className="flex gap-2 text-xs text-muted-foreground items-center flex-wrap">
+                        <span className="font-semibold">Legend:</span>
+                        {Object.entries(skillLevelColors).map(([level, color]) => (
+                            <div key={level} className="flex items-center gap-1.5">
+                                <div className={cn("h-2.5 w-2.5 rounded-full", color)} />
+                                <span>{level}</span>
+                            </div>
+                        ))}
+                     </div>
                 </div>
             </CardHeader>
             <CardContent className="p-2 sm:p-4">

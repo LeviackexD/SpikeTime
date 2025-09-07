@@ -57,7 +57,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
             {day.getDate()}
             {uniqueLevels.length > 0 && (
               <div className="absolute bottom-1 flex gap-1">
-                {uniqueLevels.map(level => (
+                {uniqueLevels.slice(0, 4).map(level => (
                   <div key={level} className={cn("h-1.5 w-1.5 rounded-full", skillLevelColors[level])} />
                 ))}
               </div>
