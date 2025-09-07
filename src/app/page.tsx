@@ -11,8 +11,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { mockSessions, currentUser, mockUsers } from '@/lib/mock-data';
-import { ArrowRight, Calendar, Clock, Users, CheckCircle, UserPlus } from 'lucide-react';
+import { mockSessions, currentUser } from '@/lib/mock-data';
+import { Calendar, Clock, Users, CheckCircle, UserPlus, XCircle } from 'lucide-react';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -22,15 +22,14 @@ import { useToast } from '@/hooks/use-toast';
 
 
 const DashboardPage: NextPage = () => {
-  // Mock user's booked sessions - We'll use state to make it interactive
-  const [sessions, setSessions] = React.useState<Session[]>(mockSessions.slice(0,3));
+  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
   const { toast } = useToast();
 
   const handleBooking = (sessionId: string) => {
     setSessions(prevSessions =>
       prevSessions.map(session => {
         if (session.id === sessionId && session.players.length < session.maxPlayers) {
-          if (session.players.some(p => p.id === currentUser.id)) return session; // Already registered
+          if (session.players.some(p => p.id === currentUser.id)) return session;
           toast({
             title: 'Booking Confirmed!',
             description: `You're all set for the ${session.level} session.`,
@@ -47,7 +46,7 @@ const DashboardPage: NextPage = () => {
      setSessions(prevSessions =>
       prevSessions.map(session => {
         if (session.id === sessionId && session.players.length >= session.maxPlayers) {
-          if (session.waitlist.some(p => p.id === currentUser.id)) return session; // Already on waitlist
+          if (session.waitlist.some(p => p.id === currentUser.id)) return session;
           toast({
             title: 'You are on the waitlist!',
             description: `We'll notify you if a spot opens up.`,
@@ -58,7 +57,25 @@ const DashboardPage: NextPage = () => {
         return session;
       })
     );
-  }
+  };
+
+  const handleCancelBooking = (sessionId: string) => {
+    setSessions(prevSessions =>
+      prevSessions.map(session => {
+        if (session.id === sessionId) {
+           if (!session.players.some(p => p.id === currentUser.id)) return session;
+            toast({
+              title: 'Booking Canceled',
+              description: 'Your spot has been successfully canceled.',
+              variant: 'destructive',
+            });
+           return { ...session, players: session.players.filter(p => p.id !== currentUser.id) };
+        }
+        return session;
+      })
+    );
+  };
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -130,9 +147,9 @@ const DashboardPage: NextPage = () => {
                         </CardContent>
                         <CardFooter className="p-4 pt-0">
                             {isRegistered ? (
-                                <Button className="w-full" variant="outline" disabled>
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    You're Registered
+                                <Button className="w-full" variant="outline" onClick={() => handleCancelBooking(session.id)}>
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Cancel My Spot
                                 </Button>
                             ) : isFull ? (
                                 isOnWaitlist ? (

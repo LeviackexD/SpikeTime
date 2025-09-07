@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import {
   Table,
   TableBody,
@@ -19,10 +20,55 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { mockSessions, mockAnnouncements } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import type { Session } from '@/lib/types';
+import SessionFormModal from '@/components/admin/session-form-modal';
+import DeleteSessionDialog from '@/components/admin/delete-session-dialog';
+
 
 export default function AdminPage() {
+  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedSession, setSelectedSession] = React.useState<Session | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', { timeZone: 'UTC' });
+  };
+  
+  const handleCreateNew = () => {
+    setSelectedSession(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditSession = (session: Session) => {
+    setSelectedSession(session);
+    setIsModalOpen(true);
+  };
+  
+  const handleDeleteClick = (session: Session) => {
+    setSessionToDelete(session);
+    setIsDeleteDialogOpen(true);
+  }
+
+  const confirmDelete = () => {
+    if (sessionToDelete) {
+        setSessions(sessions.filter(s => s.id !== sessionToDelete.id));
+        setSessionToDelete(null);
+        setIsDeleteDialogOpen(false);
+    }
+  }
+
+  const handleSaveSession = (sessionData: Session) => {
+    if (selectedSession) {
+      // Edit existing session
+      setSessions(sessions.map((s) => (s.id === sessionData.id ? sessionData : s)));
+    } else {
+      // Create new session
+      setSessions([...sessions, { ...sessionData, id: `s${sessions.length + 1}` }]);
+    }
+    setIsModalOpen(false);
+    setSelectedSession(null);
   };
 
   return (
@@ -32,7 +78,7 @@ export default function AdminPage() {
           <TabsTrigger value="sessions">Manage Sessions</TabsTrigger>
           <TabsTrigger value="announcements">Manage Announcements</TabsTrigger>
         </TabsList>
-        <Button>
+        <Button onClick={handleCreateNew}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Create New
         </Button>
@@ -50,7 +96,7 @@ export default function AdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockSessions.map((session) => (
+              {sessions.map((session) => (
                 <TableRow key={session.id}>
                   <TableCell>
                     <div className="font-medium">{formatDate(session.date)}</div>
@@ -73,9 +119,9 @@ export default function AdminPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditSession(session)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem>View Players</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-500">
+                        <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteClick(session)}>
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -125,6 +171,20 @@ export default function AdminPage() {
           </Table>
         </div>
       </TabsContent>
+      
+      <SessionFormModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveSession}
+        session={selectedSession}
+      />
+      
+      <DeleteSessionDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+      />
+
     </Tabs>
   );
 }
