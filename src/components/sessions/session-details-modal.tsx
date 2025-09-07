@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -110,17 +109,23 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
               <Users className="h-5 w-5 text-muted-foreground" />
               Registered Players ({spotsFilled})
             </h3>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-4">
               {currentSession.players.map((player) => (
-                <Avatar key={player.id} className="h-12 w-12 border-2 border-background">
-                  <AvatarImage src={player.avatarUrl} alt={player.name} />
-                  <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-                </Avatar>
+                <div key={player.id} className="flex flex-col items-center gap-1.5 text-center">
+                  <Avatar className="h-12 w-12 border-2 border-primary/50">
+                    <AvatarImage src={player.avatarUrl} alt={player.name} />
+                    <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs font-medium text-muted-foreground w-16 truncate">{player.name}</span>
+                </div>
               ))}
               {spotsLeft > 0 && Array.from({ length: spotsLeft }).map((_, i) => (
-                 <Avatar key={`empty-${i}`} className="h-12 w-12 border-2 border-dashed bg-muted">
-                   <AvatarFallback></AvatarFallback>
-                 </Avatar>
+                 <div key={`empty-${i}`} className="flex flex-col items-center gap-1.5 text-center">
+                   <Avatar className="h-12 w-12 border-2 border-dashed bg-muted">
+                     <AvatarFallback />
+                   </Avatar>
+                   <span className="text-xs font-medium text-muted-foreground w-16 truncate invisible">Empty</span>
+                 </div>
               ))}
             </div>
           </div>
