@@ -32,6 +32,7 @@ import { VolleyballIcon } from '../icons/volleyball-icon';
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
 
@@ -80,6 +81,7 @@ function AppHeader() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0 bg-primary text-primary-foreground border-primary-foreground/20">
+                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="p-4 border-b border-primary-foreground/20">
                   <InvernessEaglesLogo className="h-8 w-auto" />
                 </div>
