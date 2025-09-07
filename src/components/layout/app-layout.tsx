@@ -13,6 +13,7 @@ import {
   Bell,
   Megaphone,
   Menu,
+  Home,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -48,9 +49,9 @@ const navItems = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/settings';
+  const isAuthPage = pathname === '/login' || pathname === '/register';
 
-  if (isAuthPage && pathname !== '/settings') {
+  if (isAuthPage) {
     return <main className="min-h-screen bg-background">{children}</main>;
   }
 
@@ -70,6 +71,7 @@ function AppHeader() {
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
       <div className="flex items-center gap-4">
         {isMobile ? (
+          <div className="flex items-center gap-2">
            <Sheet>
             <SheetTrigger asChild>
               <Button
@@ -108,6 +110,17 @@ function AppHeader() {
                 </nav>
             </SheetContent>
           </Sheet>
+          <Link href="/">
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+              >
+                <Home className="h-5 w-5" />
+                <span className="sr-only">Go to Home</span>
+              </Button>
+            </Link>
+          </div>
         ) : (
            <InvernessEaglesLogo className="h-8 w-auto" />
         )}
