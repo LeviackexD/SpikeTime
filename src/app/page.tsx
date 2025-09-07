@@ -10,9 +10,12 @@ import { useToast } from '@/hooks/use-toast';
 import SessionListItem from '@/components/sessions/session-list-item';
 import SectionHeader from '@/components/layout/section-header';
 import { Volleyball } from 'lucide-react';
+import SessionDetailsModal from '@/components/sessions/session-details-modal';
 
 const DashboardPage: NextPage = () => {
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const [sessionToView, setSessionToView] = React.useState<Session | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = React.useState(false);
   const { toast } = useToast();
 
   const handleBooking = (sessionId: string) => {
@@ -81,6 +84,11 @@ const DashboardPage: NextPage = () => {
     });
   };
 
+  const handleViewPlayers = (session: Session) => {
+    setSessionToView(session);
+    setIsViewModalOpen(true);
+  };
+
   const upcomingSessions = sessions.filter(session => 
     new Date(session.date) >= new Date() && session.players.some(p => p.id === currentUser.id)
   ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -109,6 +117,7 @@ const DashboardPage: NextPage = () => {
                   onBook={handleBooking}
                   onCancel={handleCancelBooking}
                   onWaitlist={handleJoinWaitlist}
+                  onViewPlayers={() => handleViewPlayers(session)}
                   priority={index === 0}
                />
             ))}
@@ -135,6 +144,7 @@ const DashboardPage: NextPage = () => {
                   onBook={handleBooking}
                   onCancel={handleCancelBooking}
                   onWaitlist={handleJoinWaitlist}
+                  onViewPlayers={() => handleViewPlayers(session)}
                />
             ))}
           </div>
@@ -144,6 +154,12 @@ const DashboardPage: NextPage = () => {
           </div>
         )}
       </div>
+
+      <SessionDetailsModal
+        session={sessionToView}
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+      />
     </div>
   );
 };

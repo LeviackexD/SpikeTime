@@ -16,7 +16,6 @@ import {
 import type { Session, User } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Progress } from '../ui/progress';
-import PlayerAvatar from './player-avatar';
 
 interface SessionListItemProps {
   session: Session;
@@ -24,6 +23,7 @@ interface SessionListItemProps {
   onBook: (sessionId: string) => void;
   onCancel: (sessionId: string) => void;
   onWaitlist: (sessionId: string) => void;
+  onViewPlayers: () => void;
   priority?: boolean;
 }
 
@@ -33,6 +33,7 @@ export default function SessionListItem({
   onBook,
   onCancel,
   onWaitlist,
+  onViewPlayers,
   priority = false,
 }: SessionListItemProps) {
   const isFull = session.players.length >= session.maxPlayers;
@@ -86,14 +87,13 @@ export default function SessionListItem({
                 </div>
                 <Progress value={progressValue} className="h-1.5" />
              </div>
-             <div className="flex -space-x-2 overflow-hidden pt-1">
-                {session.players.slice(0, 8).map(p => <PlayerAvatar key={p.id} player={p} />)}
-                {session.players.length > 8 && (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground border-2 border-background">
-                        +{session.players.length - 8}
-                    </div>
-                )}
-             </div>
+             <Button 
+              variant="link" 
+              className="text-xs justify-start p-0 h-auto mt-2"
+              onClick={onViewPlayers}
+            >
+              View Players
+            </Button>
         </div>
         <CardFooter className="bg-muted/50 p-2">
         {isRegistered ? (

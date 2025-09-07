@@ -156,19 +156,19 @@ export default function SessionDetailsModal({ session, isOpen, onClose }: Sessio
           )}
 
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
+        <DialogFooter className='sm:justify-between'>
           {isCurrentUserRegistered ? (
              <Button variant="destructive" onClick={handleCancellation}>
               <X className="mr-2 h-4 w-4" /> Cancel My Spot
             </Button>
           ) : (
             <Button onClick={handleBooking} disabled={isSessionFull}>
-              {isSessionFull ? 'Session Full' : 'Book My Spot'}
+              {isSessionFull ? 'Join Waitlist' : 'Book My Spot'}
             </Button>
           )}
+           <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
