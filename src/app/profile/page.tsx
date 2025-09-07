@@ -20,6 +20,7 @@ import { currentUser as initialUser } from '@/lib/mock-data';
 import { BarChart, Edit, Medal, Star, Target } from 'lucide-react';
 import EditProfileModal from '@/components/profile/edit-profile-modal';
 import type { User } from '@/lib/types';
+import { Separator } from '@/components/ui/separator';
 
 const achievements = [
   { icon: Medal, label: '50+ Sessions', color: 'text-yellow-500' },
@@ -66,7 +67,7 @@ export default function ProfilePage() {
               Player Details
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <div className="grid grid-cols-2 gap-6 text-sm">
               <div>
                 <p className="text-muted-foreground">Skill Level</p>
@@ -76,10 +77,11 @@ export default function ProfilePage() {
                 <p className="text-muted-foreground">Favorite Position</p>
                 <p className="font-semibold text-lg">{currentUser.favoritePosition}</p>
               </div>
-              <div>
+            </div>
+            <Separator />
+            <div className="text-center">
                 <p className="text-muted-foreground">Sessions Played</p>
-                <p className="font-semibold text-lg">{currentUser.stats.sessionsPlayed}</p>
-              </div>
+                <p className="font-semibold text-2xl">{currentUser.stats.sessionsPlayed}</p>
             </div>
           </CardContent>
         </Card>
