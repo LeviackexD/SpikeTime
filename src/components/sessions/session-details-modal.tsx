@@ -15,9 +15,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus } from 'lucide-react';
-import { currentUser } from '@/lib/mock-data';
 import SuggestLevelButton from '../ai/suggest-level-button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/auth-context';
 
 
 interface PlayerListProps {
@@ -85,13 +85,14 @@ export default function SessionDetailsModal({
   onWaitlist,
 }: SessionDetailsModalProps) {
   
+  const { user: currentUser } = useAuth();
   const [currentSession, setCurrentSession] = React.useState(session);
 
   React.useEffect(() => {
     setCurrentSession(session);
   }, [session, isOpen]);
   
-  if (!currentSession) return null;
+  if (!currentSession || !currentUser) return null;
 
   const spotsFilled = currentSession.players.length;
   const progressValue = (spotsFilled / currentSession.maxPlayers) * 100;

@@ -17,7 +17,7 @@ interface SessionCalendarProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   skillFilter: string;
-  currentUser: User;
+  currentUser: User | null;
 }
 
 export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter, currentUser }: SessionCalendarProps) {
@@ -49,10 +49,10 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
     const dateString = day.toISOString().split('T')[0];
     const daySessions = filteredSessionsByDate[dateString] || [];
     
-    const bookedSessions = daySessions.filter(s => s.players.some(p => p.id === currentUser.id));
-    const availableSessions = daySessions.filter(s => 
+    const bookedSessions = currentUser ? daySessions.filter(s => s.players.some(p => p.id === currentUser.id)) : [];
+    const availableSessions = currentUser ? daySessions.filter(s => 
       !s.players.some(p => p.id === currentUser.id) && s.players.length < s.maxPlayers
-    );
+    ) : daySessions.filter(s => s.players.length < s.maxPlayers);
 
     const content = (
         <div className="relative flex h-full w-full flex-col items-center justify-center">

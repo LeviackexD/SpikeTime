@@ -4,7 +4,7 @@
 import * as React from 'react';
 import type { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
-import { currentUser, mockAnnouncements } from '@/lib/mock-data';
+import { mockAnnouncements } from '@/lib/mock-data';
 import Link from 'next/link';
 import type { Session, Announcement } from '@/lib/types';
 import SessionListItem from '@/components/sessions/session-list-item';
@@ -20,8 +20,10 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import AnnouncementDetailsModal from '@/components/announcements/announcement-details-modal';
 import { useSessions } from '@/context/session-context';
+import { useAuth } from '@/context/auth-context';
 
 const DashboardPage: NextPage = () => {
+  const { user } = useAuth();
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
   const [sessionToView, setSessionToView] = React.useState<Session | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = React.useState(false);
@@ -40,12 +42,16 @@ const DashboardPage: NextPage = () => {
     setSelectedAnnouncement(null);
   };
 
+  if (!user) {
+    return null; // Or a loading spinner
+  }
+
   const upcomingSessions = sessions.filter(session => 
-    new Date(session.date) >= new Date() && session.players.some(p => p.id === currentUser.id)
+    new Date(session.date) >= new Date() && session.players.some(p => p.id === user.id)
   ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
   const availableSessions = sessions.filter(session =>
-    new Date(session.date) >= new Date() && !session.players.some(p => p.id === currentUser.id)
+    new Date(session.date) >= new Date() && !session.players.some(p => p.id === user.id)
   ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const recentAnnouncements = mockAnnouncements.slice(0, 3);
@@ -54,7 +60,7 @@ const DashboardPage: NextPage = () => {
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold font-headline">Welcome back, Manu!</h1>
+        <h1 className="text-3xl font-bold font-headline">Welcome back, {user.name}!</h1>
         <p className="text-muted-foreground">Here's what's happening in your volleyball world.</p>
       </div>
       
@@ -70,7 +76,7 @@ const DashboardPage: NextPage = () => {
                   <SessionListItem 
                       key={session.id}
                       session={session}
-                      currentUser={currentUser}
+                      currentUser={user}
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
@@ -101,7 +107,7 @@ const DashboardPage: NextPage = () => {
                   <SessionListItem 
                       key={session.id}
                       session={session}
-                      currentUser={currentUser}
+                      currentUser={user}
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
