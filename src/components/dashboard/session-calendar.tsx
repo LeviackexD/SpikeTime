@@ -59,7 +59,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
       <div className="relative flex h-full w-full flex-col items-center justify-center">
         {day.getDate()}
         <div className="absolute bottom-1 flex gap-1">
-          {daySessions.map((session) => (
+          {daySessions.slice(0, 3).map((session) => (
             <span
               key={session.id}
               className={`h-1.5 w-1.5 rounded-full ${getDotColor(session.level)}`}
@@ -81,7 +81,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
         mode="single"
         selected={selectedDate}
         onSelect={handleDayClick}
-        className="rounded-md border p-0"
+        className="rounded-md border p-0 w-full"
         classNames={{
             root: "w-full",
             month: "w-full space-y-4",
@@ -89,8 +89,8 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
             head_row: "flex justify-around",
             head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
             row: "flex w-full mt-2 justify-around",
-            cell: "h-12 w-12 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-            day: "h-12 w-12 p-0 font-normal aria-selected:opacity-100",
+            cell: "h-12 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+            day: "h-12 w-full p-0 font-normal aria-selected:opacity-100",
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         }}
         components={{

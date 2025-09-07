@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -97,8 +98,8 @@ const CalendarPage: NextPage = () => {
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-1 flex flex-col gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+      <div className="lg:col-span-3 flex flex-col gap-8">
           <Card>
               <CardHeader>
                   <CardTitle className="font-headline flex items-center gap-2">
@@ -116,25 +117,21 @@ const CalendarPage: NextPage = () => {
                       onDateChange={setSelectedDate}
                       skillFilter={skillFilter}
                   />
-              </CardContent>
-          </Card>
-          <Card>
-              <CardHeader>
-                  <CardTitle>Filter Sessions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                  <Select value={skillFilter} onValueChange={setSkillFilter}>
-                      <SelectTrigger>
-                          <SelectValue placeholder="Select skill level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="All">All Levels</SelectItem>
-                          <SelectItem value="Beginner">Beginner</SelectItem>
-                          <SelectItem value="Intermediate">Intermediate</SelectItem>
-                          <SelectItem value="Advanced">Advanced</SelectItem>
-                          <SelectItem value="All-Rounder">All-Rounder</SelectItem>
-                      </SelectContent>
-                  </Select>
+                  <div className="mt-4">
+                    <h3 className="mb-2 text-sm font-medium text-muted-foreground">Filter by Skill Level</h3>
+                    <Select value={skillFilter} onValueChange={setSkillFilter}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select skill level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="All">All Levels</SelectItem>
+                            <SelectItem value="Beginner">Beginner</SelectItem>
+                            <SelectItem value="Intermediate">Intermediate</SelectItem>
+                            <SelectItem value="Advanced">Advanced</SelectItem>
+                            <SelectItem value="All-Rounder">All-Rounder</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </div>
               </CardContent>
           </Card>
       </div>
