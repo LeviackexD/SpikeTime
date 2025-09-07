@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -12,13 +13,32 @@ import SectionHeader from '@/components/layout/section-header';
 import { Volleyball } from 'lucide-react';
 import SessionDetailsModal from '@/components/sessions/session-details-modal';
 
+type ToastInfo = {
+  title: string;
+  description: string;
+  variant: 'success' | 'destructive';
+};
+
 const DashboardPage: NextPage = () => {
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
   const [sessionToView, setSessionToView] = React.useState<Session | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = React.useState(false);
+  const [toastInfo, setToastInfo] = React.useState<ToastInfo | null>(null);
   const { toast } = useToast();
 
+  React.useEffect(() => {
+    if (toastInfo) {
+      toast({
+        title: toastInfo.title,
+        description: toastInfo.description,
+        variant: toastInfo.variant,
+      });
+      setToastInfo(null);
+    }
+  }, [toastInfo, toast]);
+
   const handleBooking = (sessionId: string) => {
+    let bookedSession: Session | undefined;
     setSessions((prevSessions) => {
         const sessionToBook = prevSessions.find(s => s.id === sessionId);
         if (!sessionToBook || sessionToBook.players.some(p => p.id === currentUser.id)) {
@@ -26,17 +46,12 @@ const DashboardPage: NextPage = () => {
         }
 
         if (sessionToBook.players.length < sessionToBook.maxPlayers) {
-            toast({
-                title: 'Booking Confirmed!',
-                description: `You're all set for the ${sessionToBook.level} session.`,
-                variant: 'success',
-            });
+            bookedSession = sessionToBook;
             const updatedSessions = prevSessions.map(session =>
                 session.id === sessionId
                     ? { ...session, players: [...session.players, currentUser] }
                     : session
             );
-            // Also update the session in the modal if it's open
             if(sessionToView?.id === sessionId) {
               setSessionToView(updatedSessions.find(s => s.id === sessionId) || null);
             }
@@ -44,9 +59,18 @@ const DashboardPage: NextPage = () => {
         }
         return prevSessions;
     });
+
+    if (bookedSession) {
+      setToastInfo({
+        title: 'Booking Confirmed!',
+        description: `You're all set for the ${bookedSession.level} session.`,
+        variant: 'success',
+      });
+    }
   };
 
   const handleJoinWaitlist = (sessionId: string) => {
+    let joinedSession: Session | undefined;
     setSessions(prevSessions => {
         const sessionToJoin = prevSessions.find(s => s.id === sessionId);
         if (!sessionToJoin || sessionToJoin.waitlist.some(p => p.id === currentUser.id)) {
@@ -54,11 +78,7 @@ const DashboardPage: NextPage = () => {
         }
 
         if (sessionToJoin.players.length >= sessionToJoin.maxPlayers) {
-            toast({
-                title: 'You are on the waitlist!',
-                description: "We'll notify you if a spot opens up.",
-                variant: 'success'
-            });
+            joinedSession = sessionToJoin;
             const updatedSessions = prevSessions.map(session =>
                 session.id === sessionId
                     ? { ...session, waitlist: [...session.waitlist, currentUser] }
@@ -71,20 +91,25 @@ const DashboardPage: NextPage = () => {
         }
         return prevSessions;
     });
+
+    if(joinedSession){
+      setToastInfo({
+        title: 'You are on the waitlist!',
+        description: "We'll notify you if a spot opens up.",
+        variant: 'success'
+      });
+    }
   };
 
   const handleCancelBooking = (sessionId: string) => {
+    let canceledSession: Session | undefined;
     setSessions(prevSessions => {
         const sessionToCancel = prevSessions.find(s => s.id === sessionId);
         if (!sessionToCancel || !sessionToCancel.players.some(p => p.id === currentUser.id)) {
             return prevSessions;
         }
         
-        toast({
-            title: 'Booking Canceled',
-            description: 'Your spot has been successfully canceled.',
-            variant: 'destructive',
-        });
+        canceledSession = sessionToCancel;
         const updatedSessions = prevSessions.map(session =>
             session.id === sessionId
                 ? { ...session, players: session.players.filter(p => p.id !== currentUser.id) }
@@ -96,6 +121,14 @@ const DashboardPage: NextPage = () => {
         }
         return updatedSessions;
     });
+
+    if (canceledSession) {
+      setToastInfo({
+        title: 'Booking Canceled',
+        description: 'Your spot has been successfully canceled.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleViewPlayers = (session: Session) => {

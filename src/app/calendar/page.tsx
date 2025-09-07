@@ -18,73 +18,103 @@ import SessionDetailsCard from '@/components/sessions/session-details-card';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+type ToastInfo = {
+  title: string;
+  description: string;
+  variant: 'success' | 'destructive';
+};
+
 const CalendarPage: NextPage = () => {
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
   const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
   const [skillFilter, setSkillFilter] = React.useState<string>('All');
+  const [toastInfo, setToastInfo] = React.useState<ToastInfo | null>(null);
   const { toast } = useToast();
 
+  React.useEffect(() => {
+    if (toastInfo) {
+      toast({
+        title: toastInfo.title,
+        description: toastInfo.description,
+        variant: toastInfo.variant,
+      });
+      setToastInfo(null); 
+    }
+  }, [toastInfo, toast]);
+
   const handleBooking = (sessionId: string) => {
+    let bookedSession: Session | undefined;
     setSessions(prevSessions => {
       const sessionToBook = prevSessions.find(s => s.id === sessionId);
       if (!sessionToBook || sessionToBook.players.some(p => p.id === currentUser.id)) return prevSessions;
 
       if (sessionToBook.players.length < sessionToBook.maxPlayers) {
-        const updatedSessions = prevSessions.map(session =>
+        bookedSession = sessionToBook;
+        return prevSessions.map(session =>
           session.id === sessionId
             ? { ...session, players: [...session.players, currentUser] }
             : session
         );
-        toast({
-          title: 'Booking Confirmed!',
-          description: `You're all set for the ${sessionToBook.level} session.`,
-          variant: 'success',
-        });
-        return updatedSessions;
       }
       return prevSessions;
     });
+
+    if (bookedSession) {
+      setToastInfo({
+        title: 'Booking Confirmed!',
+        description: `You're all set for the ${bookedSession.level} session.`,
+        variant: 'success',
+      });
+    }
   };
 
   const handleJoinWaitlist = (sessionId: string) => {
+    let joinedSession: Session | undefined;
     setSessions(prevSessions => {
       const sessionToJoin = prevSessions.find(s => s.id === sessionId);
       if (!sessionToJoin || sessionToJoin.waitlist.some(p => p.id === currentUser.id)) return prevSessions;
 
       if (sessionToJoin.players.length >= sessionToJoin.maxPlayers) {
-        const updatedSessions = prevSessions.map(session =>
+        joinedSession = sessionToJoin;
+        return prevSessions.map(session =>
           session.id === sessionId
             ? { ...session, waitlist: [...session.waitlist, currentUser] }
             : session
         );
-        toast({
-          title: 'You are on the waitlist!',
-          description: "We'll notify you if a spot opens up.",
-          variant: 'success'
-        });
-        return updatedSessions;
       }
       return prevSessions;
     });
+
+    if(joinedSession){
+        setToastInfo({
+            title: 'You are on the waitlist!',
+            description: "We'll notify you if a spot opens up.",
+            variant: 'success'
+        });
+    }
   };
 
   const handleCancelBooking = (sessionId: string) => {
+    let canceledSession: Session | undefined;
     setSessions(prevSessions => {
       const sessionToCancel = prevSessions.find(s => s.id === sessionId);
       if (!sessionToCancel || !sessionToCancel.players.some(p => p.id === currentUser.id)) return prevSessions;
 
-      const updatedSessions = prevSessions.map(session =>
+      canceledSession = sessionToCancel;
+      return prevSessions.map(session =>
         session.id === sessionId
           ? { ...session, players: session.players.filter(p => p.id !== currentUser.id) }
           : session
       );
-      toast({
-        title: 'Booking Canceled',
-        description: 'Your spot has been successfully canceled.',
-        variant: 'destructive',
-      });
-      return updatedSessions;
     });
+
+    if (canceledSession) {
+        setToastInfo({
+            title: 'Booking Canceled',
+            description: 'Your spot has been successfully canceled.',
+            variant: 'destructive',
+        });
+    }
   };
   
   const filteredSessions = React.useMemo(() => {
