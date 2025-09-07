@@ -4,6 +4,13 @@
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import type { Session } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SessionCalendarProps {
   sessions: Session[];
@@ -40,33 +47,44 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
   const DayContent = (day: Date) => {
     const dateString = day.toISOString().split('T')[0];
     const daySessions = filteredSessionsByDate[dateString] || [];
-    if (daySessions.length === 0) return <div>{day.getDate()}</div>;
     
-    const getDotColor = (level: string) => {
-      switch (level.toLowerCase()) {
-        case 'beginner':
-          return 'bg-green-500';
-        case 'intermediate':
-          return 'bg-blue-500';
-        case 'advanced':
-          return 'bg-red-500';
-        default:
-          return 'bg-purple-500';
-      }
+    const content = (
+        <div className="relative flex h-full w-full flex-col items-center justify-center">
+            {day.getDate()}
+            {daySessions.length > 0 && (
+                <div className="absolute bottom-1">
+                <Badge variant="secondary" className="px-1 py-0 text-xs">
+                    {daySessions[0].time.split(' ')[0]}
+                </Badge>
+                </div>
+            )}
+        </div>
+    );
+
+    if (daySessions.length === 0) {
+        return content;
     }
 
     return (
-      <div className="relative flex h-full w-full flex-col items-center justify-center">
-        {day.getDate()}
-        <div className="absolute bottom-1 flex gap-1">
-          {daySessions.slice(0, 3).map((session) => (
-            <span
-              key={session.id}
-              className={`h-1.5 w-1.5 rounded-full ${getDotColor(session.level)}`}
-            ></span>
-          ))}
-        </div>
-      </div>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    {content}
+                </TooltipTrigger>
+                <TooltipContent>
+                    <div className="p-2 text-sm">
+                        <h4 className="font-semibold mb-2">Sessions for this day:</h4>
+                        <ul className="space-y-1">
+                        {daySessions.map(session => (
+                            <li key={session.id}>
+                            <span className="font-semibold">{session.level}:</span> {session.time}
+                            </li>
+                        ))}
+                        </ul>
+                    </div>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
   };
 
@@ -89,8 +107,8 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
             head_row: "flex justify-around",
             head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
             row: "flex w-full mt-2 justify-around",
-            cell: "h-12 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-            day: "h-12 w-full p-0 font-normal aria-selected:opacity-100",
+            cell: "h-14 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+            day: "h-14 w-full p-0 font-normal aria-selected:opacity-100",
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         }}
         components={{
