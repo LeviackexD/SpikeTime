@@ -5,6 +5,7 @@ import * as React from 'react';
 import type { Session, Message, User, DirectChat } from '@/lib/types';
 import { mockSessions, currentUser, mockDirectChats } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from '@/hooks/use-notifications';
 
 type ToastInfo = {
   title: string;
@@ -32,6 +33,44 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
   const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
   const { toast } = useToast();
+  const { requestPermission, showNotification, isPermissionGranted } = useNotifications();
+  const scheduledNotificationsRef = React.useRef<Set<string>>(new Set());
+
+
+  React.useEffect(() => {
+    requestPermission();
+  }, [requestPermission]);
+
+  React.useEffect(() => {
+    if (isPermissionGranted) {
+      const upcomingSessions = sessions.filter(session =>
+        session.players.some(p => p.id === currentUser.id) && new Date(`${session.date}T${session.startTime}`) > new Date()
+      );
+
+      upcomingSessions.forEach(session => {
+        const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+        const notificationTime = new Date(sessionDateTime.getTime() - 2 * 60 * 60 * 1000); // 2 hours before
+        const now = new Date();
+        
+        const notificationId = `session-reminder-${session.id}`;
+
+        if (notificationTime > now && !scheduledNotificationsRef.current.has(notificationId)) {
+          const timeout = notificationTime.getTime() - now.getTime();
+          
+          setTimeout(() => {
+            showNotification('Session Reminder', {
+              body: `Your ${session.level} session starts in 2 hours at ${session.location}.`,
+              icon: '/volleyball-icon.png'
+            });
+            scheduledNotificationsRef.current.delete(notificationId);
+          }, timeout);
+
+          scheduledNotificationsRef.current.add(notificationId);
+        }
+      });
+    }
+  }, [sessions, isPermissionGranted, showNotification]);
+
 
   const showToast = (toastInfo: ToastInfo) => {
     toast({
