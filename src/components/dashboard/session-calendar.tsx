@@ -50,7 +50,9 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
     const daySessions = filteredSessionsByDate[dateString] || [];
     
     const bookedSessions = daySessions.filter(s => s.players.some(p => p.id === currentUser.id));
-    const availableSessions = daySessions.filter(s => !s.players.some(p => p.id === currentUser.id));
+    const availableSessions = daySessions.filter(s => 
+      !s.players.some(p => p.id === currentUser.id) && s.players.length < s.maxPlayers
+    );
 
     const content = (
         <div className="relative flex h-full w-full flex-col items-center justify-center">
