@@ -5,7 +5,7 @@ export function InvernessEaglesLogo(props: React.SVGProps<SVGSVGElement>) {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 250 40"
-      aria-label="SpikeTime Logo"
+      aria-label="Inverness Eagles Logo"
       {...props}
     >
       <defs>
@@ -29,7 +29,7 @@ export function InvernessEaglesLogo(props: React.SVGProps<SVGSVGElement>) {
         fill="currentColor"
         className="font-headline"
       >
-        SpikeTime
+        InvernessEagles
       </text>
     </svg>
   );
