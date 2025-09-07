@@ -166,12 +166,14 @@ function UserNav() {
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/admin">
-            <Shield className="mr-2 h-4 w-4" />
-            <span>Admin</span>
-          </Link>
-        </DropdownMenuItem>
+        {currentUser.role === 'admin' && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin">
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Admin</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
