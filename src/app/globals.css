@@ -76,3 +76,9 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+    .day-with-session:not([aria-selected]) .rdp-button {
+      @apply bg-accent;
+    }
+}

@@ -94,15 +94,6 @@ const CalendarPage: NextPage = () => {
                             </SelectContent>
                         </Select>
                      </div>
-                     <div className="flex gap-2 text-xs text-muted-foreground items-center flex-wrap">
-                        <span className="font-semibold">Legend:</span>
-                        {Object.entries(skillLevelColors).map(([level, color]) => (
-                            <div key={level} className="flex items-center gap-1.5">
-                                <div className={cn("h-2.5 w-2.5 rounded-full", color)} />
-                                <span>{level}</span>
-                            </div>
-                        ))}
-                     </div>
                 </div>
             </CardHeader>
             <CardContent className="p-2 sm:p-4">

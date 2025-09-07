@@ -12,6 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
+import type { DayProps } from 'react-day-picker';
 
 interface SessionCalendarProps {
   sessions: Session[];
@@ -21,7 +22,6 @@ interface SessionCalendarProps {
 }
 
 export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter }: SessionCalendarProps) {
-
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
       const date = session.date.split('T')[0];
@@ -45,24 +45,20 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
     return filtered;
   }, [sessionsByDate, skillFilter]);
 
-  const DayContent = (day: Date) => {
+  const DayContent = ({ date: day, ...props }: DayProps) => {
     const dateString = day.toISOString().split('T')[0];
     const daySessions = filteredSessionsByDate[dateString] || [];
     
-    // Get unique skill levels for the day to display dots
     const uniqueLevels = [...new Set(daySessions.map(s => s.level))] as SkillLevel[];
 
+    const dayHasSessions = uniqueLevels.length > 0;
+    // Use the color of the first session level for simplicity
+    const dayColorClass = dayHasSessions ? skillLevelColors[uniqueLevels[0]] : '';
+
     const content = (
-        <div className="relative flex h-full w-full flex-col items-center justify-center">
+        <>
             {day.getDate()}
-            {uniqueLevels.length > 0 && (
-              <div className="absolute bottom-1 flex gap-1">
-                {uniqueLevels.slice(0, 4).map(level => (
-                  <div key={level} className={cn("h-1.5 w-1.5 rounded-full", skillLevelColors[level])} />
-                ))}
-              </div>
-            )}
-        </div>
+        </>
     );
 
     if (daySessions.length === 0) {
@@ -73,7 +69,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    {content}
+                    <div>{content}</div>
                 </TooltipTrigger>
                 <TooltipContent>
                     <div className="p-2 text-sm space-y-2">
@@ -99,6 +95,15 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
         selected={selectedDate}
         onSelect={onDateChange}
         className="rounded-md border p-0"
+        modifiers={{
+            hasSessions: (day) => {
+                const dateString = day.toISOString().split('T')[0];
+                return !!filteredSessionsByDate[dateString];
+            }
+        }}
+         modifiersClassNames={{
+            hasSessions: 'day-with-session',
+         }}
         classNames={{
             months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
             month: 'space-y-4 w-full',
@@ -110,12 +115,13 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
             head_row: 'flex justify-around',
             head_cell: 'text-muted-foreground rounded-md w-full font-normal text-[0.8rem]',
             row: 'flex w-full mt-2 justify-around',
-            cell: "h-14 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+            cell: "h-14 w-full text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
             day: "h-14 w-full p-0 font-normal aria-selected:opacity-100",
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+            day_today: "font-bold text-primary",
         }}
         components={{
-          DayContent: ({ date }) => DayContent(date),
+          DayContent: DayContent,
         }}
       />
   );
