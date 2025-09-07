@@ -26,28 +26,45 @@ import DeleteSessionDialog from '@/components/admin/delete-session-dialog';
 import SessionDetailsModal from '@/components/sessions/session-details-modal';
 import AnnouncementFormModal from '@/components/admin/announcement-form-modal';
 import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = React.useState('sessions');
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
-  const [announcements, setAnnouncements] = React.useState<Announcement[]>(mockAnnouncements);
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>(
+    mockAnnouncements
+  );
 
   const [isSessionModalOpen, setIsSessionModalOpen] = React.useState(false);
-  const [selectedSession, setSelectedSession] = React.useState<Session | null>(null);
-  const [isDeleteSessionDialogOpen, setIsDeleteSessionDialogOpen] = React.useState(false);
-  const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
+  const [selectedSession, setSelectedSession] = React.useState<Session | null>(
+    null
+  );
+  const [isDeleteSessionDialogOpen, setIsDeleteSessionDialogOpen] =
+    React.useState(false);
+  const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(
+    null
+  );
   const [isViewModalOpen, setIsViewModalOpen] = React.useState(false);
   const [sessionToView, setSessionToView] = React.useState<Session | null>(null);
 
-  const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = React.useState(false);
-  const [selectedAnnouncement, setSelectedAnnouncement] = React.useState<Announcement | null>(null);
-  const [isDeleteAnnouncementDialogOpen, setIsDeleteAnnouncementDialogOpen] = React.useState(false);
-  const [announcementToDelete, setAnnouncementToDelete] = React.useState<Announcement | null>(null);
+  const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] =
+    React.useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] =
+    React.useState<Announcement | null>(null);
+  const [isDeleteAnnouncementDialogOpen, setIsDeleteAnnouncementDialogOpen] =
+    React.useState(false);
+  const [announcementToDelete, setAnnouncementToDelete] =
+    React.useState<Announcement | null>(null);
+
+  const isMobile = useIsMobile();
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { timeZone: 'UTC' });
+    return new Date(dateString).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
+    });
   };
-  
+
   const handleCreateNew = () => {
     if (activeTab === 'sessions') {
       setSelectedSession(null);
@@ -62,11 +79,11 @@ export default function AdminPage() {
     setSelectedSession(session);
     setIsSessionModalOpen(true);
   };
-  
+
   const handleDeleteSessionClick = (session: Session) => {
     setSessionToDelete(session);
     setIsDeleteSessionDialogOpen(true);
-  }
+  };
 
   const handleViewPlayers = (session: Session) => {
     setSessionToView(session);
@@ -75,19 +92,24 @@ export default function AdminPage() {
 
   const confirmDeleteSession = () => {
     if (sessionToDelete) {
-        setSessions(sessions.filter(s => s.id !== sessionToDelete.id));
-        setSessionToDelete(null);
-        setIsDeleteSessionDialogOpen(false);
+      setSessions(sessions.filter((s) => s.id !== sessionToDelete.id));
+      setSessionToDelete(null);
+      setIsDeleteSessionDialogOpen(false);
     }
-  }
+  };
 
   const handleSaveSession = (sessionData: Session) => {
     if (selectedSession) {
       // Edit existing session
-      setSessions(sessions.map((s) => (s.id === sessionData.id ? sessionData : s)));
+      setSessions(
+        sessions.map((s) => (s.id === sessionData.id ? sessionData : s))
+      );
     } else {
       // Create new session
-      setSessions([...sessions, { ...sessionData, id: `s${sessions.length + 1}` }]);
+      setSessions([
+        ...sessions,
+        { ...sessionData, id: `s${sessions.length + 1}` },
+      ]);
     }
     setIsSessionModalOpen(false);
     setSelectedSession(null);
@@ -105,7 +127,9 @@ export default function AdminPage() {
 
   const confirmDeleteAnnouncement = () => {
     if (announcementToDelete) {
-      setAnnouncements(announcements.filter(a => a.id !== announcementToDelete.id));
+      setAnnouncements(
+        announcements.filter((a) => a.id !== announcementToDelete.id)
+      );
       setAnnouncementToDelete(null);
       setIsDeleteAnnouncementDialogOpen(false);
     }
@@ -114,125 +138,235 @@ export default function AdminPage() {
   const handleSaveAnnouncement = (announcementData: Announcement) => {
     if (selectedAnnouncement) {
       // Edit existing announcement
-      setAnnouncements(announcements.map((a) => (a.id === announcementData.id ? announcementData : a)));
+      setAnnouncements(
+        announcements.map((a) =>
+          a.id === announcementData.id ? announcementData : a
+        )
+      );
     } else {
       // Create new announcement
-      setAnnouncements([...announcements, { ...announcementData, id: `a${announcements.length + 1}`, date: new Date().toISOString() }]);
+      setAnnouncements([
+        ...announcements,
+        {
+          ...announcementData,
+          id: `a${announcements.length + 1}`,
+          date: new Date().toISOString(),
+        },
+      ]);
     }
     setIsAnnouncementModalOpen(false);
     setSelectedAnnouncement(null);
   };
 
-
-  return (
-    <Tabs defaultValue="sessions" onValueChange={setActiveTab}>
-      <div className="flex items-center justify-between">
-        <TabsList>
-          <TabsTrigger value="sessions">Manage Sessions</TabsTrigger>
-          <TabsTrigger value="announcements">Manage Announcements</TabsTrigger>
-        </TabsList>
-        <Button onClick={handleCreateNew}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create New
-        </Button>
-      </div>
-      <TabsContent value="sessions" className="mt-6">
-        <div className="rounded-lg border">
-          <Table>
+  const renderSessionTable = () => (
+    <div className="rounded-lg border">
+        <Table>
             <TableHeader>
-              <TableRow>
+            <TableRow>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Level</TableHead>
                 <TableHead>Players</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
+            </TableRow>
             </TableHeader>
             <TableBody>
-              {sessions.map((session) => (
+            {sessions.map((session) => (
                 <TableRow key={session.id}>
-                  <TableCell>
+                <TableCell>
                     <div className="font-medium">{formatDate(session.date)}</div>
                     <div className="text-sm text-muted-foreground">{session.time}</div>
-                  </TableCell>
-                  <TableCell>{session.level}</TableCell>
-                  <TableCell>
+                </TableCell>
+                <TableCell>{session.level}</TableCell>
+                <TableCell>
+                    {session.players.length} / {session.maxPlayers}
+                    {session.waitlist.length > 0 &&
+                    ` (+${session.waitlist.length} waitlist)`}
+                </TableCell>
+                <TableCell>
+                    <Badge
+                    variant={
+                        session.players.length >= session.maxPlayers
+                        ? 'destructive'
+                        : 'secondary'
+                    }
+                    >
+                    {session.players.length >= session.maxPlayers ? 'Full' : 'Open'}
+                    </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditSession(session)}>
+                        Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewPlayers(session)}>
+                        View Players
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                        className="text-red-500"
+                        onClick={() => handleDeleteSessionClick(session)}
+                        >
+                        Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </TableCell>
+                </TableRow>
+            ))}
+            </TableBody>
+        </Table>
+    </div>
+  );
+
+  const renderSessionCards = () => (
+    <div className="space-y-4">
+      {sessions.map((session) => (
+        <Card key={session.id}>
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle>{session.level}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{formatDate(session.date)} - {session.time}</p>
+                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditSession(session)}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewPlayers(session)}>View Players</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteSessionClick(session)}>Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+                 <p>
+                    <span className="font-semibold">Players: </span>
                     {session.players.length} / {session.maxPlayers}
                     {session.waitlist.length > 0 && ` (+${session.waitlist.length} waitlist)`}
-                  </TableCell>
-                  <TableCell>
+                </p>
+                <p>
+                    <span className="font-semibold">Status: </span>
                     <Badge variant={session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'}>
-                      {session.players.length >= session.maxPlayers ? 'Full' : 'Open'}
+                    {session.players.length >= session.maxPlayers ? 'Full' : 'Open'}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditSession(session)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleViewPlayers(session)}>View Players</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteSessionClick(session)}>
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </TabsContent>
-      <TabsContent value="announcements" className="mt-6">
-      <div className="rounded-lg border">
-          <Table>
+                </p>
+            </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+
+  const renderAnnouncementTable = () => (
+    <div className="rounded-lg border">
+        <Table>
             <TableHeader>
-              <TableRow>
+            <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Content</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
+            </TableRow>
             </TableHeader>
             <TableBody>
-              {announcements.map((ann) => (
+            {announcements.map((ann) => (
                 <TableRow key={ann.id}>
-                  <TableCell className="font-medium">{ann.title}</TableCell>
-                  <TableCell className="max-w-sm truncate">{ann.content}</TableCell>
-                  <TableCell>{formatDate(ann.date)}</TableCell>
-                  <TableCell className="text-right">
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                <TableCell className="font-medium">{ann.title}</TableCell>
+                <TableCell className="max-w-xs md:max-w-sm truncate">{ann.content}</TableCell>
+                <TableCell>{formatDate(ann.date)}</TableCell>
+                <TableCell className="text-right">
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontal className="h-4 w-4" />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteAnnouncementClick(ann)}>
-                          Delete
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>
+                        Edit
                         </DropdownMenuItem>
-                      </DropdownMenuContent>
+                        <DropdownMenuItem
+                        className="text-red-500"
+                        onClick={() => handleDeleteAnnouncementClick(ann)}
+                        >
+                        Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
                     </DropdownMenu>
-                  </TableCell>
+                </TableCell>
                 </TableRow>
-              ))}
+            ))}
             </TableBody>
-          </Table>
-        </div>
+        </Table>
+    </div>
+  );
+
+  const renderAnnouncementCards = () => (
+    <div className="space-y-4">
+        {announcements.map((ann) => (
+             <Card key={ann.id}>
+                <CardHeader>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle>{ann.title}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{formatDate(ann.date)}</p>
+                        </div>
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>Edit</DropdownMenuItem>
+                                <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteAnnouncementClick(ann)}>Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground line-clamp-3">{ann.content}</p>
+                </CardContent>
+            </Card>
+        ))}
+    </div>
+  )
+
+  return (
+    <Tabs defaultValue="sessions" onValueChange={setActiveTab}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+          <TabsTrigger value="sessions">Manage Sessions</TabsTrigger>
+          <TabsTrigger value="announcements">Manage Announcements</TabsTrigger>
+        </TabsList>
+        <Button onClick={handleCreateNew} className="w-full sm:w-auto">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Create New
+        </Button>
+      </div>
+      <TabsContent value="sessions" className="mt-6">
+        {isMobile ? renderSessionCards() : renderSessionTable()}
       </TabsContent>
-      
-      <SessionFormModal 
+      <TabsContent value="announcements" className="mt-6">
+       {isMobile ? renderAnnouncementCards() : renderAnnouncementTable()}
+      </TabsContent>
+
+      <SessionFormModal
         isOpen={isSessionModalOpen}
         onClose={() => setIsSessionModalOpen(false)}
         onSave={handleSaveSession}
         session={selectedSession}
       />
-      
+
       <DeleteSessionDialog
         isOpen={isDeleteSessionDialogOpen}
         onClose={() => setIsDeleteSessionDialogOpen(false)}
@@ -243,6 +377,9 @@ export default function AdminPage() {
         session={sessionToView}
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
+        onBook={() => {}}
+        onCancel={() => {}}
+        onWaitlist={() => {}}
       />
 
       <AnnouncementFormModal
@@ -257,7 +394,6 @@ export default function AdminPage() {
         onClose={() => setIsDeleteAnnouncementDialogOpen(false)}
         onConfirm={confirmDeleteAnnouncement}
       />
-
     </Tabs>
   );
 }
