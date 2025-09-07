@@ -6,7 +6,6 @@ import type { NextPage } from 'next';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -14,7 +13,6 @@ import { currentUser } from '@/lib/mock-data';
 import { Calendar as CalendarIcon, Info, Search, SlidersHorizontal } from 'lucide-react';
 import SessionDetailsCard from '@/components/sessions/session-details-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSessions } from '@/context/session-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -22,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
