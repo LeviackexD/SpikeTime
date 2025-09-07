@@ -58,9 +58,15 @@ export default function RegisterPage() {
       router.push('/');
     } catch (error: any) {
       console.error('Registration failed:', error);
+      let description = 'An unexpected error occurred.';
+      if (error.code === 'auth/weak-password') {
+        description = 'The password is too weak. Please use at least 6 characters.';
+      } else if (error.code === 'auth/email-already-in-use') {
+        description = 'This email is already registered. Please log in.';
+      }
       toast({
         title: 'Registration Failed',
-        description: error.message || 'An unexpected error occurred.',
+        description: description,
         variant: 'destructive',
       });
     } finally {
@@ -155,5 +161,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-    

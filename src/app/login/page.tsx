@@ -38,7 +38,7 @@ export default function LoginPage() {
       console.error('Login failed:', error);
       toast({
         title: 'Login Failed',
-        description: error.message || 'An unexpected error occurred.',
+        description: 'Invalid email or password. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -118,5 +118,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
