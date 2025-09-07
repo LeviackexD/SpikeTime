@@ -14,7 +14,7 @@ export default function SectionHeader({ icon: Icon, title, children, className }
         <div className={cn("flex flex-col gap-2 w-full", className)}>
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <Icon className="h-6 w-6 text-orange-500" />
+                    <Icon className="h-6 w-6 text-primary" />
                     <h2 className="text-xl font-bold font-headline">{title}</h2>
                 </div>
                 {children}
