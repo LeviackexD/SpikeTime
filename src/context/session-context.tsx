@@ -2,8 +2,8 @@
 'use client';
 
 import * as React from 'react';
-import type { Session, Message } from '@/lib/types';
-import { mockSessions, currentUser } from '@/lib/mock-data';
+import type { Session, Message, User, DirectChat } from '@/lib/types';
+import { mockSessions, currentUser, mockDirectChats } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
 type ToastInfo = {
@@ -21,12 +21,16 @@ interface SessionContextType {
   cancelBooking: (sessionId: string) => void;
   joinWaitlist: (sessionId: string) => void;
   addMessage: (sessionId: string, message: Message) => void;
+  directChats: DirectChat[];
+  createDirectChat: (user: User) => string;
+  addDirectMessage: (chatId: string, message: Message) => void;
 }
 
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
   const { toast } = useToast();
 
   const showToast = (toastInfo: ToastInfo) => {
@@ -145,9 +149,41 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     );
   };
 
+  const createDirectChat = (user: User) => {
+    const newChat: DirectChat = {
+        id: `dc${Date.now()}`,
+        participants: [currentUser, user],
+        messages: [],
+    };
+    setDirectChats(prev => [...prev, newChat]);
+    return newChat.id;
+  }
+
+  const addDirectMessage = (chatId: string, message: Message) => {
+    setDirectChats(prevChats =>
+        prevChats.map(chat =>
+          chat.id === chatId
+            ? { ...chat, messages: [...chat.messages, message] }
+            : chat
+        )
+      );
+  }
+
   return (
     <SessionContext.Provider
-      value={{ sessions, createSession, updateSession, deleteSession, bookSession, cancelBooking, joinWaitlist, addMessage }}
+      value={{ 
+        sessions, 
+        createSession, 
+        updateSession, 
+        deleteSession, 
+        bookSession, 
+        cancelBooking, 
+        joinWaitlist, 
+        addMessage,
+        directChats,
+        createDirectChat,
+        addDirectMessage,
+    }}
     >
       {children}
     </SessionContext.Provider>
@@ -161,3 +197,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    

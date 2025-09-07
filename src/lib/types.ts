@@ -44,3 +44,11 @@ export interface Announcement {
   content: string;
   date: string;
 }
+
+export interface DirectChat {
+    id: string;
+    participants: User[];
+    messages: Message[];
+}
+
+    
