@@ -7,7 +7,7 @@ import { mockDirectChats, currentUser } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, Timestamp, addDoc } from 'firebase/firestore';
 
 type ToastInfo = {
   title: string;
@@ -17,7 +17,7 @@ type ToastInfo = {
 
 interface SessionContextType {
   sessions: Session[];
-  createSession: (session: Session) => void;
+  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => void;
   updateSession: (session: Session) => void;
   deleteSession: (sessionId: string) => void;
   bookSession: (sessionId: string) => void;
@@ -100,9 +100,29 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     });
   };
 
-  const createSession = (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
-    // This would be a firestore addDoc in a real scenario
-    console.log("Creating session (mock):", sessionData)
+  const createSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
+    try {
+      const newSessionDoc = {
+        ...sessionData,
+        date: Timestamp.fromDate(new Date(sessionData.date)),
+        players: [],
+        waitlist: [],
+        messages: [],
+      };
+      await addDoc(collection(db, "sessions"), newSessionDoc);
+      showToast({
+        title: 'Session Created!',
+        description: 'The new session has been successfully added.',
+        variant: 'success',
+      });
+    } catch (error) {
+      console.error("Error creating session: ", error);
+      showToast({
+        title: 'Creation Failed',
+        description: 'Could not create the new session. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const updateSession = (updatedSession: Session) => {

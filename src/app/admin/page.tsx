@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -183,12 +184,12 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveSession = (sessionData: Session) => {
-    if (selectedSession) {
-      // Edit existing session
+  const handleSaveSession = (sessionData: Session | Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
+    if ('id' in sessionData) {
+      // Editing existing session
       updateSession(sessionData);
     } else {
-      // Create new session
+      // Creating new session
       createSession(sessionData);
     }
     setIsSessionModalOpen(false);

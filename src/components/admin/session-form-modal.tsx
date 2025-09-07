@@ -22,14 +22,16 @@ import {
 } from '@/components/ui/select';
 import type { Session, SkillLevel } from '@/lib/types';
 
+type SessionFormData = Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>
+
 interface SessionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (session: Session) => void;
+  onSave: (session: Session | SessionFormData) => void;
   session: Session | null;
 }
 
-const emptySession: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'> = {
+const emptySession: SessionFormData = {
   date: new Date().toISOString(),
   startTime: '',
   endTime: '',
@@ -40,7 +42,7 @@ const emptySession: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'> = 
 };
 
 export default function SessionFormModal({ isOpen, onClose, onSave, session }: SessionFormModalProps) {
-    const [formData, setFormData] = React.useState<Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>>({ ...emptySession });
+    const [formData, setFormData] = React.useState<SessionFormData>(emptySession);
     
     React.useEffect(() => {
         if (isOpen) {
@@ -55,6 +57,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     imageUrl: session.imageUrl,
                 });
             } else {
+                // Reset to default for new session, ensuring date is current
                 setFormData({ ...emptySession, date: new Date().toISOString() });
             }
         }
@@ -70,6 +73,8 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
             const timezoneOffset = newDate.getTimezoneOffset() * 60000;
             const adjustedDate = new Date(newDate.getTime() + timezoneOffset);
             setFormData(prev => ({...prev, date: adjustedDate.toISOString()}));
+        } else if (type === 'number') {
+            setFormData(prev => ({ ...prev, [id]: Number(value) }));
         } else {
             setFormData(prev => ({...prev, [id]: value}));
         }
@@ -81,10 +86,14 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({
-            ...(session || { id: '', players: [], waitlist: [], messages: [] }),
-            ...formData,
-        });
+        if (session) { // Editing existing session
+             onSave({
+                ...session,
+                ...formData,
+            });
+        } else { // Creating new session
+            onSave(formData);
+        }
     }
     
     // The date from formData is an ISO string. We need to format it to YYYY-MM-DD for the input.
@@ -120,7 +129,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                 </div>
                  <div className="col-span-2 space-y-2">
                     <Label htmlFor="imageUrl">Cover Image URL</Label>
-                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png"/>
+                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://picsum.photos/400/300"/>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="level">Level</Label>
