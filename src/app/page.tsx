@@ -1,3 +1,7 @@
+
+'use client';
+
+import * as React from 'react';
 import type { NextPage } from 'next';
 import {
   Card,
@@ -7,15 +11,54 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { mockSessions, currentUser } from '@/lib/mock-data';
-import { ArrowRight, Calendar, Clock, Users } from 'lucide-react';
+import { mockSessions, currentUser, mockUsers } from '@/lib/mock-data';
+import { ArrowRight, Calendar, Clock, Users, CheckCircle, UserPlus } from 'lucide-react';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
+import type { Session } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+
 
 const DashboardPage: NextPage = () => {
-  const userSessions = mockSessions.slice(0, 3); // Mock user's booked sessions
+  // Mock user's booked sessions - We'll use state to make it interactive
+  const [sessions, setSessions] = React.useState<Session[]>(mockSessions.slice(0,3));
+  const { toast } = useToast();
+
+  const handleBooking = (sessionId: string) => {
+    setSessions(prevSessions =>
+      prevSessions.map(session => {
+        if (session.id === sessionId && session.players.length < session.maxPlayers) {
+          if (session.players.some(p => p.id === currentUser.id)) return session; // Already registered
+          toast({
+            title: 'Booking Confirmed!',
+            description: `You're all set for the ${session.level} session.`,
+            variant: 'success',
+          });
+          return { ...session, players: [...session.players, currentUser] };
+        }
+        return session;
+      })
+    );
+  };
+
+  const handleJoinWaitlist = (sessionId: string) => {
+     setSessions(prevSessions =>
+      prevSessions.map(session => {
+        if (session.id === sessionId && session.players.length >= session.maxPlayers) {
+          if (session.waitlist.some(p => p.id === currentUser.id)) return session; // Already on waitlist
+          toast({
+            title: 'You are on the waitlist!',
+            description: `We'll notify you if a spot opens up.`,
+            variant: 'success'
+          });
+          return { ...session, waitlist: [...session.waitlist, currentUser] };
+        }
+        return session;
+      })
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -34,56 +77,84 @@ const DashboardPage: NextPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {userSessions.length > 0 ? (
+          {sessions.length > 0 ? (
              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {userSessions.map((session) => (
-                <Card key={session.id} className="flex flex-col overflow-hidden transition-all hover:scale-105">
-                  <div className="relative h-40 w-full">
-                    <Image 
-                      src={`https://picsum.photos/seed/${session.id}/600/400`} 
-                      alt="Volleyball session" 
-                      layout="fill" 
-                      objectFit="cover"
-                      data-ai-hint="volleyball action"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                    <div className="absolute bottom-0 left-0 p-4">
-                      <h3 className="font-headline text-xl font-bold text-white">
-                        Beach Volleyball - {session.level}
-                      </h3>
-                      <Badge variant="secondary" className="mt-1">{session.level}</Badge>
-                    </div>
-                  </div>
-                  <CardContent className="flex-grow p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span className="text-sm">
-                        {new Date(session.date).toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric',
-                          timeZone: 'UTC',
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span className="text-sm">{session.time}</span>
-                    </div>
-                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span className="text-sm">{session.players.length} / {session.maxPlayers} spots</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="p-4 pt-0">
-                     <Button className="w-full" variant="outline" asChild>
-                      <Link href="#">
-                        View Details <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+              {sessions.map((session) => {
+                 const isFull = session.players.length >= session.maxPlayers;
+                 const isRegistered = session.players.some(p => p.id === currentUser.id);
+                 const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
+
+                 return (
+                    <Card key={session.id} className="flex flex-col overflow-hidden transition-all hover:scale-105">
+                        <div className="relative h-48 w-full">
+                            <Image 
+                            src={`https://picsum.photos/seed/${session.id}/600/400`} 
+                            alt="Volleyball session" 
+                            fill
+                            style={{ objectFit: 'cover' }}
+                            data-ai-hint="volleyball action"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                            <div className="absolute top-2 right-2">
+                               <Badge variant={isFull ? 'destructive' : 'secondary'}>
+                                {isFull ? 'Full' : 'Open'}
+                               </Badge>
+                            </div>
+                            <div className="absolute bottom-0 left-0 p-4">
+                            <h3 className="font-headline text-2xl font-bold text-white">
+                                Beach Volleyball
+                            </h3>
+                            <p className="font-semibold text-primary">{session.level} Level</p>
+                            </div>
+                        </div>
+                        <CardContent className="flex-grow p-4 space-y-3">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <Calendar className="h-4 w-4" />
+                                <span className="text-sm font-semibold">
+                                {new Date(session.date).toLocaleDateString('en-US', {
+                                    month: 'long',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                    timeZone: 'UTC',
+                                })}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <Clock className="h-4 w-4" />
+                                <span className="text-sm font-semibold">{session.time}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <Users className="h-4 w-4" />
+                                <span className="text-sm font-semibold">{session.players.length} / {session.maxPlayers} players</span>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="p-4 pt-0">
+                            {isRegistered ? (
+                                <Button className="w-full" variant="outline" disabled>
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    You're Registered
+                                </Button>
+                            ) : isFull ? (
+                                isOnWaitlist ? (
+                                    <Button className="w-full" variant="outline" disabled>
+                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                        On Waitlist
+                                    </Button>
+                                ) : (
+                                    <Button className="w-full" variant="secondary" onClick={() => handleJoinWaitlist(session.id)}>
+                                        <UserPlus className="mr-2 h-4 w-4" />
+                                        Join Waitlist
+                                    </Button>
+                                )
+                            ) : (
+                                <Button className="w-full" onClick={() => handleBooking(session.id)}>
+                                    Book My Spot
+                                </Button>
+                            )}
+                        </CardFooter>
+                    </Card>
+                 );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
