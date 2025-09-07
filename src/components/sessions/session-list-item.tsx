@@ -14,9 +14,10 @@ import {
   Users,
 } from 'lucide-react';
 import type { Session, User } from '@/lib/types';
-import { currentUser } from '@/lib/mock-data';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Progress } from '../ui/progress';
+import { useAuth } from '@/context/auth-context';
+import { cn } from '@/lib/utils';
 
 interface SessionListItemProps {
   session: Session;
@@ -35,6 +36,8 @@ export default function SessionListItem({
   onViewPlayers,
   priority = false,
 }: SessionListItemProps) {
+  const { user: currentUser } = useAuth();
+  
   if (!currentUser) {
     // Or a loading skeleton
     return null;
@@ -92,7 +95,10 @@ export default function SessionListItem({
                         <span className="font-semibold flex items-center gap-1"><Users className="h-3 w-3" /> Players</span>
                         <span>{session.players.length}/{session.maxPlayers}</span>
                     </div>
-                    <Progress value={progressValue} className="h-1.5" />
+                    <Progress value={progressValue} className="h-1.5" indicatorClassName={cn({
+                        'bg-destructive': isFull,
+                        'bg-green-600': !isFull,
+                    })} />
                 </div>
                 <Button 
                 variant="link" 
