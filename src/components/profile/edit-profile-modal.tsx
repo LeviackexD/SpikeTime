@@ -70,10 +70,6 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                     <Input id="name" value={formData.name} onChange={handleChange} required />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={formData.email} onChange={handleChange} required />
-                </div>
-                 <div className="space-y-2">
                     <Label htmlFor="avatarUrl">Avatar URL</Label>
                     <Input id="avatarUrl" value={formData.avatarUrl} onChange={handleChange} />
                 </div>
