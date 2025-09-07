@@ -4,13 +4,13 @@
 import * as React from 'react';
 import type { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
-import { mockSessions, currentUser } from '@/lib/mock-data';
+import { mockSessions, currentUser, mockAnnouncements } from '@/lib/mock-data';
 import Link from 'next/link';
 import type { Session } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import SessionListItem from '@/components/sessions/session-list-item';
 import SectionHeader from '@/components/layout/section-header';
-import { Volleyball } from 'lucide-react';
+import { Volleyball, Megaphone } from 'lucide-react';
 import SessionDetailsModal from '@/components/sessions/session-details-modal';
 import {
   Accordion,
@@ -18,6 +18,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type ToastInfo = {
   title: string;
@@ -150,6 +151,8 @@ const DashboardPage: NextPage = () => {
     new Date(session.date) >= new Date() && !session.players.some(p => p.id === currentUser.id)
   ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+  const recentAnnouncements = mockAnnouncements.slice(0, 3);
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -217,6 +220,27 @@ const DashboardPage: NextPage = () => {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      <div className="space-y-4">
+        <SectionHeader icon={Megaphone} title="Recent Announcements">
+            <Button variant="link" asChild>
+                <Link href="/announcements">View all</Link>
+            </Button>
+        </SectionHeader>
+        <Card>
+            <CardContent className="p-6">
+                 <ul className="space-y-4">
+                    {recentAnnouncements.map((announcement) => (
+                    <li key={announcement.id} className="border-l-4 border-primary pl-4">
+                        <h3 className="font-semibold text-foreground">{announcement.title}</h3>
+                        <p className="text-sm text-muted-foreground">{announcement.content}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{new Date(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>
+                    </li>
+                    ))}
+                </ul>
+            </CardContent>
+        </Card>
+      </div>
 
       <SessionDetailsModal
         session={sessionToView}
