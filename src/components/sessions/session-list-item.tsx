@@ -14,12 +14,12 @@ import {
   Users,
 } from 'lucide-react';
 import type { Session, User } from '@/lib/types';
+import { currentUser } from '@/lib/mock-data';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Progress } from '../ui/progress';
 
 interface SessionListItemProps {
   session: Session;
-  currentUser: User | null;
   onBook: (sessionId: string) => void;
   onCancel: (sessionId: string) => void;
   onWaitlist: (sessionId: string) => void;
@@ -29,7 +29,6 @@ interface SessionListItemProps {
 
 export default function SessionListItem({
   session,
-  currentUser,
   onBook,
   onCancel,
   onWaitlist,
@@ -70,7 +69,7 @@ export default function SessionListItem({
                 data-ai-hint="volleyball action"
             />
              <Badge className="absolute top-2 right-2" variant={isFull ? 'destructive' : 'secondary'}>
-                {isFull ? 'Full' : `${session.maxPlayers - session.players.length} spots left`}
+                {isFull ? 'Full' : `${session.maxPlayers - session.length} spots left`}
             </Badge>
         </div>
         <div className="flex flex-col flex-grow">

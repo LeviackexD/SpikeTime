@@ -5,7 +5,7 @@ import * as React from 'react';
 import type { NextPage } from 'next';
 import { useSessions } from '@/context/session-context';
 import type { Session, Message, User, DirectChat } from '@/lib/types';
-import { mockUsers } from '@/lib/mock-data';
+import { mockUsers, currentUser } from '@/lib/mock-data';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,11 +17,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewChatModal from '@/components/chat/new-chat-modal';
-import { useAuth } from '@/context/auth-context';
 
 
 const ChatPage: NextPage = () => {
-  const { user: currentUser } = useAuth();
   const { 
     sessions, 
     addMessage,
@@ -39,7 +37,7 @@ const ChatPage: NextPage = () => {
     return sessions.filter(session => 
       session.players.some(p => p.id === currentUser.id)
     ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [sessions, currentUser]
+  }, [sessions]
   );
   
   React.useEffect(() => {
@@ -105,14 +103,12 @@ const ChatPage: NextPage = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onNewChatClick={() => setIsNewChatModalOpen(true)}
-        currentUser={currentUser}
       />
       <ChatWindow 
         session={selectedSession} 
         directChat={selectedDirectChat}
         onAddSessionMessage={addMessage} 
         onAddDirectMessage={addDirectMessage}
-        currentUser={currentUser}
         onOpenSheet={() => setIsSheetOpen(true)}
         chatKey={selectedChatId}
         title={getChatTitle()}
@@ -139,10 +135,9 @@ interface ChatListProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
     onNewChatClick: () => void;
-    currentUser: User;
 }
 
-const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheetOpen, setIsSheetOpen, activeTab, setActiveTab, onNewChatClick, currentUser }: ChatListProps) => {
+const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheetOpen, setIsSheetOpen, activeTab, setActiveTab, onNewChatClick }: ChatListProps) => {
   const isMobile = useIsMobile();
 
   const chatListContent = (
@@ -245,7 +240,6 @@ interface ChatWindowProps {
     directChat?: DirectChat;
     onAddSessionMessage: (sessionId: string, message: Message) => void;
     onAddDirectMessage: (chatId: string, message: Message) => void;
-    currentUser: User;
     onOpenSheet: () => void;
     chatKey: string | null;
     title: string;
@@ -253,7 +247,7 @@ interface ChatWindowProps {
 }
 
 
-const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessage, currentUser, onOpenSheet, chatKey, title, activeTab }: ChatWindowProps) => {
+const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessage, onOpenSheet, chatKey, title, activeTab }: ChatWindowProps) => {
   const [newMessage, setNewMessage] = React.useState('');
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -268,7 +262,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !currentUser) return;
 
     const message: Message = {
         id: `m${Date.now()}`,

@@ -23,8 +23,6 @@ import {
 } from '@/components/ui/select';
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { app } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { SkillLevel } from '@/lib/types';
 
@@ -46,32 +44,19 @@ export default function RegisterPage() {
       return;
     }
     setIsLoading(true);
-    try {
-      const auth = getAuth(app);
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Here you would typically save additional user info (name, skillLevel) to Firestore
-      console.log('User created:', userCredential.user.uid);
-      console.log('Name:', name);
-      console.log('Skill Level:', skillLevel);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    toast({
+        title: 'Account Created!',
+        description: 'You can now log in with your credentials.',
+        variant: 'success'
+    });
 
-      router.push('/');
-    } catch (error: any) {
-      console.error('Registration failed:', error);
-      let description = 'An unexpected error occurred.';
-      if (error.code === 'auth/weak-password') {
-        description = 'The password is too weak. Please use at least 6 characters.';
-      } else if (error.code === 'auth/email-already-in-use') {
-        description = 'This email is already registered. Please log in.';
-      }
-      toast({
-        title: 'Registration Failed',
-        description: description,
-        variant: 'destructive',
-      });
-    } finally {
-        setIsLoading(false);
-    }
+    router.push('/login');
+    
+    setIsLoading(false);
   };
 
   return (

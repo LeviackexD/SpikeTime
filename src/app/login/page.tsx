@@ -16,8 +16,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { app } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
@@ -30,20 +28,28 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      const auth = getAuth(app);
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/');
-    } catch (error: any) {
-      console.error('Login failed:', error);
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // In a real app, you would validate credentials here.
+    // For this mock version, we'll just check if fields are not empty.
+    if (email && password) {
       toast({
+        title: 'Login Successful!',
+        description: 'Welcome back!',
+        variant: 'success',
+      });
+      router.push('/');
+    } else {
+       toast({
         title: 'Login Failed',
-        description: 'Invalid email or password. Please try again.',
+        description: 'Please enter both email and password.',
         variant: 'destructive',
       });
-    } finally {
-        setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   return (

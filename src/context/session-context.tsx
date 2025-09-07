@@ -3,10 +3,9 @@
 
 import * as React from 'react';
 import type { Session, Message, User, DirectChat } from '@/lib/types';
-import { mockSessions, mockDirectChats } from '@/lib/mock-data';
+import { mockSessions, mockDirectChats, currentUser } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
-import { useAuth } from './auth-context';
 
 type ToastInfo = {
   title: string;
@@ -34,7 +33,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
   const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
   const { requestPermission, showNotification, isPermissionGranted } = useNotifications();
   const scheduledNotificationsRef = React.useRef<Set<string>>(new Set());
 
@@ -71,7 +69,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         }
       });
     }
-  }, [sessions, isPermissionGranted, showNotification, currentUser]);
+  }, [sessions, isPermissionGranted, showNotification]);
 
 
   const showToast = (toastInfo: ToastInfo) => {

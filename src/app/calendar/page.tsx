@@ -15,11 +15,10 @@ import SessionCalendar from '@/components/dashboard/session-calendar';
 import SessionDetailsCard from '@/components/sessions/session-details-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSessions } from '@/context/session-context';
-import { useAuth } from '@/context/auth-context';
+import { currentUser } from '@/lib/mock-data';
 import { Separator } from '@/components/ui/separator';
 
 const CalendarPage: NextPage = () => {
-  const { user } = useAuth();
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [skillFilter, setSkillFilter] = React.useState('All');
@@ -28,7 +27,7 @@ const CalendarPage: NextPage = () => {
     setSelectedDate(date);
   };
   
-  if (!user) {
+  if (!currentUser) {
     return null; // or a loading indicator
   }
 
@@ -85,7 +84,6 @@ const CalendarPage: NextPage = () => {
                                 selectedDate={selectedDate}
                                 onDateChange={handleDateChange}
                                 skillFilter={skillFilter}
-                                currentUser={user}
                             />
                         </div>
                     </CardContent>
@@ -101,7 +99,6 @@ const CalendarPage: NextPage = () => {
                              <SessionDetailsCard
                                 key={session.id}
                                 session={session}
-                                currentUser={user}
                                 onBook={bookSession}
                                 onCancel={cancelBooking}
                                 onWaitlist={joinWaitlist}

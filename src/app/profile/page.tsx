@@ -20,7 +20,7 @@ import { BarChart, Edit, Medal, Star, Target } from 'lucide-react';
 import EditProfileModal from '@/components/profile/edit-profile-modal';
 import type { User } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/context/auth-context';
+import { currentUser } from '@/lib/mock-data';
 
 const achievements = [
   { icon: Medal, label: '50+ Sessions', color: 'text-yellow-500' },
@@ -29,23 +29,14 @@ const achievements = [
 ];
 
 export default function ProfilePage() {
-  const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [currentUser, setCurrentUser] = React.useState<User | null>(user);
-
-  React.useEffect(() => {
-    setCurrentUser(user);
-  }, [user]);
+  const [user, setUser] = React.useState<User>(currentUser);
 
   const handleSaveProfile = (updatedUser: User) => {
-    setCurrentUser(updatedUser);
+    setUser(updatedUser);
     // Here you would typically update the user in your database
     setIsModalOpen(false);
   };
-  
-  if (!currentUser) {
-    return null; // or a loading spinner
-  }
 
   return (
     <>
@@ -54,11 +45,11 @@ export default function ProfilePage() {
         <Card>
           <CardHeader className="items-center text-center">
             <Avatar className="h-24 w-24 border-4 border-primary/50">
-              <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-              <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user.avatarUrl} alt={user.name} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <CardTitle className="pt-4 font-headline text-2xl">
-              {currentUser.name}
+              {user.name}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center">
@@ -81,17 +72,17 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-6 text-sm">
               <div>
                 <p className="text-muted-foreground">Skill Level</p>
-                <p className="font-semibold text-lg">{currentUser.skillLevel}</p>
+                <p className="font-semibold text-lg">{user.skillLevel}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Favorite Position</p>
-                <p className="font-semibold text-lg">{currentUser.favoritePosition}</p>
+                <p className="font-semibold text-lg">{user.favoritePosition}</p>
               </div>
             </div>
             <Separator />
             <div className="text-center">
                 <p className="text-muted-foreground">Sessions Played</p>
-                <p className="font-semibold text-2xl">{currentUser.stats.sessionsPlayed}</p>
+                <p className="font-semibold text-2xl">{user.stats.sessionsPlayed}</p>
             </div>
           </CardContent>
         </Card>
@@ -120,7 +111,7 @@ export default function ProfilePage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveProfile}
-        user={currentUser}
+        user={user}
     />
     </>
   );

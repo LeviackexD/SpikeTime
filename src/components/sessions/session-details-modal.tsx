@@ -17,7 +17,7 @@ import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus } from 'lucide-react';
 import SuggestLevelButton from '../ai/suggest-level-button';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/context/auth-context';
+import { currentUser } from '@/lib/mock-data';
 
 
 interface PlayerListProps {
@@ -85,26 +85,18 @@ export default function SessionDetailsModal({
   onWaitlist,
 }: SessionDetailsModalProps) {
   
-  const { user: currentUser } = useAuth();
-  const [currentSession, setCurrentSession] = React.useState(session);
+  if (!session || !currentUser) return null;
 
-  React.useEffect(() => {
-    setCurrentSession(session);
-  }, [session, isOpen]);
+  const spotsFilled = session.players.length;
+  const progressValue = (spotsFilled / session.maxPlayers) * 100;
+
+  const isRegistered = session.players.some(p => p.id === currentUser.id);
+  const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
+  const isFull = spotsFilled >= session.maxPlayers;
   
-  if (!currentSession || !currentUser) return null;
-
-  const spotsFilled = currentSession.players.length;
-  const progressValue = (spotsFilled / currentSession.maxPlayers) * 100;
-
-  const isRegistered = currentSession.players.some(p => p.id === currentUser.id);
-  const isOnWaitlist = currentSession.waitlist.some(p => p.id === currentUser.id);
-  const isFull = spotsFilled >= currentSession.maxPlayers;
-  
-
   const handleAction = (action: (id: string) => void) => {
-    if (currentSession) {
-      action(currentSession.id);
+    if (session) {
+      action(session.id);
     }
   }
 
@@ -126,7 +118,7 @@ export default function SessionDetailsModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px] flex flex-col max-h-[90vh]">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="font-headline text-2xl">{currentSession.level} Session</DialogTitle>
+          <DialogTitle className="font-headline text-2xl">{session.level} Session</DialogTitle>
           <DialogDescription>
             Session details and registered players.
           </DialogDescription>
@@ -135,11 +127,11 @@ export default function SessionDetailsModal({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>{formatDate(currentSession.date)}</span>
+              <span>{formatDate(session.date)}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>{currentSession.startTime} - {currentSession.endTime}</span>
+              <span>{session.startTime} - {session.endTime}</span>
             </div>
           </div>
           
@@ -149,20 +141,20 @@ export default function SessionDetailsModal({
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <span>Spots Filled</span>
               </div>
-              <span>{spotsFilled} / {currentSession.maxPlayers}</span>
+              <span>{spotsFilled} / {session.maxPlayers}</span>
             </div>
             <Progress value={progressValue} className="h-2" />
           </div>
 
           <PlayerList 
             title="Registered Players"
-            players={currentSession.players}
+            players={session.players}
             emptyMessage="No players have registered yet."
           />
 
           <PlayerList 
             title="Waitlist"
-            players={currentSession.waitlist}
+            players={session.waitlist}
             emptyMessage="The waitlist is empty."
           />
 
@@ -172,7 +164,7 @@ export default function SessionDetailsModal({
                     <BarChart2 className="h-5 w-5 text-muted-foreground" />
                     Admin Actions
                 </h3>
-                <SuggestLevelButton playerSkillLevels={currentSession.players.map(p => p.skillLevel.toLowerCase() as "beginner" | "intermediate" | "advanced")}/>
+                <SuggestLevelButton playerSkillLevels={session.players.map(p => p.skillLevel.toLowerCase() as "beginner" | "intermediate" | "advanced")}/>
              </div>
           )}
 

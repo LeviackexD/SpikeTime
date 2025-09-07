@@ -15,11 +15,11 @@ import {
   XCircle,
   UserPlus,
 } from 'lucide-react';
-import type { Session, User } from '@/lib/types';
+import type { Session } from '@/lib/types';
+import { currentUser } from '@/lib/mock-data';
 
 interface SessionDetailsCardProps {
   session: Session;
-  currentUser: User | null;
   onBook: (sessionId: string) => void;
   onCancel: (sessionId: string) => void;
   onWaitlist: (sessionId: string) => void;
@@ -28,7 +28,6 @@ interface SessionDetailsCardProps {
 
 export default function SessionDetailsCard({
   session,
-  currentUser,
   onBook,
   onCancel,
   onWaitlist,

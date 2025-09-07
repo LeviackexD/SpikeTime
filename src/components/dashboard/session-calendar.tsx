@@ -3,7 +3,8 @@
 
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import type { Session, User } from '@/lib/types';
+import type { Session } from '@/lib/types';
+import { currentUser } from '@/lib/mock-data';
 import {
   Tooltip,
   TooltipContent,
@@ -17,10 +18,9 @@ interface SessionCalendarProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   skillFilter: string;
-  currentUser: User | null;
 }
 
-export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter, currentUser }: SessionCalendarProps) {
+export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter }: SessionCalendarProps) {
 
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
