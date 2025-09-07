@@ -26,7 +26,7 @@ export function InvernessEaglesLogo(props: React.SVGProps<SVGSVGElement>) {
         fontFamily="Poppins, sans-serif"
         fontSize="20"
         fontWeight="600"
-        fill="hsl(var(--foreground))"
+        fill="currentColor"
         className="font-headline"
       >
         INVERNESS EAGLES
