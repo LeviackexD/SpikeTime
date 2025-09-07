@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -43,7 +44,9 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     React.useEffect(() => {
         if(session) {
-            setFormData(session);
+            const { date, ...rest } = session;
+            const formattedDate = date ? new Date(date).toISOString().split('T')[0] : '';
+            setFormData({ ...rest, date: formattedDate });
         } else {
             setFormData(emptySession);
         }
@@ -77,36 +80,26 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
         </DialogHeader>
         <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="date" className="text-right">
-                    Date
-                    </Label>
-                    <Input id="date" type="date" value={formData.date} onChange={handleChange} className="col-span-3" required />
+                <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input id="date" type="date" value={formData.date} onChange={handleChange} required />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="time" className="text-right">
-                    Time
-                    </Label>
-                    <Input id="time" value={formData.time} onChange={handleChange} placeholder="e.g., 18:00 - 20:00" className="col-span-3" required/>
+                <div className="space-y-2">
+                    <Label htmlFor="time">Time</Label>
+                    <Input id="time" value={formData.time} onChange={handleChange} placeholder="e.g., 18:00 - 20:00" required/>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="location" className="text-right">
-                    Location
-                    </Label>
-                    <Input id="location" value={formData.location} onChange={handleChange} placeholder="e.g., Beach Court 1" className="col-span-3" required/>
+                <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" value={formData.location} onChange={handleChange} placeholder="e.g., Beach Court 1" required/>
                 </div>
-                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="imageUrl" className="text-right">
-                    Cover Image URL
-                    </Label>
-                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png" className="col-span-3"/>
+                 <div className="space-y-2">
+                    <Label htmlFor="imageUrl">Cover Image URL</Label>
+                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png"/>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="level" className="text-right">
-                    Level
-                    </Label>
+                <div className="space-y-2">
+                    <Label htmlFor="level">Level</Label>
                     <Select value={formData.level} onValueChange={handleSelectChange}>
-                        <SelectTrigger className="col-span-3">
+                        <SelectTrigger>
                             <SelectValue placeholder="Select a level" />
                         </SelectTrigger>
                         <SelectContent>
@@ -117,11 +110,9 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="maxPlayers" className="text-right">
-                    Max Players
-                    </Label>
-                    <Input id="maxPlayers" type="number" value={formData.maxPlayers} onChange={handleChange} className="col-span-3" required/>
+                <div className="space-y-2">
+                    <Label htmlFor="maxPlayers">Max Players</Label>
+                    <Input id="maxPlayers" type="number" value={formData.maxPlayers} onChange={handleChange} required/>
                 </div>
             </div>
             <DialogFooter>
