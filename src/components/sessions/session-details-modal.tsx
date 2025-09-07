@@ -171,7 +171,7 @@ export default function SessionDetailsModal({
         <DialogFooter className='sm:justify-between items-center'>
             <div className='flex items-center gap-2'>
             {isRegistered ? (
-              <Button variant="destructive" onClick={() => handleAction(onCancel)}>
+              <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/5 hover:text-destructive" onClick={() => handleAction(onCancel)}>
                 <X className="mr-2 h-4 w-4" /> Cancel My Spot
               </Button>
             ) : isFull ? (
@@ -192,7 +192,7 @@ export default function SessionDetailsModal({
               </Button>
             )}
             </div>
-           <Button variant="outline" onClick={onClose}>
+           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
         </DialogFooter>
