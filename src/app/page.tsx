@@ -12,6 +12,12 @@ import SessionListItem from '@/components/sessions/session-list-item';
 import SectionHeader from '@/components/layout/section-header';
 import { Volleyball } from 'lucide-react';
 import SessionDetailsModal from '@/components/sessions/session-details-modal';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 type ToastInfo = {
   title: string;
@@ -152,32 +158,39 @@ const DashboardPage: NextPage = () => {
         <p className="text-muted-foreground">Here's what's happening in your volleyball world.</p>
       </div>
       
-      <div className="flex flex-col gap-8">
-        <SectionHeader icon={Volleyball} title="My Upcoming Sessions" />
-        {upcomingSessions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {upcomingSessions.map((session, index) => (
-               <SessionListItem 
-                  key={session.id}
-                  session={session}
-                  currentUser={currentUser}
-                  onBook={handleBooking}
-                  onCancel={handleCancelBooking}
-                  onWaitlist={handleJoinWaitlist}
-                  onViewPlayers={() => handleViewPlayers(session)}
-                  priority={index === 0}
-               />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed">
-            <p className="text-muted-foreground mb-4">You have no upcoming sessions booked.</p>
-            <Button asChild>
-              <Link href="/calendar">Browse Sessions</Link>
-            </Button>
-          </div>
-        )}
-      </div>
+      <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+        <AccordionItem value="item-1">
+          <AccordionTrigger className="hover:no-underline">
+              <SectionHeader icon={Volleyball} title="My Upcoming Sessions" />
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
+            {upcomingSessions.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {upcomingSessions.map((session, index) => (
+                  <SessionListItem 
+                      key={session.id}
+                      session={session}
+                      currentUser={currentUser}
+                      onBook={handleBooking}
+                      onCancel={handleCancelBooking}
+                      onWaitlist={handleJoinWaitlist}
+                      onViewPlayers={() => handleViewPlayers(session)}
+                      priority={index === 0}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed">
+                <p className="text-muted-foreground mb-4">You have no upcoming sessions booked.</p>
+                <Button asChild>
+                  <Link href="/calendar">Browse Sessions</Link>
+                </Button>
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
 
       <div className="flex flex-col gap-8">
          <SectionHeader icon={Volleyball} title="Available Sessions" />
