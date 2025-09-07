@@ -1,0 +1,149 @@
+'use client';
+
+import * as React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import type { Session, User } from '@/lib/types';
+import { Users, Calendar, Clock, BarChart2, Info, X } from 'lucide-react';
+import { currentUser } from '@/lib/mock-data';
+import { useToast } from '@/hooks/use-toast';
+import SuggestLevelButton from '../ai/suggest-level-button';
+
+interface SessionDetailsModalProps {
+  session: Session | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function SessionDetailsModal({ session, isOpen, onClose }: SessionDetailsModalProps) {
+  const { toast } = useToast();
+
+  if (!session) return null;
+
+  const spotsFilled = session.players.length;
+  const spotsLeft = session.maxPlayers - spotsFilled;
+  const progressValue = (spotsFilled / session.maxPlayers) * 100;
+  const isCurrentUserRegistered = session.players.some(p => p.id === currentUser.id);
+  const isSessionFull = spotsLeft <= 0;
+
+  const handleBooking = () => {
+    toast({
+      title: "Booking Confirmed!",
+      description: `You're all set for the ${session.level} session.`,
+    });
+    onClose();
+  };
+
+  const handleCancellation = () => {
+    toast({
+      title: "Cancellation Confirmed",
+      description: "You have been removed from the session.",
+      variant: 'destructive',
+    });
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[525px]">
+        <DialogHeader>
+          <DialogTitle className="font-headline text-2xl">{session.level} Session</DialogTitle>
+          <DialogDescription>
+            Session details and registered players.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-6 py-4">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>{new Date(session.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span>{session.time}</span>
+            </div>
+          </div>
+          
+          <div>
+            <div className="mb-2 flex justify-between text-sm font-medium">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span>Spots Filled</span>
+              </div>
+              <span>{spotsFilled} / {session.maxPlayers}</span>
+            </div>
+            <Progress value={progressValue} className="h-2" />
+          </div>
+
+          <div>
+            <h3 className="mb-3 font-semibold flex items-center gap-2">
+              <Users className="h-5 w-5 text-muted-foreground" />
+              Registered Players ({spotsFilled})
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              {session.players.map((player) => (
+                <Avatar key={player.id} className="h-12 w-12 border-2 border-background">
+                  <AvatarImage src={player.avatarUrl} alt={player.name} />
+                  <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+              ))}
+              {spotsLeft > 0 && Array.from({ length: spotsLeft }).map((_, i) => (
+                 <Avatar key={`empty-${i}`} className="h-12 w-12 border-2 border-dashed bg-muted">
+                   <AvatarFallback></AvatarFallback>
+                 </Avatar>
+              ))}
+            </div>
+          </div>
+
+           {session.waitlist.length > 0 && (
+             <div>
+                <h3 className="mb-3 font-semibold flex items-center gap-2">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    Waitlist ({session.waitlist.length})
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                    {session.waitlist.map((player) => (
+                        <span key={player.id} className="text-sm text-muted-foreground">{player.name}</span>
+                    ))}
+                </div>
+             </div>
+           )}
+
+          {currentUser.role === 'admin' && (
+             <div>
+                <h3 className="mb-3 font-semibold flex items-center gap-2">
+                    <BarChart2 className="h-5 w-5 text-muted-foreground" />
+                    Admin Actions
+                </h3>
+                <SuggestLevelButton playerSkillLevels={session.players.map(p => p.skillLevel.toLowerCase() as "beginner" | "intermediate" | "advanced")}/>
+             </div>
+          )}
+
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+          {isCurrentUserRegistered ? (
+             <Button variant="destructive" onClick={handleCancellation}>
+              <X className="mr-2 h-4 w-4" /> Cancel My Spot
+            </Button>
+          ) : (
+            <Button onClick={handleBooking} disabled={isSessionFull}>
+              {isSessionFull ? 'Session Full' : 'Book My Spot'}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
