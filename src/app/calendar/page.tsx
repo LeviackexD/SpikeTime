@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -99,83 +98,83 @@ const CalendarPage: NextPage = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-1 flex flex-col gap-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline flex items-center gap-2">
-                    <CalendarIcon className="h-6 w-6 text-primary" />
-                    Session Calendar
-                    </CardTitle>
-                    <CardDescription>
-                        Find and book your next volleyball session.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <SessionCalendar 
-                        sessions={sessions}
-                        selectedDate={selectedDate}
-                        onDateChange={setSelectedDate}
-                        skillFilter={skillFilter}
-                    />
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Filter Sessions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Select value={skillFilter} onValueChange={setSkillFilter}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select skill level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All">All Levels</SelectItem>
-                            <SelectItem value="Beginner">Beginner</SelectItem>
-                            <SelectItem value="Intermediate">Intermediate</SelectItem>
-                            <SelectItem value="Advanced">Advanced</SelectItem>
-                            <SelectItem value="All-Rounder">All-Rounder</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </CardContent>
-            </Card>
-        </div>
+      <div className="lg:col-span-1 flex flex-col gap-8">
+          <Card>
+              <CardHeader>
+                  <CardTitle className="font-headline flex items-center gap-2">
+                  <CalendarIcon className="h-6 w-6 text-primary" />
+                  Session Calendar
+                  </CardTitle>
+                  <CardDescription>
+                      Find and book your next volleyball session.
+                  </CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <SessionCalendar 
+                      sessions={sessions}
+                      selectedDate={selectedDate}
+                      onDateChange={setSelectedDate}
+                      skillFilter={skillFilter}
+                  />
+              </CardContent>
+          </Card>
+          <Card>
+              <CardHeader>
+                  <CardTitle>Filter Sessions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <Select value={skillFilter} onValueChange={setSkillFilter}>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Select skill level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="All">All Levels</SelectItem>
+                          <SelectItem value="Beginner">Beginner</SelectItem>
+                          <SelectItem value="Intermediate">Intermediate</SelectItem>
+                          <SelectItem value="Advanced">Advanced</SelectItem>
+                          <SelectItem value="All-Rounder">All-Rounder</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </CardContent>
+          </Card>
+      </div>
 
-        <div className="lg:col-span-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        Sessions on {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-                    </CardTitle>
-                    <CardDescription>
-                        {filteredSessions.length > 0 
-                            ? `Found ${filteredSessions.length} session(s).` 
-                            : 'No sessions scheduled for this day.'}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {filteredSessions.length > 0 ? (
-                        <div className="space-y-6">
-                        {filteredSessions.map(session => (
-                            <SessionCard
-                                key={session.id}
-                                session={session}
-                                currentUser={currentUser}
-                                onBook={handleBooking}
-                                onCancel={handleCancelBooking}
-                                onWaitlist={handleJoinWaitlist}
-                            />
-                        ))}
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center text-center py-16 rounded-lg bg-muted/50">
-                            <Info className="h-12 w-12 text-muted-foreground mb-4" />
-                            <h3 className="text-xl font-semibold">No Sessions Found</h3>
-                            <p className="text-muted-foreground">Try selecting another date or changing the filter.</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
+      <div className="lg:col-span-2">
+          <Card>
+              <CardHeader>
+                  <CardTitle>
+                      Sessions on {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                  </CardTitle>
+                  <CardDescription>
+                      {filteredSessions.length > 0 
+                          ? `Found ${filteredSessions.length} session(s).` 
+                          : 'No sessions scheduled for this day.'}
+                  </CardDescription>
+              </CardHeader>
+              <CardContent>
+                  {filteredSessions.length > 0 ? (
+                      <div className="space-y-6">
+                      {filteredSessions.map(session => (
+                          <SessionCard
+                              key={session.id}
+                              session={session}
+                              currentUser={currentUser}
+                              onBook={handleBooking}
+                              onCancel={handleCancelBooking}
+                              onWaitlist={handleJoinWaitlist}
+                          />
+                      ))}
+                      </div>
+                  ) : (
+                      <div className="flex flex-col items-center justify-center text-center py-16 rounded-lg bg-muted/50">
+                          <Info className="h-12 w-12 text-muted-foreground mb-4" />
+                          <h3 className="text-xl font-semibold">No Sessions Found</h3>
+                          <p className="text-muted-foreground">Try selecting another date or changing the filter.</p>
+                      </div>
+                  )}
+              </CardContent>
+          </Card>
+      </div>
     </div>
   );
 };
