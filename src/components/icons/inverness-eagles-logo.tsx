@@ -8,7 +8,7 @@ export function InvernessEaglesLogo(props: React.SVGProps<SVGSVGElement> & { cla
         className="h-8 w-8 text-orange-500"
       />
       <span
-        className="font-headline text-xl font-semibold text-foreground"
+        className="font-headline text-xl font-semibold text-current"
       >
         InvernessEagles
       </span>
