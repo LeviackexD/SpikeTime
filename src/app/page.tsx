@@ -205,7 +205,7 @@ const DashboardPage: NextPage = () => {
 
         <AccordionItem value="item-2" className="border-b-0">
           <AccordionTrigger className="hover:no-underline p-0">
-            <SectionHeader icon={Volleyball} title="Available Sessions" />
+            <SectionHeader icon={Volleyball} title="Next Sessions" />
           </AccordionTrigger>
           <AccordionContent className="pt-4">
             {availableSessions.length > 0 ? (
