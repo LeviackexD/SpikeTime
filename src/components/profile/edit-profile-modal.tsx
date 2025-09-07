@@ -83,7 +83,6 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                             <SelectItem value="Beginner">Beginner</SelectItem>
                             <SelectItem value="Intermediate">Intermediate</SelectItem>
                             <SelectItem value="Advanced">Advanced</SelectItem>
-                             <SelectItem value="All-Rounder">All-Rounder</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -98,7 +97,6 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                             <SelectItem value="Hitter">Hitter</SelectItem>
                             <SelectItem value="Libero">Libero</SelectItem>
                             <SelectItem value="Blocker">Blocker</SelectItem>
-                            <SelectItem value="All-Rounder">All-Rounder</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

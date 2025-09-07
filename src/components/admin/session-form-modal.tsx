@@ -141,7 +141,6 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                             <SelectItem value="Beginner">Beginner</SelectItem>
                             <SelectItem value="Intermediate">Intermediate</SelectItem>
                             <SelectItem value="Advanced">Advanced</SelectItem>
-                            <SelectItem value="All-Rounder">All-Rounder</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

@@ -27,7 +27,7 @@ const SessionCalendar = dynamic(() => import('@/components/dashboard/session-cal
 });
 
 
-const skillLevels: (SkillLevel | 'All')[] = ['All', 'Beginner', 'Intermediate', 'Advanced', 'All-Rounder'];
+const skillLevels: (SkillLevel | 'All')[] = ['All', 'Beginner', 'Intermediate', 'Advanced'];
 
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();

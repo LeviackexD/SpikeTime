@@ -1,13 +1,12 @@
 
 export type UserRole = 'user' | 'admin';
-export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'All-Rounder';
-export type PlayerPosition = 'Setter' | 'Hitter' | 'Libero' | 'Blocker' | 'All-Rounder';
+export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced';
+export type PlayerPosition = 'Setter' | 'Hitter' | 'Libero' | 'Blocker';
 
 export const skillLevelColors: Record<SkillLevel, string> = {
   'Beginner': 'bg-green-500',
   'Intermediate': 'bg-blue-500',
   'Advanced': 'bg-orange-500',
-  'All-Rounder': 'bg-purple-500',
 };
 
 

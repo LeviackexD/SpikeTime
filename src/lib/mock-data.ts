@@ -4,7 +4,7 @@ import type { User, Session, Announcement, Message, DirectChat } from './types';
 export const mockUsers: User[] = [
   { id: 'u1', name: 'Manu', username: 'manu_admin', email: 'admin@invernesseagles.com', avatarUrl: 'https://picsum.photos/seed/u1/100/100', role: 'admin', skillLevel: 'Intermediate', favoritePosition: 'Hitter', stats: { sessionsPlayed: 0 } },
   { id: 'u2', name: 'Maria Garcia', username: 'maria', email: 'maria@example.com', avatarUrl: 'https://picsum.photos/seed/u2/100/100', role: 'user', skillLevel: 'Advanced', favoritePosition: 'Setter', stats: { sessionsPlayed: 42 } },
-  { id: 'u3', name: 'Sam Chen', username: 'sam', email: 'sam@example.com', avatarUrl: 'https://picsum.photos/seed/u3/100/100', role: 'user', skillLevel: 'Advanced', favoritePosition: 'All-Rounder', stats: { sessionsPlayed: 89 } },
+  { id: 'u3', name: 'Sam Chen', username: 'sam', email: 'sam@example.com', avatarUrl: 'https://picsum.photos/seed/u3/100/100', role: 'user', skillLevel: 'Advanced', favoritePosition: 'Hitter', stats: { sessionsPlayed: 89 } },
   { id: 'u4', name: 'Emily White', username: 'emily', email: 'emily@example.com', avatarUrl: 'https://picsum.photos/seed/u4/100/100', role: 'user', skillLevel: 'Beginner', favoritePosition: 'Libero', stats: { sessionsPlayed: 10 } },
   { id: 'u5', name: 'David Lee', username: 'david', email: 'david@example.com', avatarUrl: 'https://picsum.photos/seed/u5/100/100', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Blocker', stats: { sessionsPlayed: 33 } },
   { id: 'u6', name: 'Chloe Brown', username: 'chloe', email: 'chloe@example.com', avatarUrl: 'https://picsum.photos/seed/u6/100/100', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Hitter', stats: { sessionsPlayed: 18 } },
@@ -53,7 +53,7 @@ export const mockSessions: Session[] = [
   { id: 's3', date: getFutureDate(4), startTime: '19:00', endTime: '21:00', location: 'Community Center', level: 'Beginner', players: mockUsers.slice(3, 4).map(u => u.id), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s3/400/300`, messages: [] },
   { id: 's4', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Sunset Park', level: 'Intermediate', players: mockUsers.slice(0,12).map(u => u.id), maxPlayers: 12, waitlist: [mockUsers[12].id], imageUrl: `https://picsum.photos/seed/s4/400/300`, messages: [] },
   { id: 's5', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Main Beach Court', level: 'Advanced', players: mockUsers.slice(0, 12).map(u => u.id), maxPlayers: 12, waitlist: mockUsers.slice(4, 5).map(u => u.id), imageUrl: `https://picsum.photos/seed/s5/400/300`, messages: [] },
-  { id: 's6', date: getFutureDate(10), startTime: '10:00', endTime: '12:00', location: 'City Sports Complex', level: 'All-Rounder', players: [], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s6/400/300`, messages: [] },
+  { id: 's6', date: getFutureDate(10), startTime: '10:00', endTime: '12:00', location: 'City Sports Complex', level: 'Intermediate', players: [], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s6/400/300`, messages: [] },
   { id: 's7', date: new Date().toISOString().split('T')[0], startTime: '18:00', endTime: '20:00', location: 'East Side Beach', level: 'Intermediate', players: mockUsers.slice(3, 11).map(u => u.id), maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s7/400/300`, messages: [] },
 ];
 
