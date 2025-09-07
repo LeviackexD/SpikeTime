@@ -10,7 +10,6 @@ import {
   User,
   Shield,
   LogOut,
-  Bell,
   Megaphone,
   Menu,
   Home,
@@ -37,6 +36,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import Footer from './footer';
 
 
 const navItems = [
@@ -59,6 +59,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen w-full flex flex-col bg-app-background">
         <AppHeader />
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <Footer />
     </div>
   );
 }
