@@ -54,7 +54,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
             {daySessions.length > 0 && (
                 <div className="absolute bottom-1">
                 <Badge variant="secondary" className="px-1 py-0 text-xs">
-                    {daySessions[0].time.split(' ')[0]}
+                    {daySessions.length} session{daySessions.length > 1 ? 's' : ''}
                 </Badge>
                 </div>
             )}
@@ -90,7 +90,8 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
 
   const handleDayClick = (day: Date | undefined) => {
     if (day) {
-      onDateChange(day);
+      const utcDate = new Date(Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()));
+      onDateChange(utcDate);
     }
   };
   
