@@ -1,0 +1,23 @@
+import type { LucideIcon } from 'lucide-react';
+import { Separator } from '../ui/separator';
+
+interface SectionHeaderProps {
+    icon: LucideIcon;
+    title: string;
+    children?: React.ReactNode;
+}
+
+export default function SectionHeader({ icon: Icon, title, children }: SectionHeaderProps) {
+    return (
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <Icon className="h-6 w-6 text-primary" />
+                    <h2 className="text-xl font-bold font-headline">{title}</h2>
+                </div>
+                {children}
+            </div>
+            <Separator />
+        </div>
+    )
+}
