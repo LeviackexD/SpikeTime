@@ -65,7 +65,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar
         variant="sidebar"
         collapsible="icon"
-        className="border-sidebar-border"
+        className="border-sidebar-border bg-sidebar text-sidebar-foreground"
       >
         <SidebarHeader>
           <InvernessEaglesLogo className="h-8 w-auto" />
