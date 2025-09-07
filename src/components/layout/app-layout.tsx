@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -112,7 +113,7 @@ function AppHeader() {
         )}
       </div>
 
-      <nav className="hidden md:flex flex-1 justify-center md:items-center md:gap-5 lg:gap-6 text-sm font-medium">
+      <nav className="hidden md:flex flex-1 justify-center md:items-center md:gap-5 lg:gap-6 text-sm lg:text-base font-medium">
         {!isMobile && navItems.map((item) => {
             if (item.adminOnly && currentUser.role !== 'admin') {
                 return null;
