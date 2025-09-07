@@ -69,7 +69,7 @@ export default function SessionListItem({
                 data-ai-hint="volleyball action"
             />
              <Badge className="absolute top-2 right-2" variant={isFull ? 'destructive' : 'secondary'}>
-                {isFull ? 'Full' : `${session.maxPlayers - session.length} spots left`}
+                {isFull ? 'Full' : `${session.maxPlayers - session.players.length} spots left`}
             </Badge>
         </div>
         <div className="flex flex-col flex-grow">
