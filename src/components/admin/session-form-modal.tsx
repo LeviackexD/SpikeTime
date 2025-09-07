@@ -97,7 +97,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     }
     
     // The date from formData is an ISO string. We need to format it to YYYY-MM-DD for the input.
-    const dateForInput = formData.date ? formData.date.split('T')[0] : '';
+    const dateForInput = formData.date ? new Date(formData.date).toISOString().split('T')[0] : '';
 
 
   return (

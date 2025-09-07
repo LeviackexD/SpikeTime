@@ -7,7 +7,7 @@ import { mockDirectChats, currentUser } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, Timestamp, addDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, Timestamp, addDoc, deleteDoc } from 'firebase/firestore';
 
 type ToastInfo = {
   title: string;
@@ -53,7 +53,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
           // Convert Firestore Timestamps to ISO strings
           date: (data.date as Timestamp).toDate().toISOString(),
         } as Session;
-      });
+      }).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       setSessions(sessionsData);
     });
 
@@ -64,11 +64,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   React.useEffect(() => {
     if (isPermissionGranted && currentUser) {
       const upcomingSessions = sessions.filter(session =>
-        session.players.some(p => p.id === currentUser.id) && new Date(`${session.date}T${session.startTime}`) > new Date()
+        session.players.some(p => p.id === currentUser.id) && new Date(`${session.date.split('T')[0]}T${session.startTime}`) > new Date()
       );
 
       upcomingSessions.forEach(session => {
-        const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+        const sessionDateTime = new Date(`${session.date.split('T')[0]}T${session.startTime}`);
         const notificationTime = new Date(sessionDateTime.getTime() - 2 * 60 * 60 * 1000); // 2 hours before
         const now = new Date();
         
@@ -125,14 +125,30 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  const updateSession = (updatedSession: Session) => {
-    // This would be a firestore updateDoc in a real scenario
-     console.log("Updating session (mock):", updatedSession)
+  const updateSession = async (updatedSession: Session) => {
+    const sessionRef = doc(db, 'sessions', updatedSession.id);
+    try {
+        const { id, ...dataToUpdate } = updatedSession;
+        await updateDoc(sessionRef, {
+            ...dataToUpdate,
+            date: Timestamp.fromDate(new Date(dataToUpdate.date)),
+        });
+        showToast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
+    } catch (error) {
+        console.error("Error updating session: ", error);
+        showToast({ title: 'Update Failed', description: 'Could not update the session. Please try again.', variant: 'destructive' });
+    }
   };
 
-  const deleteSession = (sessionId: string) => {
-    // This would be a firestore deleteDoc in a real scenario
-    console.log("Deleting session (mock):", sessionId)
+  const deleteSession = async (sessionId: string) => {
+    const sessionRef = doc(db, 'sessions', sessionId);
+    try {
+        await deleteDoc(sessionRef);
+        showToast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
+    } catch (error) {
+        console.error("Error deleting session: ", error);
+        showToast({ title: 'Deletion Failed', description: 'Could not delete the session. Please try again.', variant: 'destructive' });
+    }
   };
   
   const bookSession = async (sessionId: string) => {
