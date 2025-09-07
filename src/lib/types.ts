@@ -1,3 +1,4 @@
+
 export type UserRole = 'user' | 'admin';
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'All-Rounder';
 export type PlayerPosition = 'Setter' | 'Hitter' | 'Libero' | 'Blocker' | 'All-Rounder';
@@ -13,7 +14,6 @@ export interface User {
   favoritePosition: PlayerPosition;
   stats: {
     sessionsPlayed: number;
-    sessionsCancelled: number;
   };
 }
 

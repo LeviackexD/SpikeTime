@@ -80,10 +80,6 @@ export default function ProfilePage() {
                 <p className="text-muted-foreground">Sessions Played</p>
                 <p className="font-semibold text-lg">{currentUser.stats.sessionsPlayed}</p>
               </div>
-              <div>
-                <p className="text-muted-foreground">Cancellations</p>
-                <p className="font-semibold text-lg">{currentUser.stats.sessionsCancelled}</p>
-              </div>
             </div>
           </CardContent>
         </Card>
