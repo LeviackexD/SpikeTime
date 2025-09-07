@@ -5,13 +5,13 @@ export function InvernessEaglesLogo(props: React.SVGProps<SVGSVGElement>) {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 250 40"
-      aria-label="Inverness Eagles Logo"
+      aria-label="SpikeTime Logo"
       {...props}
     >
       <defs>
         <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 1 }} />
+          <stop offset="0%" style={{ stopColor: 'hsl(25 95% 53%)', stopOpacity: 1 }} />
+          <stop offset="100%" style={{ stopColor: 'hsl(35, 95%, 63%)', stopOpacity: 1 }} />
         </linearGradient>
       </defs>
       <circle cx="20" cy="20" r="16" fill="url(#grad1)" />
@@ -29,7 +29,7 @@ export function InvernessEaglesLogo(props: React.SVGProps<SVGSVGElement>) {
         fill="currentColor"
         className="font-headline"
       >
-        INVERNESS EAGLES
+        SpikeTime
       </text>
     </svg>
   );
