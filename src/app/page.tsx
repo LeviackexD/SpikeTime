@@ -62,6 +62,7 @@ const DashboardPage: NextPage = () => {
                           {new Date(session.date).toLocaleDateString('en-US', {
                             month: 'long',
                             day: 'numeric',
+                            timeZone: 'UTC',
                           })}{' '}
                           - {session.time}
                         </p>

@@ -21,6 +21,10 @@ import { mockSessions, mockAnnouncements } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 
 export default function AdminPage() {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', { timeZone: 'UTC' });
+  };
+
   return (
     <Tabs defaultValue="sessions">
       <div className="flex items-center justify-between">
@@ -49,7 +53,7 @@ export default function AdminPage() {
               {mockSessions.map((session) => (
                 <TableRow key={session.id}>
                   <TableCell>
-                    <div className="font-medium">{new Date(session.date).toLocaleDateString()}</div>
+                    <div className="font-medium">{formatDate(session.date)}</div>
                     <div className="text-sm text-muted-foreground">{session.time}</div>
                   </TableCell>
                   <TableCell>{session.level}</TableCell>
@@ -99,7 +103,7 @@ export default function AdminPage() {
                 <TableRow key={ann.id}>
                   <TableCell className="font-medium">{ann.title}</TableCell>
                   <TableCell className="max-w-sm truncate">{ann.content}</TableCell>
-                  <TableCell>{new Date(ann.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{formatDate(ann.date)}</TableCell>
                   <TableCell className="text-right">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
