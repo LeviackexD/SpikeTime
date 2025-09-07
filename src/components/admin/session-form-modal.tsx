@@ -2,6 +2,8 @@
 'use client';
 
 import * as React from 'react';
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -20,7 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import type { Session, SkillLevel } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface SessionFormModalProps {
   isOpen: boolean;
@@ -44,9 +49,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     React.useEffect(() => {
         if(session) {
-            const { date, ...rest } = session;
-            const formattedDate = date ? new Date(date).toISOString().split('T')[0] : '';
-            setFormData({ ...rest, date: formattedDate });
+            setFormData(session);
         } else {
             setFormData(emptySession);
         }
@@ -60,6 +63,12 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     const handleSelectChange = (value: SkillLevel) => {
         setFormData(prev => ({ ...prev, level: value }));
     };
+
+    const handleDateChange = (date: Date | undefined) => {
+      if (date) {
+        setFormData(prev => ({...prev, date: date.toISOString()}));
+      }
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -82,7 +91,28 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
             <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                     <Label htmlFor="date">Date</Label>
-                    <Input id="date" type="date" value={formData.date} onChange={handleChange} required />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.date ? format(new Date(formData.date), "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.date ? new Date(formData.date) : undefined}
+                          onSelect={handleDateChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="time">Time</Label>
