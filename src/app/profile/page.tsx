@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -48,7 +49,6 @@ export default function ProfilePage() {
             <CardTitle className="pt-4 font-headline text-2xl">
               {currentUser.name}
             </CardTitle>
-            <CardDescription>{currentUser.email}</CardDescription>
           </CardHeader>
           <CardContent className="text-center">
             <Button onClick={() => setIsModalOpen(true)}>
