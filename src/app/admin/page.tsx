@@ -163,7 +163,7 @@ export default function AdminPage() {
         <Table>
             <TableHeader>
             <TableRow>
-                <TableHead>Date & Time</TableHead>
+                <TableHead>Date &amp; Time</TableHead>
                 <TableHead>Level</TableHead>
                 <TableHead>Players</TableHead>
                 <TableHead>Status</TableHead>
@@ -232,7 +232,7 @@ export default function AdminPage() {
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle>{session.level}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{formatDate(session.date)} - {session.time}</p>
+                        <div className="text-sm text-muted-foreground">{formatDate(session.date)} - {session.time}</div>
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -249,17 +249,17 @@ export default function AdminPage() {
                 </div>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-                 <p>
-                    <span className="font-semibold">Players: </span>
+                 <div>
+                    <span className="font-semibold">Players: </span> 
                     {session.players.length} / {session.maxPlayers}
-                    {session.waitlist.length > 0 && ` (+${session.waitlist.length} waitlist)`}
-                </p>
-                <p>
+                    {session.waitlist.length &gt; 0 && ` (+${session.waitlist.length} waitlist)`}
+                </div>
+                <div>
                     <span className="font-semibold">Status: </span>
                     <Badge variant={session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'}>
                     {session.players.length >= session.maxPlayers ? 'Full' : 'Open'}
                     </Badge>
-                </p>
+                </div>
             </CardContent>
         </Card>
       ))}
@@ -318,7 +318,7 @@ export default function AdminPage() {
                     <div className="flex justify-between items-start">
                         <div>
                             <CardTitle>{ann.title}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{formatDate(ann.date)}</p>
+                            <div>{formatDate(ann.date)}</div>
                         </div>
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -334,7 +334,7 @@ export default function AdminPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-3">{ann.content}</p>
+                    <div>{ann.content}</div>
                 </CardContent>
             </Card>
         ))}
