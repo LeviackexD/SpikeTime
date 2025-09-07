@@ -14,10 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
-import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus, Star } from 'lucide-react';
+import { Users, Calendar, Clock, BarChart2, X, CheckCircle, UserPlus } from 'lucide-react';
 import { currentUser } from '@/lib/mock-data';
 import SuggestLevelButton from '../ai/suggest-level-button';
-import { Badge } from '../ui/badge';
 
 interface SessionDetailsModalProps {
   session: Session | null;
@@ -46,7 +45,6 @@ export default function SessionDetailsModal({
   if (!currentSession) return null;
 
   const spotsFilled = currentSession.players.length;
-  const spotsLeft = currentSession.maxPlayers - spotsFilled;
   const progressValue = (spotsFilled / currentSession.maxPlayers) * 100;
 
   const isRegistered = currentSession.players.some(p => p.id === currentUser.id);
@@ -113,20 +111,23 @@ export default function SessionDetailsModal({
             </h3>
             <div className="rounded-lg border max-h-56 overflow-y-auto">
               <div className="divide-y">
-                {currentSession.players.map((player) => (
-                  <div key={player.id} className="flex items-center gap-4 p-3">
-                    <Avatar className="h-10 w-10 border-2 border-primary/50">
-                      <AvatarImage src={player.avatarUrl} alt={player.name} />
-                      <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow">
-                      <p className="font-semibold">{player.name}</p>
-                      <p className="text-sm text-muted-foreground">{player.skillLevel}</p>
+                {currentSession.players.length > 0 ? (
+                  currentSession.players.map((player) => (
+                    <div key={player.id} className="flex items-center gap-4 p-3">
+                      <Avatar className="h-10 w-10 border-2 border-primary/50">
+                        <AvatarImage src={player.avatarUrl} alt={player.name} />
+                        <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-grow">
+                        <p className="font-semibold">{player.name}</p>
+                        <p className="text-sm text-muted-foreground">{player.skillLevel}</p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center p-8">
+                    <p className="text-muted-foreground text-center text-sm">No players have registered yet.</p>
                   </div>
-                ))}
-                 {currentSession.players.length === 0 && (
-                    <p className="text-muted-foreground text-center text-sm p-8">No players have registered yet.</p>
                 )}
               </div>
             </div>
