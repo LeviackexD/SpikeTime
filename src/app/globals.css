@@ -11,7 +11,7 @@ body {
     --background: 39 51% 95%;
     --foreground: 25 35% 15%;
     --app-background: 39 51% 95%;
-    --card: 0 0% 100%;
+    --card: 40 50% 98%;
     --card-foreground: 25 35% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 25 35% 15%;
@@ -21,7 +21,7 @@ body {
     --secondary-foreground: 25 35% 25%;
     --muted: 38 16% 90%;
     --muted-foreground: 25 25% 45%;
-    --accent: 170 30% 92%;
+    --accent: 100 20% 90%;
     --accent-foreground: 25 35% 15%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
