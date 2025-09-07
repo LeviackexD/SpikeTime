@@ -16,7 +16,7 @@ import {
 import type { Session, User } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Progress } from '../ui/progress';
-import { useAuth } from '@/context/auth-context';
+import { currentUser } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 
 interface SessionListItemProps {
@@ -36,8 +36,6 @@ export default function SessionListItem({
   onViewPlayers,
   priority = false,
 }: SessionListItemProps) {
-  const { user: currentUser } = useAuth();
-  
   if (!currentUser) {
     // Or a loading skeleton
     return null;
