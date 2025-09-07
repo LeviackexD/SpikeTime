@@ -3,9 +3,11 @@
 
 import * as React from 'react';
 import type { Session, Message, User, DirectChat } from '@/lib/types';
-import { mockSessions, mockDirectChats, currentUser } from '@/lib/mock-data';
+import { mockDirectChats, currentUser } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, Timestamp } from 'firebase/firestore';
 
 type ToastInfo = {
   title: string;
@@ -30,16 +32,34 @@ interface SessionContextType {
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
-  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const [sessions, setSessions] = React.useState<Session[]>([]);
   const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
   const { toast } = useToast();
   const { requestPermission, showNotification, isPermissionGranted } = useNotifications();
   const scheduledNotificationsRef = React.useRef<Set<string>>(new Set());
 
-
   React.useEffect(() => {
     requestPermission();
   }, [requestPermission]);
+
+  React.useEffect(() => {
+    const sessionsCollection = collection(db, 'sessions');
+    const unsubscribe = onSnapshot(sessionsCollection, (snapshot) => {
+      const sessionsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          // Convert Firestore Timestamps to ISO strings
+          date: (data.date as Timestamp).toDate().toISOString(),
+        } as Session;
+      });
+      setSessions(sessionsData);
+    });
+
+    return () => unsubscribe(); // Cleanup subscription on unmount
+  }, []);
+
 
   React.useEffect(() => {
     if (isPermissionGranted && currentUser) {
@@ -81,103 +101,92 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const createSession = (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
-    const newSession: Session = {
-      ...sessionData,
-      id: `s${Date.now()}`,
-      players: [],
-      waitlist: [],
-      messages: [],
-    };
-    setSessions(prevSessions => [...prevSessions, newSession]);
+    // This would be a firestore addDoc in a real scenario
+    console.log("Creating session (mock):", sessionData)
   };
 
   const updateSession = (updatedSession: Session) => {
-    setSessions(prevSessions =>
-      prevSessions.map(session =>
-        session.id === updatedSession.id ? updatedSession : session
-      )
-    );
+    // This would be a firestore updateDoc in a real scenario
+     console.log("Updating session (mock):", updatedSession)
   };
 
   const deleteSession = (sessionId: string) => {
-    setSessions(prevSessions => prevSessions.filter(s => s.id !== sessionId));
+    // This would be a firestore deleteDoc in a real scenario
+    console.log("Deleting session (mock):", sessionId)
   };
   
-  const bookSession = (sessionId: string) => {
+  const bookSession = async (sessionId: string) => {
     if (!currentUser) return;
-    let bookedSession: Session | undefined;
-    setSessions(prevSessions => {
-      const sessionToBook = prevSessions.find(s => s.id === sessionId);
-      if (!sessionToBook || sessionToBook.players.some(p => p.id === currentUser.id)) return prevSessions;
-
-      if (sessionToBook.players.length < sessionToBook.maxPlayers) {
-        bookedSession = sessionToBook;
-        return prevSessions.map(session =>
-          session.id === sessionId
-            ? { ...session, players: [...session.players, currentUser] }
-            : session
-        );
-      }
-      return prevSessions;
-    });
-
-    if (bookedSession) {
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+    
+    const sessionRef = doc(db, 'sessions', sessionId);
+    
+    try {
+      await updateDoc(sessionRef, {
+        players: arrayUnion(currentUser)
+      });
       showToast({
         title: 'Booking Confirmed!',
-        description: `You're all set for the ${bookedSession.level} session.`,
+        description: `You're all set for the ${session.level} session.`,
         variant: 'success',
       });
+    } catch (error) {
+       showToast({
+        title: 'Booking Failed',
+        description: 'Could not book your spot. Please try again.',
+        variant: 'destructive',
+      });
+      console.error("Error booking session: ", error);
     }
   };
 
-  const joinWaitlist = (sessionId: string) => {
+  const joinWaitlist = async (sessionId: string) => {
     if (!currentUser) return;
-    let joinedSession: Session | undefined;
-    setSessions(prevSessions => {
-      const sessionToJoin = prevSessions.find(s => s.id === sessionId);
-      if (!sessionToJoin || sessionToJoin.waitlist.some(p => p.id === currentUser.id)) return prevSessions;
+     const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
 
-      if (sessionToJoin.players.length >= sessionToJoin.maxPlayers) {
-        joinedSession = sessionToJoin;
-        return prevSessions.map(session =>
-          session.id === sessionId
-            ? { ...session, waitlist: [...session.waitlist, currentUser] }
-            : session
-        );
-      }
-      return prevSessions;
-    });
+    const sessionRef = doc(db, 'sessions', sessionId);
 
-    if(joinedSession){
-        showToast({
-            title: 'You are on the waitlist!',
-            description: "We'll notify you if a spot opens up.",
-            variant: 'success'
-        });
+    try {
+       await updateDoc(sessionRef, {
+        waitlist: arrayUnion(currentUser)
+      });
+      showToast({
+          title: 'You are on the waitlist!',
+          description: "We'll notify you if a spot opens up.",
+          variant: 'success'
+      });
+    } catch(error) {
+       showToast({
+        title: 'Waitlist Failed',
+        description: 'Could not join the waitlist. Please try again.',
+        variant: 'destructive',
+      });
+      console.error("Error joining waitlist: ", error);
     }
   };
 
-  const cancelBooking = (sessionId: string) => {
+  const cancelBooking = async (sessionId: string) => {
     if (!currentUser) return;
-    let canceledSession: Session | undefined;
-    setSessions(prevSessions => {
-      const sessionToCancel = prevSessions.find(s => s.id === sessionId);
-      if (!sessionToCancel || !sessionToCancel.players.some(p => p.id === currentUser.id)) return prevSessions;
+    const sessionRef = doc(db, 'sessions', sessionId);
 
-      canceledSession = sessionToCancel;
-      return prevSessions.map(session =>
-        session.id === sessionId
-          ? { ...session, players: session.players.filter(p => p.id !== currentUser.id) }
-          : session
-      );
-    });
-
-    if (canceledSession) {
-        showToast({
+    try {
+      await updateDoc(sessionRef, {
+        players: arrayRemove(currentUser)
+      });
+       showToast({
             title: 'Booking Canceled',
             description: 'Your spot has been successfully canceled.',
             variant: 'destructive',
         });
+    } catch (error) {
+        showToast({
+            title: 'Cancellation Failed',
+            description: 'Could not cancel your spot. Please try again.',
+            variant: 'destructive',
+        });
+        console.error("Error canceling booking: ", error);
     }
   };
 
