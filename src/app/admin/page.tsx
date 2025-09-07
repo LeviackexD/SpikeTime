@@ -63,7 +63,10 @@ const SessionCards = ({ sessions, handleEditSession, handleViewPlayers, handleDe
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEditSession(session)}>Edit</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleViewPlayers(session)}>View Players</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleQRCodeClick(session)}>QR Code</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleQRCodeClick(session)}>
+                                <QrCode className="mr-2 h-4 w-4" />
+                                QR Code
+                            </DropdownMenuItem>
                             <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteSessionClick(session)}>Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
