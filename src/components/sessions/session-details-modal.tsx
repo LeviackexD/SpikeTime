@@ -123,14 +123,14 @@ export default function SessionDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[525px] flex flex-col max-h-[90vh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="font-headline text-2xl">{currentSession.level} Session</DialogTitle>
           <DialogDescription>
             Session details and registered players.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-6 py-4">
+        <div className="flex-grow overflow-y-auto pr-4 -mr-4 space-y-6">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -176,7 +176,7 @@ export default function SessionDetailsModal({
           )}
 
         </div>
-        <DialogFooter className='sm:justify-between items-center'>
+        <DialogFooter className='sm:justify-between items-center flex-shrink-0 pt-4'>
             <div className='flex items-center gap-2'>
             {isRegistered ? (
               <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/5 hover:text-destructive" onClick={() => handleAction(onCancel)}>
