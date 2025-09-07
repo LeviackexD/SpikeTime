@@ -5,7 +5,7 @@ import * as React from 'react';
 import type { NextPage } from 'next';
 import { useSessions } from '@/context/session-context';
 import type { Session, Message, User, DirectChat } from '@/lib/types';
-import { currentUser, mockUsers } from '@/lib/mock-data';
+import { mockUsers } from '@/lib/mock-data';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,9 +17,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewChatModal from '@/components/chat/new-chat-modal';
+import { useAuth } from '@/context/auth-context';
 
 
 const ChatPage: NextPage = () => {
+  const { user: currentUser } = useAuth();
   const { 
     sessions, 
     addMessage,
@@ -32,12 +34,12 @@ const ChatPage: NextPage = () => {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [isNewChatModalOpen, setIsNewChatModalOpen] = React.useState(false);
 
-
-  const mySessions = React.useMemo(() => 
-    sessions.filter(session => 
+  const mySessions = React.useMemo(() => {
+    if (!currentUser) return [];
+    return sessions.filter(session => 
       session.players.some(p => p.id === currentUser.id)
-    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-    [sessions]
+    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [sessions, currentUser]
   );
   
   React.useEffect(() => {
@@ -79,11 +81,15 @@ const ChatPage: NextPage = () => {
     if(activeTab === 'sessions' && selectedSession) {
         return `${selectedSession.level} Session`
     }
-    if (activeTab === 'direct' && selectedDirectChat) {
+    if (activeTab === 'direct' && selectedDirectChat && currentUser) {
         const otherUser = selectedDirectChat.participants.find(p => p.id !== currentUser.id);
         return otherUser?.name || 'Direct Message';
     }
     return 'Select a chat';
+  }
+  
+  if (!currentUser) {
+    return null; // or a loading spinner
   }
 
   return (
@@ -99,6 +105,7 @@ const ChatPage: NextPage = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onNewChatClick={() => setIsNewChatModalOpen(true)}
+        currentUser={currentUser}
       />
       <ChatWindow 
         session={selectedSession} 
@@ -132,9 +139,10 @@ interface ChatListProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
     onNewChatClick: () => void;
+    currentUser: User;
 }
 
-const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheetOpen, setIsSheetOpen, activeTab, setActiveTab, onNewChatClick }: ChatListProps) => {
+const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheetOpen, setIsSheetOpen, activeTab, setActiveTab, onNewChatClick, currentUser }: ChatListProps) => {
   const isMobile = useIsMobile();
 
   const chatListContent = (
@@ -367,5 +375,3 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
 
 
 export default ChatPage;
-
-    

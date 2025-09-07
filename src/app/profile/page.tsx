@@ -16,11 +16,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { currentUser as initialUser } from '@/lib/mock-data';
 import { BarChart, Edit, Medal, Star, Target } from 'lucide-react';
 import EditProfileModal from '@/components/profile/edit-profile-modal';
 import type { User } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/context/auth-context';
 
 const achievements = [
   { icon: Medal, label: '50+ Sessions', color: 'text-yellow-500' },
@@ -29,13 +29,23 @@ const achievements = [
 ];
 
 export default function ProfilePage() {
+  const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [currentUser, setCurrentUser] = React.useState<User>(initialUser);
+  const [currentUser, setCurrentUser] = React.useState<User | null>(user);
+
+  React.useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
 
   const handleSaveProfile = (updatedUser: User) => {
     setCurrentUser(updatedUser);
+    // Here you would typically update the user in your database
     setIsModalOpen(false);
   };
+  
+  if (!currentUser) {
+    return null; // or a loading spinner
+  }
 
   return (
     <>

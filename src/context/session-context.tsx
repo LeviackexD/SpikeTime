@@ -3,9 +3,10 @@
 
 import * as React from 'react';
 import type { Session, Message, User, DirectChat } from '@/lib/types';
-import { mockSessions, currentUser, mockDirectChats } from '@/lib/mock-data';
+import { mockSessions, mockDirectChats } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
+import { useAuth } from './auth-context';
 
 type ToastInfo = {
   title: string;
@@ -33,6 +34,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
   const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   const { requestPermission, showNotification, isPermissionGranted } = useNotifications();
   const scheduledNotificationsRef = React.useRef<Set<string>>(new Set());
 
@@ -42,7 +44,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   }, [requestPermission]);
 
   React.useEffect(() => {
-    if (isPermissionGranted) {
+    if (isPermissionGranted && currentUser) {
       const upcomingSessions = sessions.filter(session =>
         session.players.some(p => p.id === currentUser.id) && new Date(`${session.date}T${session.startTime}`) > new Date()
       );
@@ -69,7 +71,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         }
       });
     }
-  }, [sessions, isPermissionGranted, showNotification]);
+  }, [sessions, isPermissionGranted, showNotification, currentUser]);
 
 
   const showToast = (toastInfo: ToastInfo) => {
@@ -104,6 +106,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
   
   const bookSession = (sessionId: string) => {
+    if (!currentUser) return;
     let bookedSession: Session | undefined;
     setSessions(prevSessions => {
       const sessionToBook = prevSessions.find(s => s.id === sessionId);
@@ -130,6 +133,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const joinWaitlist = (sessionId: string) => {
+    if (!currentUser) return;
     let joinedSession: Session | undefined;
     setSessions(prevSessions => {
       const sessionToJoin = prevSessions.find(s => s.id === sessionId);
@@ -156,6 +160,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const cancelBooking = (sessionId: string) => {
+    if (!currentUser) return;
     let canceledSession: Session | undefined;
     setSessions(prevSessions => {
       const sessionToCancel = prevSessions.find(s => s.id === sessionId);
@@ -189,6 +194,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const createDirectChat = (user: User) => {
+    if (!currentUser) return '';
     const newChat: DirectChat = {
         id: `dc${Date.now()}`,
         participants: [currentUser, user],
@@ -236,5 +242,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
