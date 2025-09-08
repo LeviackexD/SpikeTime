@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Provides a full-page calendar view of all volleyball sessions.
+ * Users can filter sessions by skill level and click on a date to see the
+ * sessions scheduled for that day.
+ */
 
 'use client';
 

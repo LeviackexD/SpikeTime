@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Main layout component for the application.
+ * It wraps all pages, providing a consistent structure with a header,
+ * main content area, and footer. It also handles routing logic for
+ * authentication pages.
+ */
 
 'use client';
 
@@ -50,7 +56,7 @@ const navItems = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   
   const isAuthPage = pathname === '/login' || pathname === '/register';
   

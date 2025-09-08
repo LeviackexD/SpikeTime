@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A reusable component for creating consistent section headers.
+ * It includes an icon, a title, a separator line, and an optional slot for action buttons.
+ */
+
 import type { LucideIcon } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';

@@ -1,7 +1,12 @@
+/**
+ * @fileoverview A card component for displaying a summary of a single session in a list.
+ * Used on the main dashboard to show upcoming and available sessions.
+ * Includes action buttons and a progress bar for player capacity.
+ */
 
 'use client';
 
-import * as React from 'react';
+import * * as React from 'react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

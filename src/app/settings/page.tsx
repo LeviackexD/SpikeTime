@@ -1,3 +1,9 @@
+/**
+ * @fileoverview User settings page.
+ * Allows users to manage their preferences, including notification settings
+ * (email, push), appearance (light/dark mode), and account actions like
+ * changing their password.
+ */
 
 'use client';
 

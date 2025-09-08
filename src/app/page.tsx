@@ -1,7 +1,13 @@
+/**
+ * @fileoverview The main dashboard page for authenticated users.
+ * Displays a welcome message, a list of the user's upcoming sessions,
+ * a list of other available sessions, and recent club announcements.
+ */
 
 'use client';
 
-import * as React from 'react';
+import *
+as React from 'react';
 import type { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
 import { mockAnnouncements } from '@/lib/mock-data';

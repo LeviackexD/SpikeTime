@@ -1,3 +1,7 @@
+/**
+ * @fileoverview A modal dialog for editing the current user's profile information.
+ * Allows changing name, avatar, skill level, and favorite position.
+ */
 
 'use client';
 

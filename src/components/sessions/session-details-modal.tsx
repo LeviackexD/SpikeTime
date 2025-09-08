@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A modal dialog that displays comprehensive details about a session.
+ * It shows the list of registered players and the waitlist, and provides
+ * action buttons for booking, canceling, or joining the waitlist.
+ */
 
 'use client';
 

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Admin management page for volleyball sessions and club announcements.
+ * Allows administrators to create, view, update, and delete sessions and announcements.
+ * It provides both a table view for desktop and a card view for mobile.
+ */
 
 'use client';
 

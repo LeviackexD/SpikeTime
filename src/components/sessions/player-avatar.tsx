@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A simple component to display a user's avatar.
+ * It includes a tooltip to show the user's full name on hover.
+ */
+
 'use client';
 
 import type { User } from '@/lib/types';

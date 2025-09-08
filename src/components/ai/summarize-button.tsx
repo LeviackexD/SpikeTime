@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A button that triggers an AI flow to summarize a list of announcements.
+ * It shows a loading state and displays the generated summary in a dialog.
+ */
+
 'use client';
 
 import { useState } from 'react';

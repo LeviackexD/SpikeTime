@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A modal form for creating or editing announcements.
+ * It's used within the admin page.
+ */
+
 'use client';
 
 import * as React from 'react';

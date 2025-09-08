@@ -1,3 +1,9 @@
+/**
+ * @fileoverview User profile page.
+ * Displays the current user's information, including their name, avatar,
+ * skill level, favorite position, and session stats. Allows users to
+ * edit their profile information via a modal.
+ */
 
 'use client';
 

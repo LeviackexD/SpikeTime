@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Displays a list of all club announcements.
+ * Users can view all announcements in a grid format and open a modal for more details.
+ * Features an AI-powered button to summarize all announcements.
+ */
 
 'use client';
 

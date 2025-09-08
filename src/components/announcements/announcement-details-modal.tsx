@@ -1,3 +1,7 @@
+/**
+ * @fileoverview A modal dialog to display the full details of an announcement.
+ * Triggered when a user clicks on an announcement card.
+ */
 
 'use client';
 

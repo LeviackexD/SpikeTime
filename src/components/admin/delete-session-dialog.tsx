@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A confirmation dialog for deleting a session.
+ * Ensures the admin is sure before proceeding with the deletion, as it's a permanent action.
+ */
+
 'use client';
 
 import {

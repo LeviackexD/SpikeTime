@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Main calendar component for displaying sessions.
+ * It uses react-day-picker to render a calendar, highlighting days with scheduled sessions.
+ * Days are color-coded based on the session's skill level.
+ */
 
 'use client';
 

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview A modal form for creating or editing volleyball sessions.
+ * Collects all session details like date, time, location, and skill level.
+ */
 
 'use client';
 

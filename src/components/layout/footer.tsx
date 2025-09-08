@@ -1,3 +1,7 @@
+/**
+ * @fileoverview The application's footer component.
+ * Displays contact information, social media links, and the copyright notice.
+ */
 
 'use client';
 

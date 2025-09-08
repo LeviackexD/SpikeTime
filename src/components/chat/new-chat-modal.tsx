@@ -1,3 +1,7 @@
+/**
+ * @fileoverview A modal dialog for starting a new direct chat.
+ * It displays a searchable list of users that the current user can start a conversation with.
+ */
 
 'use client';
 
@@ -75,5 +79,3 @@ export default function NewChatModal({
     </Dialog>
   );
 }
-
-    

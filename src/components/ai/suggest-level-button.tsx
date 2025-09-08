@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A button component that triggers an AI flow to suggest the optimal skill level for a session.
+ * It takes an array of player skill levels, sends them to a Genkit flow, and displays the AI's suggestion in a dialog.
+ */
+
 'use client';
 
 import { useState } from 'react';

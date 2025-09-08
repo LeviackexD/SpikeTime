@@ -1,3 +1,8 @@
+/**
+ * @fileoverview New user registration page.
+ * Provides a form for new users to create an account with their name, email,
+ * password, skill level, and favorite position.
+ */
 
 'use client';
 

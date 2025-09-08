@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Main page for real-time chat.
+ * Users can participate in group chats for sessions they are booked into,
+ * and engage in direct one-on-one messages with other users.
+ */
 
 'use client';
 

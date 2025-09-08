@@ -1,3 +1,8 @@
+/**
+ * @fileoverview User login page.
+ * Provides a form for users to sign in with their email and password,
+ * or to use Google for authentication. Also links to the registration page.
+ */
 
 'use client';
 

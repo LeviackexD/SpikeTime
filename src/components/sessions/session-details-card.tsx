@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A card component that displays detailed information about a single session.
+ * Used on the calendar page to list sessions for a selected day.
+ * Includes actions for booking, canceling, or joining a waitlist.
+ */
 
 'use client';
 

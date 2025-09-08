@@ -1,3 +1,8 @@
+/**
+ * @fileoverview A confirmation dialog for deleting an announcement.
+ * Ensures the admin is sure before proceeding with the deletion.
+ */
+
 'use client';
 
 import {
