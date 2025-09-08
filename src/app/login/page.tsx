@@ -17,25 +17,26 @@ import { Label } from '@/components/ui/label';
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/auth-context';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { signInWithEmail, signInWithGoogle } = useAuth();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This is a mock login.
-    // In a real app, you would call your auth provider.
-    if ((email === 'admin@invernesseagles.com' || email === 'maria@example.com') && password === 'password') {
+    setIsLoading(true);
+    const success = await signInWithEmail(email, password);
+    if (success) {
       toast({
         title: 'Login Successful!',
         description: 'Welcome back!',
         variant: 'success',
       });
-      // Here you would typically set the user in a global context
-      // and then redirect. For the prototype, we just redirect.
       router.push('/');
     } else {
       toast({
@@ -44,7 +45,28 @@ export default function LoginPage() {
         variant: 'destructive',
       });
     }
+    setIsLoading(false);
   };
+  
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    const success = await signInWithGoogle();
+     if (success) {
+      toast({
+        title: 'Login Successful!',
+        description: 'Welcome back!',
+        variant: 'success',
+      });
+      router.push('/');
+    } else {
+      toast({
+        title: 'Login Failed',
+        description: 'Could not sign in with Google.',
+        variant: 'destructive',
+      });
+    }
+    setIsLoading(false);
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -55,7 +77,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-headline">Welcome Back!</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account. Try admin@invernesseagles.com with password 'password'.
+            Enter your credentials to access your account.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
@@ -69,6 +91,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@example.com"
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -87,10 +110,12 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                required />
+                required 
+                disabled={isLoading}
+                />
             </div>
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
@@ -102,9 +127,10 @@ export default function LoginPage() {
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline">Google</Button>
-              <Button variant="outline">Facebook</Button>
+            <div className="grid grid-cols-1 gap-4">
+              <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading}>
+                Google
+              </Button>
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
