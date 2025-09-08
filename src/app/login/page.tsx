@@ -55,22 +55,18 @@ export default function LoginPage() {
   
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    const success = await signInWithGoogle();
-     if (success) {
-      toast({
-        title: 'Login Successful!',
-        description: 'Welcome back!',
-        variant: 'success',
-      });
-      router.push('/');
-    } else {
-      toast({
+    try {
+      await signInWithGoogle();
+      // No need to handle success/failure here as the redirect flow will take over.
+      // The page will reload and the AuthContext will handle the redirect result.
+    } catch (error) {
+       toast({
         title: 'Login Failed',
-        description: 'Could not sign in with Google.',
+        description: 'Could not start sign in with Google.',
         variant: 'destructive',
       });
+       setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   return (

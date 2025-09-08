@@ -11,7 +11,8 @@ import {
     signOut, 
     signInWithEmailAndPassword,
     GoogleAuthProvider,
-    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -22,7 +23,7 @@ interface AuthContextType {
   loading: boolean;
   logout: () => void;
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
-  signInWithGoogle: () => Promise<boolean>;
+  signInWithGoogle: () => Promise<void>;
   createUserProfile: (firebaseUser: FirebaseUser, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<void>;
 }
 
@@ -45,16 +46,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (userDoc.exists()) {
           setUser(userDoc.data() as User);
         } else {
-          setUser(null);
+          setUser(null); // Should not happen if profile is created on sign up
         }
       } else {
         setUser(null);
       }
       setLoading(false);
     });
+    
+    // Handle redirect result
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result) {
+          const fbUser = result.user;
+          const userRef = doc(db, 'users', fbUser.uid);
+          const userDoc = await getDoc(userRef);
+
+          if (!userDoc.exists()) {
+            await createUserProfile(fbUser, {
+              name: fbUser.displayName || 'New User',
+              skillLevel: 'Beginner',
+              favoritePosition: 'Hitter',
+            });
+          }
+           router.push('/');
+        }
+      })
+      .catch((error) => {
+        console.error('Error getting redirect result:', error);
+      });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   React.useEffect(() => {
     if (!loading && !user && !publicRoutes.includes(pathname)) {
@@ -99,31 +122,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(newUser);
   }
   
-  const signInWithGoogle = async (): Promise<boolean> => {
+  const signInWithGoogle = async (): Promise<void> => {
     const provider = new GoogleAuthProvider();
     try {
-        const result = await signInWithPopup(auth, provider);
-        const fbUser = result.user;
-        
-        const userRef = doc(db, 'users', fbUser.uid);
-        const userDoc = await getDoc(userRef);
-
-        if (!userDoc.exists()) {
-            await createUserProfile(fbUser, {
-              name: fbUser.displayName || 'New User',
-              skillLevel: 'Beginner', 
-              favoritePosition: 'Hitter' 
-            });
-        }
-        return true;
+      await signInWithRedirect(auth, provider);
+      // The redirect will cause the page to reload, 
+      // and the getRedirectResult effect will handle the rest.
     } catch (error) {
-        console.error("Error signing in with Google:", error);
-        return false;
+      console.error("Error initiating Google sign-in with redirect:", error);
     }
-  }
+  };
 
 
-  if (loading) {
+  if (loading && !user && !publicRoutes.includes(pathname)) {
     return (
       <div className="flex items-center justify-center min-h-screen w-full">
         <div>Loading...</div>
