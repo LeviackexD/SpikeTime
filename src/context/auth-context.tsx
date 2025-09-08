@@ -11,7 +11,8 @@ import {
     signOut, 
     signInWithEmailAndPassword,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -44,8 +45,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (userDoc.exists()) {
           setUser(userDoc.data() as User);
         } else {
-          // If user exists in Auth but not Firestore, something is wrong.
-          // For now, we log them out. A better implementation might create a profile.
           setUser(null);
         }
       } else {
@@ -106,16 +105,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const result = await signInWithPopup(auth, provider);
         const fbUser = result.user;
         
-        // Check if user already exists in Firestore
         const userRef = doc(db, 'users', fbUser.uid);
         const userDoc = await getDoc(userRef);
 
         if (!userDoc.exists()) {
-            // New user, create a profile in Firestore
             await createUserProfile(fbUser, {
               name: fbUser.displayName || 'New User',
-              skillLevel: 'Beginner', // Default values
-              favoritePosition: 'Hitter' // Default values
+              skillLevel: 'Beginner', 
+              favoritePosition: 'Hitter' 
             });
         }
         return true;
@@ -126,9 +123,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen w-full">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <AuthContext.Provider value={{ user, firebaseUser, loading, logout, signInWithEmail, signInWithGoogle, createUserProfile }}>
-      {loading ? <div>Loading...</div> : children}
+      {children}
     </AuthContext.Provider>
   );
 };
