@@ -25,21 +25,76 @@ import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { SkillLevel, PlayerPosition } from '@/lib/types';
+import { useAuth } from '@/context/auth-context';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { createUserProfile } = useAuth();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [formData, setFormData] = React.useState({
+    name: '',
+    email: '',
+    password: '',
+    skillLevel: '' as SkillLevel | '',
+    favoritePosition: '' as PlayerPosition | '',
+  });
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSelectChange = (field: 'skillLevel' | 'favoritePosition') => (value: string) => {
+    setFormData({ ...formData, [field]: value as any });
+  };
+
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This is a mock registration.
-    // In a real app, you would call your auth provider.
-    toast({
-        title: 'Account Created!',
-        description: 'You can now log in with your credentials.',
-        variant: 'success'
-    });
-    router.push('/login');
+    if (!formData.skillLevel || !formData.favoritePosition) {
+        toast({
+            title: 'Incomplete Form',
+            description: 'Please select a skill level and favorite position.',
+            variant: 'destructive'
+        });
+        return;
+    }
+    setIsLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const firebaseUser = userCredential.user;
+
+      await createUserProfile(firebaseUser, {
+        name: formData.name,
+        skillLevel: formData.skillLevel as SkillLevel,
+        favoritePosition: formData.favoritePosition as PlayerPosition
+      });
+      
+      toast({
+          title: 'Account Created!',
+          description: 'You can now log in with your credentials.',
+          variant: 'success'
+      });
+      router.push('/login');
+
+    } catch (error: any) {
+        let description = 'An unexpected error occurred.';
+        if (error.code === 'auth/email-already-in-use') {
+            description = 'This email is already in use by another account.';
+        } else if (error.code === 'auth/weak-password') {
+            description = 'The password is too weak. It should be at least 6 characters long.';
+        }
+       toast({
+          title: 'Registration Failed',
+          description,
+          variant: 'destructive'
+      });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -58,7 +113,7 @@ export default function RegisterPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="Alex Johnson" required />
+              <Input id="name" placeholder="Alex Johnson" value={formData.name} onChange={handleInputChange} required disabled={isLoading} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -66,17 +121,20 @@ export default function RegisterPage() {
                 id="email"
                 type="email"
                 placeholder="alex@example.com"
+                value={formData.email}
+                onChange={handleInputChange}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
+              <Input id="password" type="password" value={formData.password} onChange={handleInputChange} required disabled={isLoading} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="skill-level">Skill Level</Label>
-              <Select required>
-                <SelectTrigger id="skill-level">
+              <Label htmlFor="skillLevel">Skill Level</Label>
+              <Select required onValueChange={handleSelectChange('skillLevel')} disabled={isLoading}>
+                <SelectTrigger id="skillLevel">
                   <SelectValue placeholder="Select your skill level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -88,7 +146,7 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="favoritePosition">Favorite Position</Label>
-              <Select required>
+              <Select required onValueChange={handleSelectChange('favoritePosition')} disabled={isLoading}>
                 <SelectTrigger id="favoritePosition">
                   <SelectValue placeholder="Select your favorite position" />
                 </SelectTrigger>
@@ -100,8 +158,8 @@ export default function RegisterPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full">
-              Create Account
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </CardContent>
           <CardFooter className="flex justify-center">

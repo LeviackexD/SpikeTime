@@ -2,10 +2,18 @@
 'use client';
 
 import * as React from 'react';
-import type { User } from '@/lib/types';
-import { mockUsers } from '@/lib/mock-data';
+import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import type { User as FirebaseUser } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { auth, db } from '@/lib/firebase';
+import { 
+    onAuthStateChanged, 
+    signOut, 
+    signInWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -14,69 +22,113 @@ interface AuthContextType {
   logout: () => void;
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
   signInWithGoogle: () => Promise<boolean>;
+  createUserProfile: (firebaseUser: FirebaseUser, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<void>;
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
+const publicRoutes = ['/login', '/register'];
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = React.useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = React.useState<FirebaseUser | null>(null);
   const [loading, setLoading] = React.useState(true);
 
-  // This effect runs once on startup to check the initial auth state.
   React.useEffect(() => {
-    // In a real Firebase app, you'd use onAuthStateChanged here.
-    // For the mock, we'll start with no user logged in.
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
+      if (fbUser) {
+        const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
+        if (userDoc.exists()) {
+          setUser(userDoc.data() as User);
+        } else {
+          // If user exists in Auth but not Firestore, something is wrong.
+          // For now, we log them out. A better implementation might create a profile.
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   React.useEffect(() => {
-    // If loading is finished and there's no user, redirect to login.
-    if (!loading && !user) {
+    if (!loading && !user && !publicRoutes.includes(pathname)) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
   
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    await signOut(auth);
+    router.push('/login');
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    // This is a mock login.
-    // In a real app, you'd call Firebase's signInWithEmailAndPassword.
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser && pass === 'password') {
-      setUser(foundUser);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
       return true;
+    } catch (error) {
+      console.error("Error signing in with email:", error);
+      return false;
     }
-    return false;
   };
+
+  const createUserProfile = async (
+    fbUser: FirebaseUser, 
+    additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }
+    ): Promise<void> => {
+    const userRef = doc(db, 'users', fbUser.uid);
+    const newUser: User = {
+        id: fbUser.uid,
+        name: additionalData.name,
+        username: fbUser.email?.split('@')[0] || `user_${fbUser.uid.substring(0, 5)}`,
+        email: fbUser.email || '',
+        avatarUrl: fbUser.photoURL || `https://picsum.photos/seed/${fbUser.uid}/100/100`,
+        role: 'user', // Default role
+        skillLevel: additionalData.skillLevel,
+        favoritePosition: additionalData.favoritePosition,
+        stats: {
+            sessionsPlayed: 0
+        }
+    };
+    await setDoc(userRef, newUser);
+    setUser(newUser);
+  }
   
   const signInWithGoogle = async (): Promise<boolean> => {
-    // This is a mock Google sign-in.
-    // In a real app, this would use signInWithPopup with GoogleAuthProvider.
-    // We'll simulate a successful sign-in with a user who isn't in mock data.
-    const googleUser = {
-      id: 'u-google',
-      name: 'Google User',
-      username: 'google_user',
-      email: 'google@example.com',
-      avatarUrl: 'https://picsum.photos/seed/u-google/100/100',
-      role: 'user' as const,
-      skillLevel: 'Beginner' as const,
-      favoritePosition: 'Hitter' as const,
-      stats: { sessionsPlayed: 0 },
+    const provider = new GoogleAuthProvider();
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const fbUser = result.user;
+        
+        // Check if user already exists in Firestore
+        const userRef = doc(db, 'users', fbUser.uid);
+        const userDoc = await getDoc(userRef);
+
+        if (!userDoc.exists()) {
+            // New user, create a profile in Firestore
+            await createUserProfile(fbUser, {
+              name: fbUser.displayName || 'New User',
+              skillLevel: 'Beginner', // Default values
+              favoritePosition: 'Hitter' // Default values
+            });
+        }
+        return true;
+    } catch (error) {
+        console.error("Error signing in with Google:", error);
+        return false;
     }
-    // You could add logic here to check if the user already exists
-    // and if not, add them to your user list (in a real DB).
-    setUser(googleUser);
-    return true;
   }
 
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser: null, loading, logout, signInWithEmail, signInWithGoogle }}>
-      {children}
+    <AuthContext.Provider value={{ user, firebaseUser, loading, logout, signInWithEmail, signInWithGoogle, createUserProfile }}>
+      {loading ? <div>Loading...</div> : children}
     </AuthContext.Provider>
   );
 };

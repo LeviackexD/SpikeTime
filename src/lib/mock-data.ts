@@ -17,9 +17,6 @@ export const mockUsers: User[] = [
   { id: 'u13', name: 'User 13', username: 'user13', email: 'user13@example.com', avatarUrl: 'https://picsum.photos/seed/u13/100/100', role: 'user', skillLevel: 'Beginner', favoritePosition: 'Hitter', stats: { sessionsPlayed: 18 } },
 ];
 
-export const currentUser: User = mockUsers[0];
-
-
 function getFutureDate(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() + days);
