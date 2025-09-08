@@ -48,7 +48,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (fbUser) {
         const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
         if (userDoc.exists()) {
-          setUser(userDoc.data() as User);
+          const userData = userDoc.data() as User;
+          // Assign admin role based on email for the mock admin
+          if (userData.email === 'admin@invernesseagles.com') {
+              userData.role = 'admin';
+          }
+          setUser(userData);
         } else {
           // This can happen if a user authenticates but their profile isn't created yet.
           // The sign-in/sign-up flows should handle profile creation.
@@ -95,7 +100,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         username: fbUser.email?.split('@')[0] || `user_${fbUser.uid.substring(0, 5)}`,
         email: fbUser.email || '',
         avatarUrl: fbUser.photoURL || `https://picsum.photos/seed/${fbUser.uid}/100/100`,
-        role: 'user', // Default role
+        role: fbUser.email === 'admin@invernesseagles.com' ? 'admin' : 'user',
         skillLevel: additionalData.skillLevel,
         favoritePosition: additionalData.favoritePosition,
         stats: {
@@ -122,8 +127,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
       router.push('/');
-    } catch (error) {
-      console.error("Error with Google sign-in:", error);
+    } catch (error: any) {
+       console.error("Error with Google sign-in:", error);
+      // Don't route away or do anything if the user closes the popup.
+      if (error.code === 'auth/popup-closed-by-user') {
+        return;
+      }
     }
   };
 

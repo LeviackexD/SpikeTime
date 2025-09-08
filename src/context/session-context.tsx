@@ -7,6 +7,8 @@ import type { Session, Message, User, DirectChat } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useAuth } from './auth-context';
+import { seedDevelopmentData } from '@/lib/seed-dev-data';
+
 
 type ToastInfo = {
   title: string;
@@ -39,6 +41,70 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
   const { requestPermission, showNotification, isPermissionGranted } = useNotifications();
   const scheduledNotificationsRef = React.useRef<Set<string>>(new Set());
+
+  // Seed data in development mode
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      // We are using a local admin instance of Firebase to seed the data
+      // This is a temporary solution and should be replaced with a proper seeding script
+      // that runs against the emulators.
+      const seed = async () => {
+        try {
+          const admin = await import('firebase-admin');
+          if (admin.apps.length === 0) {
+            process.env.FIRESTORE_EMULATOR_HOST="127.0.0.1:8080";
+            process.env.FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:9099";
+            admin.initializeApp({ projectId: 'spiketime-8retn' });
+          }
+          
+          const auth = admin.auth();
+          const db = admin.firestore();
+          
+          const seedDevelopmentData = async () => {
+            let isSeeding = true;
+            try {
+              const { users } = await auth.listUsers();
+              if (users.length >= mockUsers.length) {
+                console.log('Auth emulator already seeded.');
+                return;
+              }
+
+              console.log('Seeding development data...');
+              for (const mockUser of mockUsers) {
+                if (!mockUser.email) continue;
+                try {
+                  await auth.createUser({
+                    uid: mockUser.id,
+                    email: mockUser.email,
+                    password: "password123",
+                    displayName: mockUser.name,
+                    photoURL: mockUser.avatarUrl,
+                  });
+                  await db.collection('users').doc(mockUser.id).set(mockUser);
+                  console.log(`Successfully created user: ${mockUser.name}`);
+                } catch (error: any) {
+                  if (error.code === 'auth/uid-already-exists' || error.code === 'auth/email-already-exists') {
+                    console.log(`User ${mockUser.name} already exists. Skipping.`);
+                  } else {
+                    console.error(`Error creating user ${mockUser.name}:`, error);
+                  }
+                }
+              }
+              console.log('Development data seeding complete.');
+            } catch (error) {
+              console.error('Error seeding data:', error);
+            }
+          };
+
+          await seedDevelopmentData();
+
+        } catch (e) {
+            console.log('Could not seed dev data', e);
+        }
+      }
+      seed();
+    }
+  }, []);
 
   React.useEffect(() => {
     requestPermission();
