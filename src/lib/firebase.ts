@@ -19,14 +19,14 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 // Connect to emulators in development
-if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+if (process.env.NODE_ENV === 'development') {
   // @ts-ignore - _isInitialized is not in the public API but it's a reliable way to check
   if (!auth.emulatorConfig) {
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   }
   // @ts-ignore
-  if (!db._isInitialized) {
-    connectFirestoreEmulator(db, 'localhost', 8080);
+  if (!db.emulator) {
+    connectFirestoreEmulator(db, '127.0.0.1', 8080);
   }
 }
 
