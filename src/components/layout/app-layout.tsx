@@ -161,7 +161,7 @@ function AppHeader() {
 }
 
 function UserNav() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   if (!user) return null;
 
   return (
@@ -203,7 +203,7 @@ function UserNav() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={logout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
