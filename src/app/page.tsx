@@ -4,7 +4,7 @@
 import * as React from 'react';
 import type { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
-import { mockAnnouncements, currentUser } from '@/lib/mock-data';
+import { mockAnnouncements } from '@/lib/mock-data';
 import Link from 'next/link';
 import type { Session, Announcement } from '@/lib/types';
 import SessionListItem from '@/components/sessions/session-list-item';
@@ -20,9 +20,11 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import AnnouncementDetailsModal from '@/components/announcements/announcement-details-modal';
 import { useSessions } from '@/context/session-context';
+import { useAuth } from '@/context/auth-context';
 
 const DashboardPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
+  const { user: currentUser } = useAuth();
   const [sessionToView, setSessionToView] = React.useState<Session | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = React.useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = React.useState<Announcement | null>(null);

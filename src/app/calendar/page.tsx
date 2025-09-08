@@ -15,7 +15,7 @@ import { Calendar as CalendarIcon, Filter } from 'lucide-react';
 import SessionDetailsCard from '@/components/sessions/session-details-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSessions } from '@/context/session-context';
-import { currentUser } from '@/lib/mock-data';
+import { useAuth } from '@/context/auth-context';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { skillLevelColors, type SkillLevel } from '@/lib/types';
@@ -31,6 +31,7 @@ const skillLevels: (SkillLevel | 'All')[] = ['All', 'Beginner', 'Intermediate', 
 
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
+  const { user: currentUser } = useAuth();
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [skillFilter, setSkillFilter] = React.useState<SkillLevel | 'All'>('All');
   

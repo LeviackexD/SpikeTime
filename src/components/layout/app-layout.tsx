@@ -38,8 +38,8 @@ import {
 } from "@/components/ui/sheet"
 import Footer from './footer';
 import { useAuth } from '@/context/auth-context';
-import { currentUser } from '@/lib/mock-data';
-
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 
 const navItems = [
   { href: '/', icon: VolleyballIcon, label: 'Sessions' },
@@ -52,9 +52,26 @@ const navItems = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
-  if (isAuthPage) {
+  React.useEffect(() => {
+    if (!loading && !user && !isAuthPage) {
+      router.push('/login');
+    }
+  }, [user, loading, isAuthPage, router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <InvernessEaglesLogo className="h-12 w-auto animate-pulse" />
+      </div>
+    );
+  }
+
+  if (isAuthPage || !user) {
     return <main className="min-h-screen bg-background">{children}</main>;
   }
 
@@ -70,8 +87,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 function AppHeader() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
+  const { user } = useAuth();
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
-
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
@@ -96,7 +113,7 @@ function AppHeader() {
                 </div>
                 <nav className="grid gap-2 p-4 text-lg font-medium">
                 {navItems.map((item) => {
-                    if (item.adminOnly && currentUser?.role !== 'admin') {
+                    if (item.adminOnly && user?.role !== 'admin') {
                         return null;
                     }
                     return (
@@ -135,7 +152,7 @@ function AppHeader() {
 
       <nav className="hidden md:flex flex-1 justify-center md:items-center md:gap-5 lg:gap-6 text-sm lg:text-base font-medium">
         {!isMobile && navItems.map((item) => {
-            if (item.adminOnly && currentUser?.role !== 'admin') {
+            if (item.adminOnly && user?.role !== 'admin') {
                 return null;
             }
             return (
@@ -164,10 +181,13 @@ function UserNav() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const handleLogout = () => {
-    // In a real app, you'd handle logout logic here.
-    // For now, we'll just navigate to the login page.
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error('Failed to log out:', error);
+    }
   }
 
   if (!user) return null;

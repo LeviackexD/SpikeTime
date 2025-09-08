@@ -15,19 +15,21 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, X, CheckCircle, UserPlus } from 'lucide-react';
-import { currentUser, mockUsers } from '@/lib/mock-data';
+import { useSessions } from '@/context/session-context';
+import { useAuth } from '@/context/auth-context';
 
 
 interface PlayerListProps {
   title: string;
   playerIds: string[];
+  allUsers: User[];
   emptyMessage: string;
 }
 
-const PlayerList: React.FC<PlayerListProps> = ({ title, playerIds, emptyMessage }) => {
+const PlayerList: React.FC<PlayerListProps> = ({ title, playerIds, allUsers, emptyMessage }) => {
   const players = React.useMemo(() => 
-    playerIds.map(id => mockUsers.find(user => user.id === id)).filter(Boolean) as User[],
-    [playerIds]
+    playerIds.map(id => allUsers.find(user => user.id === id)).filter(Boolean) as User[],
+    [playerIds, allUsers]
   );
 
   if (players.length === 0) {
@@ -87,6 +89,8 @@ export default function SessionDetailsModal({
   onCancel,
   onWaitlist,
 }: SessionDetailsModalProps) {
+  const { user: currentUser } = useAuth();
+  const { users: allUsers } = useSessions();
   
   if (!session || !currentUser) return null;
 
@@ -153,12 +157,14 @@ export default function SessionDetailsModal({
           <PlayerList 
             title="Registered Players"
             playerIds={session.players}
+            allUsers={allUsers}
             emptyMessage="No players have registered yet."
           />
 
           <PlayerList 
             title="Waitlist"
             playerIds={session.waitlist}
+            allUsers={allUsers}
             emptyMessage="The waitlist is empty."
           />
 

@@ -20,7 +20,10 @@ import { BarChart, Edit, Medal, Star, Target } from 'lucide-react';
 import EditProfileModal from '@/components/profile/edit-profile-modal';
 import type { User } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
-import { currentUser } from '@/lib/mock-data';
+import { useAuth } from '@/context/auth-context';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 const achievements = [
   { icon: Medal, label: '50+ Sessions', color: 'text-yellow-500' },
@@ -29,14 +32,32 @@ const achievements = [
 ];
 
 export default function ProfilePage() {
+  const { user: currentUser, firebaseUser } = useAuth();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [user, setUser] = React.useState<User>(currentUser);
+  const { toast } = useToast();
 
-  const handleSaveProfile = (updatedUser: User) => {
-    setUser(updatedUser);
-    // Here you would typically update the user in your database
-    setIsModalOpen(false);
+  const handleSaveProfile = async (updatedUser: User) => {
+    if (!firebaseUser) {
+      toast({ title: "Not Authenticated", description: "You must be logged in to update your profile.", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      // We don't want to save the `id` field inside the document
+      const { id, ...dataToSave } = updatedUser;
+      await updateDoc(userDocRef, dataToSave);
+      toast({ title: "Profile Updated", description: "Your information has been successfully saved.", variant: "success" });
+      setIsModalOpen(false);
+    } catch(error) {
+      console.error("Error updating profile: ", error);
+      toast({ title: "Update Failed", description: "Could not update your profile. Please try again.", variant: "destructive" });
+    }
   };
+  
+  if (!currentUser) {
+    return <div>Loading profile...</div>
+  }
 
   return (
     <>
@@ -45,11 +66,11 @@ export default function ProfilePage() {
         <Card>
           <CardHeader className="items-center text-center">
             <Avatar className="h-24 w-24 border-4 border-primary/50">
-              <AvatarImage src={user.avatarUrl} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+              <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <CardTitle className="pt-4 font-headline text-2xl">
-              {user.name}
+              {currentUser.name}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center">
@@ -72,17 +93,17 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-6 text-sm">
               <div>
                 <p className="text-muted-foreground">Skill Level</p>
-                <p className="font-semibold text-lg">{user.skillLevel}</p>
+                <p className="font-semibold text-lg">{currentUser.skillLevel}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Favorite Position</p>
-                <p className="font-semibold text-lg">{user.favoritePosition}</p>
+                <p className="font-semibold text-lg">{currentUser.favoritePosition}</p>
               </div>
             </div>
             <Separator />
             <div className="text-center">
                 <p className="text-muted-foreground">Sessions Played</p>
-                <p className="font-semibold text-2xl">{user.stats.sessionsPlayed}</p>
+                <p className="font-semibold text-2xl">{currentUser.stats.sessionsPlayed}</p>
             </div>
           </CardContent>
         </Card>
@@ -111,7 +132,7 @@ export default function ProfilePage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveProfile}
-        user={user}
+        user={currentUser}
     />
     </>
   );

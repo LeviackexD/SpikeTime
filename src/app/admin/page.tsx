@@ -30,6 +30,8 @@ import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dia
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSessions } from '@/context/session-context';
+import { useAuth } from '@/context/auth-context';
+import { useRouter } from 'next/navigation';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -120,6 +122,8 @@ const AnnouncementCards = ({ announcements, handleEditAnnouncement, handleDelete
   );
 
 export default function AdminPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const { sessions, createSession, updateSession, deleteSession, bookSession, cancelBooking, joinWaitlist } = useSessions();
   const [activeTab, setActiveTab] = React.useState('sessions');
   const [announcements, setAnnouncements] = React.useState<Announcement[]>(
@@ -149,6 +153,14 @@ export default function AdminPage() {
     
 
   const isMobile = useIsMobile();
+  
+  React.useEffect(() => {
+    // If not admin, redirect to home
+    if (user?.role !== 'admin') {
+      router.push('/');
+    }
+  }, [user, router]);
+
 
   const handleCreateNew = () => {
     if (activeTab === 'sessions') {
@@ -183,13 +195,13 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveSession = (sessionData: Session | Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
+  const handleSaveSession = async (sessionData: Session | Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
     if ('id' in sessionData) {
       // Editing existing session
-      updateSession(sessionData);
+      await updateSession(sessionData as Session);
     } else {
       // Creating new session
-      createSession(sessionData);
+      await createSession(sessionData);
     }
     setIsSessionModalOpen(false);
     setSelectedSession(null);
@@ -347,6 +359,10 @@ export default function AdminPage() {
         </Table>
     </div>
   );
+
+  if (user?.role !== 'admin') {
+    return <div className="text-center p-8">Redirecting...</div>; // or a loading spinner
+  }
 
   return (
     <Tabs defaultValue="sessions" onValueChange={setActiveTab}>

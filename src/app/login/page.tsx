@@ -17,6 +17,8 @@ import { Label } from '@/components/ui/label';
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,27 +31,36 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // In a real app, you would validate credentials here.
-    // For this mock version, we'll just check if fields are not empty.
-    if (email && password) {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       toast({
         title: 'Login Successful!',
         description: 'Welcome back!',
         variant: 'success',
       });
       router.push('/');
-    } else {
+    } catch (error: any) {
+      console.error('Login error:', error);
+      let errorMessage = 'An unexpected error occurred.';
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            errorMessage = 'Invalid email or password.';
+            break;
+          default:
+            errorMessage = 'Failed to log in. Please try again.';
+        }
+      }
        toast({
         title: 'Login Failed',
-        description: 'Please enter both email and password.',
+        description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
@@ -61,7 +72,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-headline">Welcome Back!</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account
+            Enter your credentials to access your account. Try admin@invernesseagles.com with password 'password'.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
@@ -73,6 +84,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@example.com"
                 required
               />
             </div>
@@ -91,6 +103,7 @@ export default function LoginPage() {
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
                 required />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

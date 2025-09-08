@@ -5,7 +5,6 @@ import * as React from 'react';
 import type { NextPage } from 'next';
 import { useSessions } from '@/context/session-context';
 import type { Session, Message, User, DirectChat } from '@/lib/types';
-import { mockUsers, currentUser } from '@/lib/mock-data';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,7 +16,8 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewChatModal from '@/components/chat/new-chat-modal';
-
+import { useAuth } from '@/context/auth-context';
+import { Timestamp } from 'firebase/firestore';
 
 const ChatPage: NextPage = () => {
   const { 
@@ -26,7 +26,9 @@ const ChatPage: NextPage = () => {
     directChats,
     addDirectMessage,
     createDirectChat,
+    users,
   } = useSessions();
+  const { user: currentUser } = useAuth();
   const [selectedChatId, setSelectedChatId] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState('sessions');
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
@@ -37,7 +39,7 @@ const ChatPage: NextPage = () => {
     return sessions.filter(session => 
       session.players.includes(currentUser.id)
     ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [sessions]
+  }, [sessions, currentUser]
   );
   
   React.useEffect(() => {
@@ -63,12 +65,12 @@ const ChatPage: NextPage = () => {
     setIsSheetOpen(false); // Close sheet on mobile after selection
   }
 
-  const handleStartNewChat = (user: User) => {
-    const existingChat = directChats.find(chat => chat.participants.some(p => p.id === user.id));
+  const handleStartNewChat = async (user: User) => {
+    const existingChat = directChats.find(chat => chat.participantIds.includes(user.id));
     if (existingChat) {
       setSelectedChatId(existingChat.id);
     } else {
-      const newChatId = createDirectChat(user);
+      const newChatId = await createDirectChat(user);
       setSelectedChatId(newChatId);
     }
     setActiveTab('direct');
@@ -103,6 +105,7 @@ const ChatPage: NextPage = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onNewChatClick={() => setIsNewChatModalOpen(true)}
+        currentUser={currentUser}
       />
       <ChatWindow 
         session={selectedSession} 
@@ -113,12 +116,14 @@ const ChatPage: NextPage = () => {
         chatKey={selectedChatId}
         title={getChatTitle()}
         activeTab={activeTab}
+        currentUser={currentUser}
+        users={users}
       />
     </Card>
     <NewChatModal
         isOpen={isNewChatModalOpen}
         onClose={() => setIsNewChatModalOpen(false)}
-        users={mockUsers.filter(u => u.id !== currentUser.id)}
+        users={users.filter(u => u.id !== currentUser.id)}
         onStartChat={handleStartNewChat}
     />
     </>
@@ -135,9 +140,10 @@ interface ChatListProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
     onNewChatClick: () => void;
+    currentUser: User;
 }
 
-const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheetOpen, setIsSheetOpen, activeTab, setActiveTab, onNewChatClick }: ChatListProps) => {
+const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheetOpen, setIsSheetOpen, activeTab, setActiveTab, onNewChatClick, currentUser }: ChatListProps) => {
   const isMobile = useIsMobile();
 
   const chatListContent = (
@@ -238,19 +244,44 @@ const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheet
 interface ChatWindowProps {
     session?: Session;
     directChat?: DirectChat;
-    onAddSessionMessage: (sessionId: string, message: Message) => void;
-    onAddDirectMessage: (chatId: string, message: Message) => void;
+    onAddSessionMessage: (sessionId: string, message: Omit<Message, 'id'|'sender'>) => void;
+    onAddDirectMessage: (chatId: string, message: Omit<Message, 'id'|'sender'>) => void;
     onOpenSheet: () => void;
     chatKey: string | null;
     title: string;
     activeTab: string;
+    currentUser: User;
+    users: User[];
 }
 
 
-const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessage, onOpenSheet, chatKey, title, activeTab }: ChatWindowProps) => {
+const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessage, onOpenSheet, chatKey, title, activeTab, currentUser, users }: ChatWindowProps) => {
   const [newMessage, setNewMessage] = React.useState('');
+  const [messages, setMessages] = React.useState<Message[]>([]);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  
+  const currentChat = activeTab === 'sessions' ? session : directChat;
+
+  React.useEffect(() => {
+    if (!currentChat) return;
+
+    // This part is tricky because messages are now a subcollection.
+    // For simplicity in this refactor, we'll keep the session-level messages for now.
+    // A full implementation would use a snapshot listener on the subcollection.
+    const chatMessages = (currentChat.messages || []).map(msg => {
+        const sender = users.find(u => u.id === (msg as any).senderId);
+        return {
+            ...msg,
+            sender: sender || { id: 'unknown', name: 'Unknown', avatarUrl: '', skillLevel: 'Beginner', favoritePosition: 'Hitter', role: 'user', stats: { sessionsPlayed: 0}, username: 'unknown' },
+            timestamp: msg.timestamp instanceof Timestamp ? msg.timestamp.toDate().toISOString() : msg.timestamp,
+        }
+    }).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    
+    setMessages(chatMessages as Message[]);
+    
+  }, [currentChat, users]);
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -258,15 +289,13 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
 
   React.useEffect(() => {
     scrollToBottom();
-  }, [session?.messages, directChat?.messages, chatKey]);
+  }, [messages, chatKey]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !currentUser) return;
 
-    const message: Message = {
-        id: `m${Date.now()}`,
-        sender: currentUser,
+    const message: Omit<Message, 'id'|'sender'> = {
         content: newMessage.trim(),
         timestamp: new Date().toISOString(),
     };
@@ -280,12 +309,10 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
     setNewMessage('');
   };
   
-  const currentChat = activeTab === 'sessions' ? session : directChat;
-  const messages = currentChat?.messages ?? [];
   const participants = activeTab === 'sessions' 
-    ? (currentChat as Session)?.players.map(pId => mockUsers.find(u => u.id === pId)).filter(Boolean) as User[]
+    ? (currentChat as Session)?.players.map(pId => users.find(u => u.id === pId)).filter(Boolean) as User[]
     : (currentChat as DirectChat)?.participants;
-  const avatarUrl = activeTab === 'sessions' ? session?.imageUrl : directChat?.participants.find(p => p.id !== currentUser?.id)?.avatarUrl;
+  const avatarUrl = activeTab === 'sessions' ? session?.imageUrl : directChat?.participants.find(p => p.id !== currentUser.id)?.avatarUrl;
   const avatarFallback = title.charAt(0);
 
 
@@ -335,7 +362,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
                        {!isCurrentUser && showAvatar && <p className="text-xs font-semibold mb-1">{message.sender.name}</p>}
                        <p className="text-sm">{message.content}</p>
                        <p className="text-xs text-right mt-1 opacity-70">
-                        {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'})}
+                        {new Date(message.timestamp as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'})}
                        </p>
                     </div>
                      {isCurrentUser && (

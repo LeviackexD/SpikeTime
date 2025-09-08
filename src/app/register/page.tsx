@@ -24,8 +24,10 @@ import {
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import type { SkillLevel } from '@/lib/types';
-
+import type { SkillLevel, PlayerPosition, User } from '@/lib/types';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -34,29 +36,62 @@ export default function RegisterPage() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [skillLevel, setSkillLevel] = React.useState<SkillLevel | ''>('');
+  const [favoritePosition, setFavoritePosition] = React.useState<PlayerPosition | ''>('');
   const [isLoading, setIsLoading] = React.useState(false);
 
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!skillLevel) {
-      toast({ title: "Skill level required", description: "Please select your skill level.", variant: "destructive" });
+    if (!skillLevel || !favoritePosition) {
+      toast({ title: "Profile details required", description: "Please select your skill level and favorite position.", variant: "destructive" });
       return;
     }
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-        title: 'Account Created!',
-        description: 'You can now log in with your credentials.',
-        variant: 'success'
-    });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
 
-    router.push('/login');
-    
-    setIsLoading(false);
+      // Now create a user profile document in Firestore
+      const newUser: Omit<User, 'id'> = {
+        name,
+        username: name.toLowerCase().replace(/\s/g, ''),
+        email: email,
+        avatarUrl: `https://picsum.photos/seed/${firebaseUser.uid}/100/100`,
+        role: 'user',
+        skillLevel,
+        favoritePosition,
+        stats: { sessionsPlayed: 0 }
+      };
+
+      await setDoc(doc(db, "users", firebaseUser.uid), newUser);
+      
+      toast({
+          title: 'Account Created!',
+          description: 'You can now log in with your credentials.',
+          variant: 'success'
+      });
+
+      router.push('/login');
+    } catch (error: any) {
+      console.error("Registration error: ", error);
+      let errorMessage = 'An unexpected error occurred.';
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = 'This email is already registered.';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'Password should be at least 6 characters.';
+            break;
+          default:
+            errorMessage = 'Failed to create an account. Please try again.';
+        }
+      }
+      toast({ title: "Registration Failed", description: errorMessage, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -115,23 +150,23 @@ export default function RegisterPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="favoritePosition">Favorite Position</Label>
+              <Select value={favoritePosition} onValueChange={(value) => setFavoritePosition(value as PlayerPosition)} required>
+                <SelectTrigger id="favoritePosition">
+                  <SelectValue placeholder="Select your favorite position" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Setter">Setter</SelectItem>
+                  <SelectItem value="Hitter">Hitter</SelectItem>
+                  <SelectItem value="Libero">Libero</SelectItem>
+                  <SelectItem value="Blocker">Blocker</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </Button>
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or sign up with
-                </span>
-              </div>
-            </div>
-             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" disabled={isLoading}>Google</Button>
-              <Button variant="outline" disabled={isLoading}>Facebook</Button>
-            </div>
           </CardContent>
           <CardFooter className="flex justify-center">
             <div className="text-sm text-muted-foreground">

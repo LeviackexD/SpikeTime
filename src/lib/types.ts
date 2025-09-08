@@ -1,4 +1,6 @@
 
+import { Timestamp } from 'firebase/firestore';
+
 export type UserRole = 'user' | 'admin';
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced';
 export type PlayerPosition = 'Setter' | 'Hitter' | 'Libero' | 'Blocker';
@@ -28,7 +30,7 @@ export interface Message {
   id: string;
   sender: User;
   content: string;
-  timestamp: string;
+  timestamp: string | Timestamp;
 }
 
 export interface Session {
@@ -55,6 +57,7 @@ export interface Announcement {
 
 export interface DirectChat {
     id: string;
+    participantIds: string[];
     participants: User[];
     messages: Message[];
 }

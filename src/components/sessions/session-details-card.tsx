@@ -16,7 +16,7 @@ import {
   UserPlus,
 } from 'lucide-react';
 import type { Session } from '@/lib/types';
-import { currentUser } from '@/lib/mock-data';
+import { useAuth } from '@/context/auth-context';
 
 interface SessionDetailsCardProps {
   session: Session;
@@ -33,6 +33,8 @@ export default function SessionDetailsCard({
   onWaitlist,
   priority = false,
 }: SessionDetailsCardProps) {
+  const { user: currentUser } = useAuth();
+  
   if (!currentUser) {
     return null; // Or a loading skeleton
   }

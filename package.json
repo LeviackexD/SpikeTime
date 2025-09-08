@@ -4,11 +4,12 @@
   "version": "0.1.0",
   "private": "true",
   "scripts": {
-    "dev": "next dev",
+    "dev": "firebase emulators:exec 'npm run start-next'",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "start-next": "next dev"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",
