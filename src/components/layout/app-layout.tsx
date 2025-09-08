@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   Calendar,
   Settings,
@@ -38,8 +38,6 @@ import {
 } from "@/components/ui/sheet"
 import Footer from './footer';
 import { useAuth } from '@/context/auth-context';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
 
 const navItems = [
   { href: '/', icon: VolleyballIcon, label: 'Sessions' },
@@ -52,26 +50,11 @@ const navItems = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
+  const { user } = useAuth();
+  
   const isAuthPage = pathname === '/login' || pathname === '/register';
-
-  React.useEffect(() => {
-    if (!loading && !user && !isAuthPage) {
-      router.push('/login');
-    }
-  }, [user, loading, isAuthPage, router]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <InvernessEaglesLogo className="h-12 w-auto animate-pulse" />
-      </div>
-    );
-  }
-
-  if (isAuthPage || !user) {
+  
+  if (isAuthPage) {
     return <main className="min-h-screen bg-background">{children}</main>;
   }
 
@@ -178,18 +161,7 @@ function AppHeader() {
 }
 
 function UserNav() {
-  const router = useRouter();
   const { user } = useAuth();
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.push('/login');
-    } catch (error) {
-      console.error('Failed to log out:', error);
-    }
-  }
-
   if (!user) return null;
 
   return (
@@ -231,7 +203,7 @@ function UserNav() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>

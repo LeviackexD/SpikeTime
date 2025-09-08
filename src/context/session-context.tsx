@@ -2,22 +2,8 @@
 'use client';
 
 import * as React from 'react';
-import {
-  collection,
-  query,
-  onSnapshot,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  arrayUnion,
-  arrayRemove,
-  Timestamp,
-  writeBatch,
-  where,
-} from 'firebase/firestore';
+import { mockSessions, mockUsers, mockDirectChats } from '@/lib/mock-data';
 import type { Session, Message, User, DirectChat } from '@/lib/types';
-import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useAuth } from './auth-context';
@@ -47,9 +33,9 @@ const SessionContext = React.createContext<SessionContextType | undefined>(undef
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const { user: currentUser } = useAuth();
-  const [sessions, setSessions] = React.useState<Session[]>([]);
-  const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
-  const [users, setUsers] = React.useState<User[]>([]);
+  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
+  const [users, setUsers] = React.useState<User[]>(mockUsers);
   const { toast } = useToast();
   const { requestPermission, showNotification, isPermissionGranted } = useNotifications();
   const scheduledNotificationsRef = React.useRef<Set<string>>(new Set());
@@ -58,59 +44,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     requestPermission();
   }, [requestPermission]);
 
-  // Fetch all users
-  React.useEffect(() => {
-    const usersCollection = collection(db, 'users');
-    const q = query(usersCollection);
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-      setUsers(usersData);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Fetch all sessions
-  React.useEffect(() => {
-    const sessionsCollection = collection(db, 'sessions');
-    const q = query(sessionsCollection);
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const sessionsData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          date: (data.date as Timestamp).toDate().toISOString(),
-        } as Session;
-      });
-      setSessions(sessionsData);
-    });
-    return () => unsubscribe();
-  }, []);
-  
-    // Fetch direct chats for the current user
-  React.useEffect(() => {
-    if (!currentUser) return;
-
-    const chatsCollection = collection(db, 'directChats');
-    const q = query(chatsCollection, where('participantIds', 'array-contains', currentUser.id));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const chatsData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        const participants = users.filter(u => data.participantIds.includes(u.id));
-        return {
-          id: doc.id,
-          ...data,
-          participants,
-        } as DirectChat;
-      }).filter(chat => chat.participants.length > 1); // Ensure both participants are loaded
-      setDirectChats(chatsData);
-    });
-
-    return () => unsubscribe();
-  }, [currentUser, users]);
-
-  // Schedule notifications
   React.useEffect(() => {
     if (isPermissionGranted && currentUser) {
       const upcomingSessions = sessions.filter(session =>
@@ -151,53 +84,32 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const createSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
-     if (!currentUser || currentUser.role !== 'admin') {
-      showToast({ title: 'Unauthorized', description: 'Only admins can create sessions.', variant: 'destructive' });
-      return;
-    }
-    try {
-      await addDoc(collection(db, 'sessions'), {
-        ...sessionData,
-        date: Timestamp.fromDate(new Date(sessionData.date)),
-        players: [],
-        waitlist: [],
-        messages: [],
-        createdBy: currentUser.id
-      });
-      showToast({
-          title: 'Session Created!',
-          description: 'The new session has been successfully added.',
-          variant: 'success',
-      });
-    } catch (error) {
-      console.error("Error creating session: ", error);
-      showToast({ title: 'Error', description: 'Failed to create session.', variant: 'destructive' });
-    }
+    // In a real app, this would be an API call. Here, we just update local state.
+    const newSession: Session = {
+      ...sessionData,
+      id: `s${sessions.length + 1}`,
+      players: [],
+      waitlist: [],
+      messages: [],
+    };
+    setSessions(prev => [newSession, ...prev]);
+    showToast({
+        title: 'Session Created!',
+        description: 'The new session has been successfully added.',
+        variant: 'success',
+    });
   };
 
   const updateSession = async (updatedSession: Session) => {
-    try {
-      const sessionDoc = doc(db, 'sessions', updatedSession.id);
-      const { id, ...dataToUpdate } = updatedSession;
-      await updateDoc(sessionDoc, {
-        ...dataToUpdate,
-        date: Timestamp.fromDate(new Date(dataToUpdate.date)),
-      });
-      showToast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
-    } catch (error) {
-      console.error("Error updating session: ", error);
-      showToast({ title: 'Error', description: 'Failed to update session.', variant: 'destructive' });
-    }
+    setSessions(prev =>
+      prev.map(s => (s.id === updatedSession.id ? updatedSession : s))
+    );
+    showToast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
   };
 
   const deleteSession = async (sessionId: string) => {
-    try {
-      await deleteDoc(doc(db, 'sessions', sessionId));
-      showToast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
-    } catch (error) {
-      console.error("Error deleting session: ", error);
-      showToast({ title: 'Error', description: 'Failed to delete session.', variant: 'destructive' });
-    }
+    setSessions(prev => prev.filter(s => s.id !== sessionId));
+    showToast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
   };
   
   const bookSession = async (sessionId: string) => {
@@ -211,31 +123,24 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         return;
     }
     
-    try {
-      const sessionDoc = doc(db, 'sessions', sessionId);
-      await updateDoc(sessionDoc, {
-        players: arrayUnion(currentUser.id)
-      });
-      showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
-    } catch (error) {
-      console.error("Error booking session: ", error);
-      showToast({ title: 'Error', description: 'Failed to book session.', variant: 'destructive' });
-    }
+    setSessions(prev =>
+      prev.map(s =>
+        s.id === sessionId ? { ...s, players: [...s.players, currentUser.id] } : s
+      )
+    );
+    showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
   };
 
   const cancelBooking = async (sessionId: string) => {
     if (!currentUser) return;
-    
-    try {
-      const sessionDoc = doc(db, 'sessions', sessionId);
-      await updateDoc(sessionDoc, {
-        players: arrayRemove(currentUser.id)
-      });
-      showToast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
-    } catch (error) {
-      console.error("Error canceling booking: ", error);
-      showToast({ title: 'Error', description: 'Failed to cancel booking.', variant: 'destructive' });
-    }
+    setSessions(prev =>
+      prev.map(s =>
+        s.id === sessionId
+          ? { ...s, players: s.players.filter(pId => pId !== currentUser.id) }
+          : s
+      )
+    );
+    showToast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
   };
 
   const joinWaitlist = async (sessionId: string) => {
@@ -247,32 +152,26 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         return;
     }
 
-    try {
-      const sessionDoc = doc(db, 'sessions', sessionId);
-      await updateDoc(sessionDoc, {
-        waitlist: arrayUnion(currentUser.id)
-      });
-      showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
-    } catch (error) {
-       console.error("Error joining waitlist: ", error);
-       showToast({ title: 'Error', description: 'Failed to join waitlist.', variant: 'destructive' });
-    }
+    setSessions(prev =>
+      prev.map(s =>
+        s.id === sessionId ? { ...s, waitlist: [...s.waitlist, currentUser.id] } : s
+      )
+    );
+    showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
   };
 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender'>) => {
     if (!currentUser) return;
-    const newMessage = {
-        senderId: currentUser.id,
-        content: messageContent.content,
-        timestamp: Timestamp.now(),
+    const newMessage: Message = {
+      ...messageContent,
+      id: `m${Date.now()}`,
+      sender: currentUser,
     };
-    try {
-      const messagesCollection = collection(db, 'sessions', sessionId, 'messages');
-      await addDoc(messagesCollection, newMessage);
-    } catch (error) {
-        console.error("Error sending message: ", error);
-        showToast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
-    }
+    setSessions(prev =>
+      prev.map(s =>
+        s.id === sessionId ? { ...s, messages: [...s.messages, newMessage] } : s
+      )
+    );
   };
 
   const createDirectChat = async (otherUser: User) => {
@@ -284,33 +183,28 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       return existingChat.id;
     }
     
-    try {
-      const newChatDoc = await addDoc(collection(db, 'directChats'), {
+    const newChat: DirectChat = {
+        id: `dc${Date.now()}`,
+        participants: [currentUser, otherUser],
         participantIds: [currentUser.id, otherUser.id],
         messages: [],
-      });
-      return newChatDoc.id;
-    } catch(error) {
-      console.error("Error creating direct chat: ", error);
-      showToast({ title: 'Error', description: 'Failed to create chat.', variant: 'destructive' });
-      return '';
-    }
+    };
+    setDirectChats(prev => [newChat, ...prev]);
+    return newChat.id;
   }
 
   const addDirectMessage = async (chatId: string, messageContent: Omit<Message, 'id' | 'sender'>) => {
-    if (!currentUser) return;
-    const newMessage = {
-        senderId: currentUser.id,
-        content: messageContent.content,
-        timestamp: Timestamp.now(),
+     if (!currentUser) return;
+    const newMessage: Message = {
+      ...messageContent,
+      id: `m${Date.now()}`,
+      sender: currentUser,
     };
-    try {
-      const messagesCollection = collection(db, 'directChats', chatId, 'messages');
-      await addDoc(messagesCollection, newMessage);
-    } catch (error) {
-      console.error("Error sending direct message: ", error);
-      showToast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
-    }
+    setDirectChats(prev =>
+      prev.map(c =>
+        c.id === chatId ? { ...c, messages: [...c.messages, newMessage] } : c
+      )
+    );
   }
 
   return (

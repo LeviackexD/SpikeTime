@@ -17,7 +17,6 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewChatModal from '@/components/chat/new-chat-modal';
 import { useAuth } from '@/context/auth-context';
-import { Timestamp } from 'firebase/firestore';
 
 const ChatPage: NextPage = () => {
   const { 
@@ -66,7 +65,7 @@ const ChatPage: NextPage = () => {
   }
 
   const handleStartNewChat = async (user: User) => {
-    const existingChat = directChats.find(chat => chat.participantIds.includes(user.id));
+    const existingChat = directChats.find(chat => chat.participants.some(p => p.id === user.id));
     if (existingChat) {
       setSelectedChatId(existingChat.id);
     } else {
@@ -117,7 +116,6 @@ const ChatPage: NextPage = () => {
         title={getChatTitle()}
         activeTab={activeTab}
         currentUser={currentUser}
-        users={users}
       />
     </Card>
     <NewChatModal
@@ -251,37 +249,16 @@ interface ChatWindowProps {
     title: string;
     activeTab: string;
     currentUser: User;
-    users: User[];
 }
 
 
-const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessage, onOpenSheet, chatKey, title, activeTab, currentUser, users }: ChatWindowProps) => {
+const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessage, onOpenSheet, chatKey, title, activeTab, currentUser }: ChatWindowProps) => {
   const [newMessage, setNewMessage] = React.useState('');
-  const [messages, setMessages] = React.useState<Message[]>([]);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   
   const currentChat = activeTab === 'sessions' ? session : directChat;
-
-  React.useEffect(() => {
-    if (!currentChat) return;
-
-    // This part is tricky because messages are now a subcollection.
-    // For simplicity in this refactor, we'll keep the session-level messages for now.
-    // A full implementation would use a snapshot listener on the subcollection.
-    const chatMessages = (currentChat.messages || []).map(msg => {
-        const sender = users.find(u => u.id === (msg as any).senderId);
-        return {
-            ...msg,
-            sender: sender || { id: 'unknown', name: 'Unknown', avatarUrl: '', skillLevel: 'Beginner', favoritePosition: 'Hitter', role: 'user', stats: { sessionsPlayed: 0}, username: 'unknown' },
-            timestamp: msg.timestamp instanceof Timestamp ? msg.timestamp.toDate().toISOString() : msg.timestamp,
-        }
-    }).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    
-    setMessages(chatMessages as Message[]);
-    
-  }, [currentChat, users]);
-
+  const messages = (currentChat?.messages || []).sort((a,b) => new Date(a.timestamp as string).getTime() - new Date(b.timestamp as string).getTime());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -309,9 +286,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
     setNewMessage('');
   };
   
-  const participants = activeTab === 'sessions' 
-    ? (currentChat as Session)?.players.map(pId => users.find(u => u.id === pId)).filter(Boolean) as User[]
-    : (currentChat as DirectChat)?.participants;
+  const participants = activeTab === 'sessions' ? currentChat?.players : currentChat?.participants;
   const avatarUrl = activeTab === 'sessions' ? session?.imageUrl : directChat?.participants.find(p => p.id !== currentUser.id)?.avatarUrl;
   const avatarFallback = title.charAt(0);
 
@@ -341,7 +316,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
         </Avatar>
         <div>
           <h3 className="font-bold text-lg">{title}</h3>
-          <p className="text-sm text-muted-foreground">{participants?.length} members</p>
+          <p className="text-sm text-muted-foreground">{Array.isArray(participants) ? participants.length : 0} members</p>
         </div>
       </header>
       <div className="flex-1 p-4 overflow-y-auto bg-muted/20">

@@ -21,9 +21,6 @@ import EditProfileModal from '@/components/profile/edit-profile-modal';
 import type { User } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/auth-context';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { useToast } from '@/hooks/use-toast';
 
 const achievements = [
   { icon: Medal, label: '50+ Sessions', color: 'text-yellow-500' },
@@ -32,27 +29,14 @@ const achievements = [
 ];
 
 export default function ProfilePage() {
-  const { user: currentUser, firebaseUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const { toast } = useToast();
 
-  const handleSaveProfile = async (updatedUser: User) => {
-    if (!firebaseUser) {
-      toast({ title: "Not Authenticated", description: "You must be logged in to update your profile.", variant: "destructive" });
-      return;
-    }
-    
-    try {
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      // We don't want to save the `id` field inside the document
-      const { id, ...dataToSave } = updatedUser;
-      await updateDoc(userDocRef, dataToSave);
-      toast({ title: "Profile Updated", description: "Your information has been successfully saved.", variant: "success" });
-      setIsModalOpen(false);
-    } catch(error) {
-      console.error("Error updating profile: ", error);
-      toast({ title: "Update Failed", description: "Could not update your profile. Please try again.", variant: "destructive" });
-    }
+  const handleSaveProfile = (updatedUser: User) => {
+    // In a real app, you would call an API to save the user data.
+    // For this prototype, we can't persist it, but we can close the modal.
+    console.log('Saving user:', updatedUser);
+    setIsModalOpen(false);
   };
   
   if (!currentUser) {

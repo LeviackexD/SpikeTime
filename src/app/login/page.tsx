@@ -17,49 +17,32 @@ import { Label } from '@/components/ui/label';
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
+    // This is a mock login.
+    // In a real app, you would call your auth provider.
+    if ((email === 'admin@invernesseagles.com' || email === 'maria@example.com') && password === 'password') {
       toast({
         title: 'Login Successful!',
         description: 'Welcome back!',
         variant: 'success',
       });
+      // Here you would typically set the user in a global context
+      // and then redirect. For the prototype, we just redirect.
       router.push('/');
-    } catch (error: any) {
-      console.error('Login error:', error);
-      let errorMessage = 'An unexpected error occurred.';
-      if (error.code) {
-        switch (error.code) {
-          case 'auth/user-not-found':
-          case 'auth/wrong-password':
-          case 'auth/invalid-credential':
-            errorMessage = 'Invalid email or password.';
-            break;
-          default:
-            errorMessage = 'Failed to log in. Please try again.';
-        }
-      }
-       toast({
+    } else {
+      toast({
         title: 'Login Failed',
-        description: errorMessage,
+        description: 'Invalid email or password.',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -106,8 +89,8 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 required />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+            <Button type="submit" className="w-full">
+              Sign in
             </Button>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
@@ -120,8 +103,8 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" disabled={isLoading}>Google</Button>
-              <Button variant="outline" disabled={isLoading}>Facebook</Button>
+              <Button variant="outline">Google</Button>
+              <Button variant="outline">Facebook</Button>
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
