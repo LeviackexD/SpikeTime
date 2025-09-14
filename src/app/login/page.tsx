@@ -55,18 +55,9 @@ export default function LoginPage() {
   
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    try {
-      await signInWithGoogle();
-      // No need to handle success/failure here as the redirect flow will take over.
-      // The page will reload and the AuthContext will handle the redirect result.
-    } catch (error) {
-       toast({
-        title: 'Login Failed',
-        description: 'Could not start sign in with Google.',
-        variant: 'destructive',
-      });
-       setIsLoading(false);
-    }
+    await signInWithGoogle();
+    // This will now be handled by the mock in AuthContext
+    setIsLoading(false);
   }
 
   return (

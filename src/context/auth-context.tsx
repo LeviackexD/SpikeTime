@@ -20,6 +20,7 @@ import {
     createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { mockUsers } from '@/lib/mock-data';
 
 interface AuthContextType {
   user: User | null;
@@ -33,111 +34,45 @@ interface AuthContextType {
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
-const publicRoutes = ['/login', '/register'];
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const pathname = usePathname();
-  const [user, setUser] = React.useState<User | null>(null);
+  const [user, setUser] = React.useState<User | null>(mockUsers[0]);
   const [firebaseUser, setFirebaseUser] = React.useState<FirebaseUser | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
 
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setFirebaseUser(fbUser);
-      if (fbUser) {
-        const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data() as User;
-          // Assign admin role based on email for the mock admin
-          if (userData.email === 'admin@invernesseagles.com') {
-              userData.role = 'admin';
-          }
-          setUser(userData);
-        } else {
-          // This can happen if a user authenticates but their profile isn't created yet.
-          // The sign-in/sign-up flows should handle profile creation.
-          setUser(null); 
-        }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-    
-    return () => unsubscribe();
-  }, []);
-
-  React.useEffect(() => {
-    if (!loading && !user && !publicRoutes.includes(pathname)) {
-      router.push('/login');
-    }
-  }, [user, loading, router, pathname]);
-  
   const logout = async () => {
-    await signOut(auth);
+    // In a real app, you'd sign out. For this mock, we do nothing or redirect.
+    setUser(null);
     router.push('/login');
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
+    // Mock sign-in
+    const foundUser = mockUsers.find(u => u.email === email);
+    if(foundUser){
+      setUser(foundUser);
+      router.push('/');
       return true;
-    } catch (error) {
-      console.error("Error signing in with email:", error);
-      return false;
     }
+    return false;
   };
 
   const createUserProfile = async (
     fbUser: FirebaseUser, 
     additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }
     ): Promise<void> => {
-    const userRef = doc(db, 'users', fbUser.uid);
-    const newUser: User = {
-        id: fbUser.uid,
-        name: additionalData.name,
-        username: fbUser.email?.split('@')[0] || `user_${fbUser.uid.substring(0, 5)}`,
-        email: fbUser.email || '',
-        avatarUrl: fbUser.photoURL || `https://picsum.photos/seed/${fbUser.uid}/100/100`,
-        role: fbUser.email === 'admin@invernesseagles.com' ? 'admin' : 'user',
-        skillLevel: additionalData.skillLevel,
-        favoritePosition: additionalData.favoritePosition,
-        stats: {
-            sessionsPlayed: 0
-        }
-    };
-    await setDoc(userRef, newUser);
-    setUser(newUser);
+        // This is a mock, so we just log it
+    console.log("Creating user profile for", fbUser.uid, additionalData);
   }
   
   const signInWithGoogle = async (): Promise<void> => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const fbUser = result.user;
-      const userRef = doc(db, 'users', fbUser.uid);
-      const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
-        await createUserProfile(fbUser, {
-          name: fbUser.displayName || 'New User',
-          skillLevel: 'Beginner',
-          favoritePosition: 'Hitter',
-        });
-      }
-      router.push('/');
-    } catch (error: any) {
-       console.error("Error with Google sign-in:", error);
-      // Don't route away or do anything if the user closes the popup.
-      if (error.code === 'auth/popup-closed-by-user') {
-        return;
-      }
-    }
+    // Mock sign-in
+    setUser(mockUsers[1]); // Log in as a regular user for variety
+    router.push('/');
   };
 
 
-  if (loading && !user && !publicRoutes.includes(pathname)) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen w-full">
         <div className="animate-pulse">Loading...</div>
