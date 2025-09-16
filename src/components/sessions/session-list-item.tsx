@@ -156,26 +156,29 @@ export default function SessionListItem({
             <XCircle className="mr-2 h-4 w-4" />
             Cancel Spot
           </Button>
-        ) : isFull ? (
-          isOnWaitlist ? (
-            <Button className="w-full" variant="outline" disabled>
-              <CheckCircle className="mr-2 h-4 w-4" />
-              On Waitlist
-            </Button>
-          ) : (
-            <Button
-              className="w-full"
-              variant="secondary"
-              onClick={() => onWaitlist(session.id)}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              Join Waitlist
-            </Button>
-          )
         ) : (
-          <Button className="w-full" onClick={() => onBook(session.id)}>
-            Book My Spot
-          </Button>
+          <>
+            {!isFull && (
+              <Button className="w-full" onClick={() => onBook(session.id)}>
+                Book My Spot
+              </Button>
+            )}
+            {isOnWaitlist ? (
+              <Button className="w-full" variant="outline" disabled>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                On Waitlist
+              </Button>
+            ) : (
+              <Button
+                className="w-full"
+                variant="secondary"
+                onClick={() => onWaitlist(session.id)}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Join Waitlist
+              </Button>
+            )}
+          </>
         )}
       </CardFooter>
     </Card>

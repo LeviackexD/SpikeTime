@@ -180,7 +180,7 @@ export default function SessionDetailsModal({
 
         </div>
         <DialogFooter className='sm:justify-between items-center flex-shrink-0 pt-4'>
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2 flex-wrap'>
             {isRegistered ? (
               <Button 
                 variant="outline" 
@@ -190,22 +190,28 @@ export default function SessionDetailsModal({
               >
                 <XCircle className="mr-2 h-4 w-4" /> Cancel My Spot
               </Button>
-            ) : isFull ? (
-              isOnWaitlist ? (
-                <Button variant="outline" disabled>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  On Waitlist
-                </Button>
-              ) : (
-                <Button variant="secondary" onClick={() => handleAction(onWaitlist)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Join Waitlist
-                </Button>
-              )
             ) : (
-              <Button onClick={() => handleAction(onBook)}>
-                Book My Spot
-              </Button>
+              <>
+                {!isFull && (
+                   <Button onClick={() => handleAction(onBook)}>
+                      Book My Spot
+                  </Button>
+                )}
+                {isOnWaitlist ? (
+                  <Button variant="outline" disabled>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      On Waitlist
+                  </Button>
+                ) : (
+                  <Button
+                      variant="secondary"
+                      onClick={() => handleAction(onWaitlist)}
+                  >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Join Waitlist
+                  </Button>
+                )}
+              </>
             )}
             </div>
            <Button variant="ghost" onClick={onClose}>

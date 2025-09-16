@@ -132,7 +132,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     setSessions(prev =>
       prev.map(s => 
         s.id === sessionId 
-        ? { ...s, players: [...s.players, currentUser.id] } 
+        ? { 
+            ...s, 
+            players: [...s.players, currentUser.id],
+            // If user was on waitlist, remove them
+            waitlist: s.waitlist.filter(id => id !== currentUser.id),
+          } 
         : s
       )
     );
@@ -213,9 +218,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       showToast({ title: 'Already on Waitlist', description: 'You are already on the waitlist for this session.', variant: 'destructive' });
       return;
     }
-    if (session.players.length < session.maxPlayers) {
-      showToast({ title: 'Spots Available', description: 'There are open spots. You can book directly.', variant: 'destructive' });
-      return;
+    if (session.players.includes(currentUser.id)) {
+        showToast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
+        return;
     }
 
     setSessions(prev => prev.map(s => 
