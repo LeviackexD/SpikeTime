@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, getApp, FirebaseOptions } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 
 const firebaseConfig: FirebaseOptions = {
@@ -19,15 +19,22 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 // Connect to emulators in development
-if (process.env.NODE_ENV === 'development') {
-  // @ts-ignore - _isInitialized is not in the public API but it's a reliable way to check
-  if (!auth.emulatorConfig) {
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-  }
-  // @ts-ignore
-  if (!db.emulator) {
     connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  }
 }
+
+// Enable offline persistence for Firestore.
+// This is done after emulator connection to avoid conflicts.
+try {
+    enableMultiTabIndexedDbPersistence(db);
+} catch (error: any) {
+    if (error.code == 'failed-precondition') {
+        console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+    } else if (error.code == 'unimplemented') {
+        console.log('The current browser does not support all of the features required to enable persistence.');
+    }
+}
+
 
 export { app, db, auth };
