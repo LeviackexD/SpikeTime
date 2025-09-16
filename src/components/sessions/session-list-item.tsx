@@ -39,6 +39,7 @@ interface SessionListItemProps {
   onLeaveWaitlist: (sessionId: string) => void;
   onViewPlayers: (session: Session) => void;
   priority?: boolean;
+  animationDelay?: number;
 }
 
 export default function SessionListItem({
@@ -49,6 +50,7 @@ export default function SessionListItem({
   onLeaveWaitlist,
   onViewPlayers,
   priority = false,
+  animationDelay = 0,
 }: SessionListItemProps) {
   const { user: currentUser } = useAuth();
   const { users } = useSessions();
@@ -79,7 +81,10 @@ export default function SessionListItem({
   const { day, month } = formatDate(session.date);
 
   return (
-    <Card className="flex flex-col overflow-hidden transition-all hover:shadow-xl h-full">
+    <Card 
+      className="flex flex-col overflow-hidden transition-all hover:shadow-xl h-full animate-slide-up-and-fade"
+      style={{ animationDelay: `${animationDelay}ms`, animationFillMode: 'backwards' }}
+    >
       <CardHeader className="p-0 relative">
         <Badge
           variant={isFull ? 'destructive' : 'secondary'}

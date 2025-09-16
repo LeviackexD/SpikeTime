@@ -38,7 +38,7 @@ const AnnouncementsPage: NextPage = () => {
 
   return (
     <>
-      <div className="space-y-8">
+      <div className="space-y-8 animate-fade-in">
         <div className="flex flex-col items-center text-center">
           <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
             <Megaphone className="h-8 w-8 text-primary" />
@@ -53,10 +53,11 @@ const AnnouncementsPage: NextPage = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {mockAnnouncements.map((announcement) => (
+          {mockAnnouncements.map((announcement, index) => (
             <Card 
               key={announcement.id} 
-              className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow"
+              className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300 animate-slide-up-and-fade"
+              style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => handleOpenModal(announcement)}
             >
               <CardHeader>

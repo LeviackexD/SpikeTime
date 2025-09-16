@@ -58,7 +58,7 @@ const CalendarPage: NextPage = () => {
   }).sort((a,b) => a.startTime.localeCompare(b.startTime));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
         <div className="text-center">
              <h1 className="text-3xl font-bold font-headline flex items-center justify-center gap-2">
                 <CalendarIcon className="h-8 w-8 text-primary" />
@@ -119,7 +119,7 @@ const CalendarPage: NextPage = () => {
              <Separator className="mb-6"/>
             {filteredSessions.length > 0 ? (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {filteredSessions.map(session => (
+                    {filteredSessions.map((session, index) => (
                          <SessionDetailsCard
                             key={session.id}
                             session={session}
@@ -127,11 +127,12 @@ const CalendarPage: NextPage = () => {
                             onCancel={cancelBooking}
                             onWaitlist={joinWaitlist}
                             onLeaveWaitlist={leaveWaitlist}
+                            priority={index < 2}
                         />
                     ))}
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center text-center p-12 rounded-lg bg-muted/50 border border-dashed">
+                <div className="flex flex-col items-center justify-center text-center p-12 rounded-lg bg-muted/50 border border-dashed animate-fade-in">
                     <p className="text-muted-foreground">No sessions scheduled for this day or matching your filters.</p>
                 </div>
             )}

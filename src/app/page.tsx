@@ -79,7 +79,7 @@ const DashboardPage: NextPage = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8 animate-fade-in">
         <div className="text-center">
           <h1 className="text-3xl font-bold font-headline">Welcome back, {currentUser.name}!</h1>
           <p className="text-muted-foreground">Here's what's happening in your volleyball world.</p>
@@ -104,12 +104,13 @@ const DashboardPage: NextPage = () => {
                       onWaitlist={joinWaitlist}
                       onLeaveWaitlist={leaveWaitlist}
                       onViewPlayers={handleViewPlayers}
-                      priority={index === 0} // Prioritize loading the first image
+                      priority={index < 4} // Prioritize loading the first images
+                      animationDelay={index * 100}
                     />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed">
+                <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed animate-fade-in">
                   <p className="text-muted-foreground mb-4">You have no upcoming sessions booked.</p>
                   <Button asChild>
                     <Link href="/calendar">Browse Sessions</Link>
@@ -137,12 +138,13 @@ const DashboardPage: NextPage = () => {
                       onWaitlist={joinWaitlist}
                       onLeaveWaitlist={leaveWaitlist}
                       onViewPlayers={handleViewPlayers}
-                      priority={index === 0}
+                      priority={index < 4}
+                      animationDelay={index * 100}
                     />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed">
+                <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed animate-fade-in">
                   <p className="text-muted-foreground">No other sessions available at the moment.</p>
                 </div>
               )}

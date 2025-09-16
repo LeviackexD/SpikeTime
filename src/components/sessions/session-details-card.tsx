@@ -57,7 +57,7 @@ export default function SessionDetailsCard({
 
 
   return (
-    <Card className="flex flex-col md:flex-row overflow-hidden transition-all hover:shadow-xl w-full">
+    <Card className="flex flex-col md:flex-row overflow-hidden transition-all hover:shadow-xl w-full animate-scale-in">
       <div className="relative h-48 md:h-auto md:w-1/3">
         <Image
           src={session.imageUrl || `https://picsum.photos/seed/${session.id}/600/400`}
