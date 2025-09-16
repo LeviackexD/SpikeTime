@@ -23,6 +23,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 interface SessionListItemProps {
   session: Session;
@@ -52,6 +59,11 @@ export default function SessionListItem({
   const isRegistered = session.players.includes(currentUser.id);
   const isOnWaitlist = session.waitlist.includes(currentUser.id);
   const progressValue = (session.players.length / session.maxPlayers) * 100;
+  
+  const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+  const now = new Date();
+  const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const canCancel = hoursUntilSession > 24;
 
 
   const formatDate = (dateString: string) => {
@@ -62,6 +74,22 @@ export default function SessionListItem({
       timeZone: 'UTC',
     });
   };
+
+  const CancelButtonWrapper = ({ children }: { children: React.ReactNode }) => {
+    if (canCancel) {
+      return <>{children}</>;
+    }
+    return (
+       <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>{children}</TooltipTrigger>
+          <TooltipContent>
+            <p>Cannot cancel less than 24 hours before the session.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-xl w-full h-full">
@@ -115,15 +143,18 @@ export default function SessionListItem({
             </CardContent>
             <CardFooter className="bg-muted/50 p-2">
             {isRegistered ? (
+              <CancelButtonWrapper>
                 <Button
                     className="w-full"
                     variant="outline"
                     size="sm"
                     onClick={() => onCancel(session.id)}
+                    disabled={!canCancel}
                 >
                     <XCircle className="mr-2 h-4 w-4" />
                     Cancel My Spot
                 </Button>
+              </CancelButtonWrapper>
                 ) : isFull ? (
                 isOnWaitlist ? (
                     <Button className="w-full" variant="outline" size="sm" disabled>

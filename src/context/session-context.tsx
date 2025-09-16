@@ -135,6 +135,22 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
   const cancelBooking = async (sessionId: string) => {
     if (!currentUser) return;
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+    const now = new Date();
+    const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    if (hoursUntilSession <= 24) {
+      showToast({
+        title: 'Cancellation Not Allowed',
+        description: 'You cannot cancel a booking less than 24 hours before the session starts.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSessions(prev =>
       prev.map(s =>
         s.id === sessionId

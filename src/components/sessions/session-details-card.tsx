@@ -47,6 +47,12 @@ export default function SessionDetailsCard({
   const isRegistered = session.players.includes(currentUser.id);
   const isOnWaitlist = session.waitlist.includes(currentUser.id);
 
+  const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+  const now = new Date();
+  const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const canCancel = hoursUntilSession > 24;
+
+
   return (
     <Card className="flex flex-col md:flex-row overflow-hidden transition-all hover:shadow-xl w-full">
       <div className="relative h-48 md:h-auto md:w-1/3">
@@ -109,6 +115,8 @@ export default function SessionDetailsCard({
               className="w-full"
               variant="outline"
               onClick={() => onCancel(session.id)}
+              disabled={!canCancel}
+              title={!canCancel ? "Cancellations must be made more than 24 hours in advance." : "Cancel your spot"}
             >
               <XCircle className="mr-2 h-4 w-4" />
               Cancel My Spot
