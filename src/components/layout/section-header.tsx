@@ -1,10 +1,10 @@
 /**
  * @fileoverview A reusable component for creating consistent section headers.
- * It includes an icon, a title, a separator line, and an optional slot for action buttons.
+ * It includes an icon, a title, and an optional slot for action buttons.
+ * It is not responsible for the separator line.
  */
 
 import type { LucideIcon } from 'lucide-react';
-import { Separator } from '../ui/separator';
 import { cn } from '@/lib/utils';
 
 interface SectionHeaderProps {
@@ -16,15 +16,12 @@ interface SectionHeaderProps {
 
 export default function SectionHeader({ icon: Icon, title, children, className }: SectionHeaderProps) {
     return (
-        <div className={cn("flex flex-col gap-2 w-full", className)}>
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Icon className="h-6 w-6 text-green-600" />
-                    <h2 className="text-xl font-bold font-headline">{title}</h2>
-                </div>
-                {children}
+        <div className={cn("flex items-center justify-between w-full", className)}>
+            <div className="flex items-center gap-3">
+                <Icon className="h-6 w-6 text-green-600" />
+                <h2 className="text-xl font-bold font-headline">{title}</h2>
             </div>
-            <Separator />
+            {children}
         </div>
     )
 }

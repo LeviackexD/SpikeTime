@@ -100,9 +100,10 @@ const DashboardPage: NextPage = () => {
         <Accordion type="multiple" defaultValue={['my-sessions', 'next-sessions']} className="w-full space-y-8">
           {/* My Upcoming Sessions Section */}
           <AccordionItem value="my-sessions" className="border-b-0">
-            <AccordionTrigger className="hover:no-underline p-0">
-                <SectionHeader icon={Volleyball} title="My Upcoming Sessions" />
-            </AccordionTrigger>
+             <div className="flex items-center">
+              <SectionHeader icon={Volleyball} title="My Upcoming Sessions" />
+              <AccordionTrigger className="ml-auto" />
+            </div>
             <AccordionContent className="pt-4">
               {upcomingSessions.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -131,9 +132,10 @@ const DashboardPage: NextPage = () => {
 
           {/* Next Available Sessions Section */}
           <AccordionItem value="next-sessions" className="border-b-0">
-            <AccordionTrigger className="hover:no-underline p-0">
-              <SectionHeader icon={Volleyball} title="Next Sessions" />
-            </AccordionTrigger>
+            <div className="flex items-center">
+                <SectionHeader icon={Volleyball} title="Next Sessions" />
+                <AccordionTrigger className="ml-auto" />
+            </div>
             <AccordionContent className="pt-4">
               {availableSessions.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -168,15 +170,16 @@ const DashboardPage: NextPage = () => {
               <CardContent className="p-6">
                    <ul className="space-y-4">
                       {recentAnnouncements.map((announcement) => (
-                      <li 
-                        key={announcement.id} 
-                        className="border-l-4 border-primary pl-4 cursor-pointer hover:bg-muted/50 rounded-r-md transition-colors"
-                        onClick={() => handleOpenAnnouncementModal(announcement)}
-                      >
-                          <h3 className="font-semibold text-foreground">{announcement.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{new Date(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>
-                      </li>
+                        <li key={announcement.id}>
+                          <button
+                            onClick={() => handleOpenAnnouncementModal(announcement)}
+                            className="w-full text-left border-l-4 border-primary pl-4 rounded-r-md transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <h3 className="font-semibold text-foreground">{announcement.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{new Date(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>
+                          </button>
+                        </li>
                       ))}
                   </ul>
               </CardContent>
