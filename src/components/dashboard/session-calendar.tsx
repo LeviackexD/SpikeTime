@@ -8,7 +8,7 @@
 
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import type { Session, SkillLevel } from '@/lib/types';
+import type { Session } from '@/lib/types';
 import {
   Tooltip,
   TooltipContent,
@@ -52,57 +52,9 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
 
   const DayContent = ({ date: day, ...props }: DayProps) => {
     const dateString = day.toISOString().split('T')[0];
-    const daySessions = sessionsByDate[dateString] || []; // Use all sessions for dots, not filtered ones
+    const daySessions = filteredSessionsByDate[dateString] || [];
     
-    // Get unique skill levels for the day to display dots
-    const skillLevelsOnDay = Array.from(new Set(daySessions.map(s => s.level))) as SkillLevel[];
-
-    const content = (
-      <div className="relative flex flex-col items-center justify-center h-full w-full">
-        <span>{day.getDate()}</span>
-        {skillLevelsOnDay.length > 0 && (
-          <div className="absolute bottom-1 flex space-x-1">
-            {skillLevelsOnDay.map(level => (
-              <div
-                key={level}
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ backgroundColor: skillLevelColors[level] }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-
-    if (daySessions.length === 0) {
-        return content;
-    }
-
-    return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <div>{content}</div>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <div className="p-2 text-sm space-y-2">
-                        <h4 className="font-semibold mb-1">Sessions on this day:</h4>
-                         <ul className="space-y-1 list-none p-0">
-                          {daySessions.map(session => (
-                              <li key={session.id} className="flex items-center gap-2">
-                                <div
-                                    className="h-2 w-2 rounded-full"
-                                    style={{ backgroundColor: skillLevelColors[session.level] }}
-                                />
-                                <span className="font-semibold">{session.level}:</span> {session.startTime} - {session.endTime}
-                              </li>
-                          ))}
-                        </ul>
-                    </div>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    );
+    return <p>{day.getDate()}</p>;
   };
   
   return (
@@ -117,6 +69,9 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
                 const dateString = day.toISOString().split('T')[0];
                 return !!filteredSessionsByDate[dateString];
             }
+        }}
+        modifiersClassNames={{
+            hasSessions: 'day-with-session',
         }}
         classNames={{
             months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
