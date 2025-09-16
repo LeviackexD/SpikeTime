@@ -18,17 +18,17 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import type { Session, User } from '@/lib/types';
+import type { Session } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { useSessions } from '@/context/session-context';
 import PlayerAvatar from './player-avatar';
 import {
-  Users,
   CheckCircle,
   UserPlus,
   XCircle,
   Eye,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SessionListItemProps {
   session: Session;
@@ -114,27 +114,37 @@ export default function SessionListItem({
              <p>{session.location}</p>
           </div>
         
-        <div>
-          <div className="flex -space-x-2 overflow-hidden mb-2">
-            {session.players.slice(0, 5).map(playerId => {
-                const player = getPlayer(playerId);
-                return player && <PlayerAvatar key={player.id} player={player} />;
-            })}
-            {session.players.length > 5 && (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
-                    +{session.players.length - 5}
-                </div>
-            )}
-          </div>
-          <Progress value={progressValue} className="h-1" />
+        <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <div className="flex -space-x-2 overflow-hidden">
+                {session.players.slice(0, 4).map(playerId => {
+                    const player = getPlayer(playerId);
+                    return player && <PlayerAvatar key={player.id} player={player} />;
+                })}
+                {session.players.length > 4 && (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
+                        +{session.players.length - 4}
+                    </div>
+                )}
+              </div>
+              <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onViewPlayers(session)}>
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>View Details</p>
+                    </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <Progress value={progressValue} className="h-1" />
         </div>
       </CardContent>
 
       <CardFooter className="p-4 pt-0 mt-auto flex flex-col gap-2">
-        <Button className="w-full" variant="outline" onClick={() => onViewPlayers(session)}>
-            <Eye className="mr-2 h-4 w-4" />
-            View Details
-        </Button>
         {isRegistered ? (
           <Button
             className="w-full"
