@@ -31,14 +31,11 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { SkillLevel, PlayerPosition } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { createUserProfile } = useAuth();
+  const { signUpWithEmail } = useAuth();
   const [isLoading, setIsLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
     name: '',
@@ -68,38 +65,29 @@ export default function RegisterPage() {
         return;
     }
     setIsLoading(true);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      const firebaseUser = userCredential.user;
+    
+    const success = await signUpWithEmail(formData.email, formData.password, {
+      name: formData.name,
+      skillLevel: formData.skillLevel as SkillLevel,
+      favoritePosition: formData.favoritePosition as PlayerPosition,
+    });
 
-      await createUserProfile(firebaseUser, {
-        name: formData.name,
-        skillLevel: formData.skillLevel as SkillLevel,
-        favoritePosition: formData.favoritePosition as PlayerPosition
-      });
-      
+    if (success) {
       toast({
           title: 'Account Created!',
           description: 'You can now log in with your credentials.',
           variant: 'success'
       });
       router.push('/login');
-
-    } catch (error: any) {
-        let description = 'An unexpected error occurred.';
-        if (error.code === 'auth/email-already-in-use') {
-            description = 'This email is already in use by another account.';
-        } else if (error.code === 'auth/weak-password') {
-            description = 'The password is too weak. It should be at least 6 characters long.';
-        }
+    } else {
        toast({
           title: 'Registration Failed',
-          description,
+          description: 'This email might already be in use or the password is too weak.',
           variant: 'destructive'
       });
-    } finally {
-        setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   return (

@@ -28,6 +28,7 @@ interface AuthContextType {
   logout: () => void;
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
   signInWithGoogle: () => Promise<void>;
+  signUpWithEmail: (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<boolean>;
   createUserProfile: (firebaseUser: FirebaseUser, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<void>;
 }
 
@@ -105,6 +106,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await setDoc(userRef, newUser);
     setUser(newUser);
   }
+
+  const signUpWithEmail = async (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      await createUserProfile(userCredential.user, additionalData);
+      return true;
+    } catch (error) {
+      console.error("Error signing up:", error);
+      return false;
+    }
+  };
   
   const signInWithGoogle = async (): Promise<void> => {
     const provider = new GoogleAuthProvider();
@@ -140,7 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, logout, signInWithEmail, signInWithGoogle, createUserProfile }}>
+    <AuthContext.Provider value={{ user, firebaseUser, loading, logout, signInWithEmail, signInWithGoogle, signUpWithEmail, createUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
