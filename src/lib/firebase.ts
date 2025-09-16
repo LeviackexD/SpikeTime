@@ -1,6 +1,5 @@
-
 import { initializeApp, getApps, getApp, FirebaseOptions } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, initializeFirestore, memoryLocalCache, persistentLocalCache, Firestore } from 'firebase/firestore';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 
 const firebaseConfig: FirebaseOptions = {
@@ -15,24 +14,35 @@ const firebaseConfig: FirebaseOptions = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
 const auth = getAuth(app);
+
+let db: Firestore;
+
+// Firestore uses a different cache implementation on the server-side.
+if (typeof window === 'undefined') {
+  db = initializeFirestore(app, {
+    localCache: memoryLocalCache(),
+  });
+} else {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: 'multi-tab' }),
+  });
+}
+
 
 // Connect to emulators in development
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-    connectFirestoreEmulator(db, '127.0.0.1', 8080);
-}
-
-// Enable offline persistence for Firestore.
-// This is done after emulator connection to avoid conflicts.
-try {
-    enableMultiTabIndexedDbPersistence(db);
-} catch (error: any) {
-    if (error.code == 'failed-precondition') {
-        console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-    } else if (error.code == 'unimplemented') {
-        console.log('The current browser does not support all of the features required to enable persistence.');
+    // Check if emulators are already running to avoid re-connecting
+    // This is a common pattern to prevent errors in Next.js with HMR
+    if (!auth.emulatorConfig) {
+        connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    }
+    // Firestore emulator connection doesn't have a check like auth, but we can wrap it.
+    // A simple check is to see if the internal _settings.host has been set.
+    // This is a bit of a hack, but it's effective.
+    // @ts-ignore
+    if (db._settings.host !== '127.0.0.1:8080') {
+         connectFirestoreEmulator(db, '127.0.0.1', 8080);
     }
 }
 
