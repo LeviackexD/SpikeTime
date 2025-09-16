@@ -30,6 +30,7 @@ import SessionGrid from '@/components/sessions/session-grid';
 // Context and Hooks
 import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
+import { useUpcomingSessions, useAvailableSessions } from '@/hooks/use-session-filters';
 
 // Mock Data (for announcements)
 import { mockAnnouncements } from '@/lib/mock-data';
@@ -48,22 +49,9 @@ const DashboardPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
   const { user: currentUser } = useAuth();
   
-  // --- DERIVED STATE ---
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const upcomingSessions = sessions.filter(session => {
-      const sessionDate = new Date(session.date);
-      sessionDate.setHours(0, 0, 0, 0);
-      return currentUser && sessionDate >= today && session.players.includes(currentUser.id);
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  const availableSessions = sessions.filter(session => {
-    const sessionDate = new Date(session.date);
-    sessionDate.setHours(0, 0, 0, 0);
-    return currentUser && sessionDate >= today && !session.players.includes(currentUser.id)
-  }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
+  // --- DERIVED STATE FROM CUSTOM HOOKS ---
+  const upcomingSessions = useUpcomingSessions(currentUser, sessions);
+  const availableSessions = useAvailableSessions(currentUser, sessions);
   const recentAnnouncements = mockAnnouncements.slice(0, 3);
 
   // --- EVENT HANDLERS ---
