@@ -20,7 +20,6 @@ import {
     createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { mockUsers } from '@/lib/mock-data';
 
 interface AuthContextType {
   user: User | null;
@@ -34,48 +33,107 @@ interface AuthContextType {
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
+const publicRoutes = ['/login', '/register'];
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const [user, setUser] = React.useState<User | null>(mockUsers[0]);
+  const pathname = usePathname();
+  const [user, setUser] = React.useState<User | null>(null);
   const [firebaseUser, setFirebaseUser] = React.useState<FirebaseUser | null>(null);
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
 
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
+      if (fbUser) {
+        const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
+        if (userDoc.exists()) {
+          setUser(userDoc.data() as User);
+        } else {
+          // This can happen if a user authenticates but their profile isn't created yet.
+          // The sign-in/sign-up flows should handle profile creation.
+          setUser(null); 
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+    if (!loading && !user && !publicRoutes.includes(pathname)) {
+      router.push('/login');
+    }
+  }, [user, loading, router, pathname]);
+  
   const logout = async () => {
-    // In a real app, you'd sign out. For this mock, we do nothing or redirect.
-    setUser(null);
+    await signOut(auth);
     router.push('/login');
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    // Mock sign-in
-    const foundUser = mockUsers.find(u => u.email === email);
-    if(foundUser){
-      setUser(foundUser);
-      router.push('/');
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
       return true;
+    } catch (error) {
+      console.error("Error signing in with email:", error);
+      return false;
     }
-    return false;
   };
 
   const createUserProfile = async (
     fbUser: FirebaseUser, 
     additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }
     ): Promise<void> => {
-        // This is a mock, so we just log it
-    console.log("Creating user profile for", fbUser.uid, additionalData);
+    const userRef = doc(db, 'users', fbUser.uid);
+    const newUser: User = {
+        id: fbUser.uid,
+        name: additionalData.name,
+        username: fbUser.email?.split('@')[0] || `user_${fbUser.uid.substring(0, 5)}`,
+        email: fbUser.email || '',
+        avatarUrl: fbUser.photoURL || `https://picsum.photos/seed/${fbUser.uid}/100/100`,
+        role: 'user', // Default role
+        skillLevel: additionalData.skillLevel,
+        favoritePosition: additionalData.favoritePosition,
+        stats: {
+            sessionsPlayed: 0
+        }
+    };
+    await setDoc(userRef, newUser);
+    setUser(newUser);
   }
   
   const signInWithGoogle = async (): Promise<void> => {
-    // Mock sign-in
-    setUser(mockUsers[1]); // Log in as a regular user for variety
-    router.push('/');
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const fbUser = result.user;
+      const userRef = doc(db, 'users', fbUser.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        // For Google Sign-in, we might not have skill level/position, so we set defaults.
+        // In a real app, you might redirect to a profile completion page.
+        await createUserProfile(fbUser, {
+          name: fbUser.displayName || 'New User',
+          skillLevel: 'Beginner', // Default value
+          favoritePosition: 'Hitter', // Default value
+        });
+      }
+      router.push('/');
+    } catch (error) {
+      console.error("Error with Google sign-in:", error);
+    }
   };
 
 
-  if (loading) {
+  if (loading && !publicRoutes.includes(pathname)) {
     return (
       <div className="flex items-center justify-center min-h-screen w-full">
-        <div className="animate-pulse">Loading...</div>
+        <div>Loading...</div>
       </div>
     );
   }
