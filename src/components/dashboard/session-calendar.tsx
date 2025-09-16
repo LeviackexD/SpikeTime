@@ -8,15 +8,13 @@
 
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import type { Session, SkillLevel } from '@/lib/types';
-import { skillLevelColors } from '@/lib/types';
+import type { Session } from '@/lib/types';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from '@/lib/utils';
 import type { DayProps } from 'react-day-picker';
 
 interface SessionCalendarProps {
@@ -29,7 +27,7 @@ interface SessionCalendarProps {
 export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter }: SessionCalendarProps) {
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
-      const date = session.date.split('T')[0];
+      const date = new Date(session.date).toISOString().split('T')[0];
       if (!acc[date]) {
         acc[date] = [];
       }
@@ -76,7 +74,6 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
                          <ul className="space-y-1 list-none p-0">
                           {daySessions.map(session => (
                               <li key={session.id} className="flex items-center gap-2">
-                                <div className={cn("h-2 w-2 rounded-full", skillLevelColors[session.level])} />
                                 <span className="font-semibold">{session.level}:</span> {session.startTime} - {session.endTime}
                               </li>
                           ))}
@@ -90,6 +87,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
   
   return (
       <Calendar
+        key={JSON.stringify(sessions)}
         mode="single"
         selected={selectedDate}
         onSelect={onDateChange}

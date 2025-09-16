@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
-import { Users, Calendar, Clock, X, CheckCircle, UserPlus } from 'lucide-react';
+import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle } from 'lucide-react';
 import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 
@@ -126,6 +126,11 @@ export default function SessionDetailsModal({
       timeZone: 'UTC',
     });
   }
+  
+  const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+  const now = new Date();
+  const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const canCancel = hoursUntilSession > 24;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -177,8 +182,13 @@ export default function SessionDetailsModal({
         <DialogFooter className='sm:justify-between items-center flex-shrink-0 pt-4'>
             <div className='flex items-center gap-2'>
             {isRegistered ? (
-              <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/5 hover:text-destructive" onClick={() => handleAction(onCancel)}>
-                <X className="mr-2 h-4 w-4" /> Cancel My Spot
+              <Button 
+                variant="outline" 
+                onClick={() => handleAction(onCancel)}
+                disabled={!canCancel}
+                title={!canCancel ? "Cancellations must be made more than 24 hours in advance." : "Cancel your spot"}
+              >
+                <XCircle className="mr-2 h-4 w-4" /> Cancel My Spot
               </Button>
             ) : isFull ? (
               isOnWaitlist ? (

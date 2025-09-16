@@ -89,7 +89,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     // In a real app, this would be an API call. Here, we just update local state.
     const newSession: Session = {
       ...sessionData,
-      id: `s${sessions.length + 1}`,
+      id: `s${Date.now()}`,
       players: [],
       waitlist: [],
       messages: [],
@@ -117,65 +117,68 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string) => {
     if (!currentUser) return;
 
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
-    
-    if (session.players.includes(currentUser.id)) {
-        showToast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
-        return;
-    }
-    
     setSessions(prev =>
-      prev.map(s =>
-        s.id === sessionId ? { ...s, players: [...s.players, currentUser.id] } : s
-      )
+      prev.map(s => {
+        if (s.id === sessionId) {
+          if (s.players.includes(currentUser.id)) {
+            showToast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
+            return s;
+          }
+          if (s.players.length >= s.maxPlayers) {
+            showToast({ title: 'Session Full', description: 'This session is full. You can join the waitlist.', variant: 'destructive' });
+            return s;
+          }
+          showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${s.level} session.`, variant: 'success' });
+          return { ...s, players: [...s.players, currentUser.id] };
+        }
+        return s;
+      })
     );
-    showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
   };
 
   const cancelBooking = async (sessionId: string) => {
     if (!currentUser) return;
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
 
-    const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
-    const now = new Date();
-    const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    setSessions(prev => prev.map(s => {
+      if (s.id === sessionId) {
+        // Create new lists for players and waitlist
+        const newPlayers = s.players.filter(pId => pId !== currentUser.id);
+        let newWaitlist = [...s.waitlist];
 
-    if (hoursUntilSession <= 24) {
-      showToast({
-        title: 'Cancellation Not Allowed',
-        description: 'You cannot cancel a booking less than 24 hours before the session starts.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setSessions(prev =>
-      prev.map(s =>
-        s.id === sessionId
-          ? { ...s, players: s.players.filter(pId => pId !== currentUser.id) }
-          : s
-      )
-    );
-    showToast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+        // If a spot opened up and there's a waitlist, move the first person
+        if (newPlayers.length < s.maxPlayers && newWaitlist.length > 0) {
+          const nextPlayerId = newWaitlist.shift(); // Get and remove first person from waitlist
+          if (nextPlayerId) {
+            newPlayers.push(nextPlayerId); // Add them to players
+            // TODO: Notify this user
+          }
+        }
+        
+        showToast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+        return { ...s, players: newPlayers, waitlist: newWaitlist };
+      }
+      return s;
+    }));
   };
 
   const joinWaitlist = async (sessionId: string) => {
     if (!currentUser) return;
     
-    const session = sessions.find(s => s.id === sessionId);
-    if (session && session.waitlist.includes(currentUser.id)) {
-        showToast({ title: 'Already on Waitlist', description: 'You are already on the waitlist for this session.', variant: 'destructive' });
-        return;
-    }
-
-    setSessions(prev =>
-      prev.map(s =>
-        s.id === sessionId ? { ...s, waitlist: [...s.waitlist, currentUser.id] } : s
-      )
-    );
-    showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+    setSessions(prev => prev.map(s => {
+      if (s.id === sessionId) {
+        if (s.waitlist.includes(currentUser.id)) {
+          showToast({ title: 'Already on Waitlist', description: 'You are already on the waitlist for this session.', variant: 'destructive' });
+          return s;
+        }
+        if (s.players.length < s.maxPlayers) {
+          showToast({ title: 'Spots Available', description: 'There are open spots. You can book directly.', variant: 'destructive' });
+          return s;
+        }
+        showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+        return { ...s, waitlist: [...s.waitlist, currentUser.id] };
+      }
+      return s;
+    }));
   };
 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender'>) => {
