@@ -27,6 +27,7 @@ import {
   UserPlus,
   XCircle,
   Eye,
+  LogOut,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -35,6 +36,7 @@ interface SessionListItemProps {
   onBook: (sessionId: string) => void;
   onCancel: (sessionId: string) => void;
   onWaitlist: (sessionId: string) => void;
+  onLeaveWaitlist: (sessionId: string) => void;
   onViewPlayers: (session: Session) => void;
   priority?: boolean;
 }
@@ -44,6 +46,7 @@ export default function SessionListItem({
   onBook,
   onCancel,
   onWaitlist,
+  onLeaveWaitlist,
   onViewPlayers,
   priority = false,
 }: SessionListItemProps) {
@@ -163,10 +166,11 @@ export default function SessionListItem({
                 Book My Spot
               </Button>
             )}
+            
             {isOnWaitlist ? (
-              <Button className="w-full" variant="outline" disabled>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                On Waitlist
+              <Button className="w-full" variant="secondary" onClick={() => onLeaveWaitlist(session.id)}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Leave Waitlist
               </Button>
             ) : (
               <Button

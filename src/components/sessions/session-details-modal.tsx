@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
-import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle } from 'lucide-react';
+import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut } from 'lucide-react';
 import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 
@@ -84,6 +84,7 @@ interface SessionDetailsModalProps {
   onBook: (sessionId: string) => void;
   onCancel: (sessionId: string) => void;
   onWaitlist: (sessionId: string) => void;
+  onLeaveWaitlist: (sessionId: string) => void;
 }
 
 export default function SessionDetailsModal({ 
@@ -93,6 +94,7 @@ export default function SessionDetailsModal({
   onBook,
   onCancel,
   onWaitlist,
+  onLeaveWaitlist,
 }: SessionDetailsModalProps) {
   const { user: currentUser } = useAuth();
   const { users: allUsers } = useSessions();
@@ -198,9 +200,9 @@ export default function SessionDetailsModal({
                   </Button>
                 )}
                 {isOnWaitlist ? (
-                  <Button variant="outline" disabled>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      On Waitlist
+                  <Button variant="secondary" onClick={() => handleAction(onLeaveWaitlist)}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Leave Waitlist
                   </Button>
                 ) : (
                   <Button

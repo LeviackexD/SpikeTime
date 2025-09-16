@@ -23,6 +23,7 @@ interface SessionContextType {
   bookSession: (sessionId: string) => Promise<void>;
   cancelBooking: (sessionId: string) => Promise<void>;
   joinWaitlist: (sessionId: string) => Promise<void>;
+  leaveWaitlist: (sessionId: string) => Promise<void>;
   addMessage: (sessionId: string, message: Omit<Message, 'id' | 'sender'>) => Promise<void>;
   directChats: DirectChat[];
   createDirectChat: (otherUser: User) => Promise<string>;
@@ -230,6 +231,31 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     ));
     showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
   };
+  
+  const leaveWaitlist = async (sessionId: string) => {
+    if (!currentUser) return;
+
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) {
+        showToast({ title: 'Error', description: 'Session not found.', variant: 'destructive' });
+        return;
+    }
+
+    if (!session.waitlist.includes(currentUser.id)) {
+        showToast({ title: 'Not on Waitlist', description: "You aren't on the waitlist for this session.", variant: 'destructive' });
+        return;
+    }
+
+    setSessions(prev =>
+        prev.map(s =>
+            s.id === sessionId
+                ? { ...s, waitlist: s.waitlist.filter(id => id !== currentUser.id) }
+                : s
+        )
+    );
+
+    showToast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
+  };
 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender'>) => {
     if (!currentUser) return;
@@ -287,7 +313,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         deleteSession, 
         bookSession, 
         cancelBooking, 
-        joinWaitlist, 
+        joinWaitlist,
+        leaveWaitlist,
         addMessage,
         directChats,
         createDirectChat,

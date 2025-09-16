@@ -46,7 +46,7 @@ const DashboardPage: NextPage = () => {
   const [selectedAnnouncement, setSelectedAnnouncement] = React.useState<Announcement | null>(null);
 
   // --- HOOKS ---
-  const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
+  const { sessions, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
   const { user: currentUser } = useAuth();
   
   // --- DERIVED STATE FROM CUSTOM HOOKS ---
@@ -102,6 +102,7 @@ const DashboardPage: NextPage = () => {
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
+                      onLeaveWaitlist={leaveWaitlist}
                       onViewPlayers={handleViewPlayers}
                       priority={index === 0} // Prioritize loading the first image
                     />
@@ -134,6 +135,7 @@ const DashboardPage: NextPage = () => {
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
+                      onLeaveWaitlist={leaveWaitlist}
                       onViewPlayers={handleViewPlayers}
                       priority={index === 0}
                     />
@@ -184,6 +186,7 @@ const DashboardPage: NextPage = () => {
         onBook={bookSession}
         onCancel={cancelBooking}
         onWaitlist={joinWaitlist}
+        onLeaveWaitlist={leaveWaitlist}
       />
 
       <AnnouncementDetailsModal

@@ -35,7 +35,7 @@ const SessionCalendar = dynamic(() => import('@/components/dashboard/session-cal
 const skillLevels: (SkillLevel | 'All')[] = ['All', 'Beginner', 'Intermediate', 'Advanced'];
 
 const CalendarPage: NextPage = () => {
-  const { sessions, bookSession, cancelBooking, joinWaitlist } = useSessions();
+  const { sessions, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
   const { user: currentUser } = useAuth();
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [skillFilter, setSkillFilter] = React.useState<SkillLevel | 'All'>('All');
@@ -126,6 +126,7 @@ const CalendarPage: NextPage = () => {
                             onBook={bookSession}
                             onCancel={cancelBooking}
                             onWaitlist={joinWaitlist}
+                            onLeaveWaitlist={leaveWaitlist}
                         />
                     ))}
                 </div>

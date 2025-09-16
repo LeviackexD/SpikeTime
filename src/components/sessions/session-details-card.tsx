@@ -19,6 +19,7 @@ import {
   CheckCircle,
   XCircle,
   UserPlus,
+  LogOut,
 } from 'lucide-react';
 import type { Session } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
@@ -28,6 +29,7 @@ interface SessionDetailsCardProps {
   onBook: (sessionId: string) => void;
   onCancel: (sessionId: string) => void;
   onWaitlist: (sessionId: string) => void;
+  onLeaveWaitlist: (sessionId: string) => void;
   priority?: boolean;
 }
 
@@ -36,6 +38,7 @@ export default function SessionDetailsCard({
   onBook,
   onCancel,
   onWaitlist,
+  onLeaveWaitlist,
   priority = false,
 }: SessionDetailsCardProps) {
   const { user: currentUser } = useAuth();
@@ -129,9 +132,9 @@ export default function SessionDetailsCard({
                 </Button>
               )}
               {isOnWaitlist ? (
-                <Button className="w-full" variant="outline" disabled>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    On Waitlist
+                <Button className="w-full" variant="secondary" onClick={() => onLeaveWaitlist(session.id)}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Leave Waitlist
                 </Button>
               ) : (
                 <Button
