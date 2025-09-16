@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, FirebaseOptions } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator, initializeFirestore, memoryLocalCache, persistentLocalCache, Firestore } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, initializeFirestore, memoryLocalCache, Firestore } from 'firebase/firestore';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 
 const firebaseConfig: FirebaseOptions = {
@@ -16,18 +16,11 @@ const firebaseConfig: FirebaseOptions = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 
-let db: Firestore;
-
-// Firestore uses a different cache implementation on the server-side.
-if (typeof window === 'undefined') {
-  db = initializeFirestore(app, {
-    localCache: memoryLocalCache(),
-  });
-} else {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: 'multi-tab' }),
-  });
-}
+// Use memory cache which works in all environments (client/server)
+// This avoids issues with server-side rendering in Next.js
+const db: Firestore = initializeFirestore(app, {
+  cache: memoryLocalCache(),
+});
 
 
 // Connect to emulators in development
