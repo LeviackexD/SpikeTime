@@ -117,18 +117,18 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string) => {
     if (!currentUser) return;
 
-    const sessionToBook = sessions.find(s => s.id === sessionId);
-    if (!sessionToBook) return;
-
-    if (sessionToBook.players.includes(currentUser.id)) {
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+    
+    if (session.players.includes(currentUser.id)) {
       showToast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
       return;
     }
-    if (sessionToBook.players.length >= sessionToBook.maxPlayers) {
+    if (session.players.length >= session.maxPlayers) {
       showToast({ title: 'Session Full', description: 'This session is full. You can join the waitlist.', variant: 'destructive' });
       return;
     }
-
+    
     setSessions(prev =>
       prev.map(s => 
         s.id === sessionId 
@@ -136,15 +136,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         : s
       )
     );
-    showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${sessionToBook.level} session.`, variant: 'success' });
+    showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
   };
-
+  
   const cancelBooking = async (sessionId: string) => {
     if (!currentUser) return;
-
-    let sessionToCancel = sessions.find(s => s.id === sessionId);
-    if (!sessionToCancel) return;
-
+  
+    const sessionToCancel = sessions.find(s => s.id === sessionId);
+    
+    // --- VALIDATIONS ---
+    if (!sessionToCancel) {
+      console.error("Session not found");
+      return;
+    }
+  
     if (!sessionToCancel.players.includes(currentUser.id)) {
       showToast({
         title: 'Not Registered',
@@ -153,11 +158,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       });
       return;
     }
-
+  
     const sessionDateTime = new Date(`${sessionToCancel.date}T${sessionToCancel.startTime}`);
     const now = new Date();
     const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-
+  
     if (hoursUntilSession <= 24) {
       showToast({
         title: 'Cancellation Period Over',
@@ -166,18 +171,22 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       });
       return;
     }
-
+    
+    // --- STATE UPDATE ---
     setSessions(prevSessions =>
       prevSessions.map(s => {
         if (s.id === sessionId) {
-          const newPlayers = s.players.filter(pId => pId !== currentUser.id);
+          // Remove the current user
+          let newPlayers = s.players.filter(pId => pId !== currentUser.id);
           let newWaitlist = [...s.waitlist];
-
-          if (s.players.length <= s.maxPlayers && newWaitlist.length > 0) {
-            const nextPlayerId = newWaitlist.shift();
+  
+          // Check if a spot has opened up and if there's a waitlist
+          const spotOpened = newPlayers.length < s.maxPlayers;
+          if (spotOpened && newWaitlist.length > 0) {
+            const nextPlayerId = newWaitlist.shift(); // Get the first person from the waitlist
             if (nextPlayerId) {
-              newPlayers.push(nextPlayerId);
-              // TODO: Notify this user they have been moved from the waitlist
+              newPlayers.push(nextPlayerId); // Add them to the players list
+              // TODO: In a real app, notify this user they've been moved from the waitlist.
             }
           }
           return { ...s, players: newPlayers, waitlist: newWaitlist };
@@ -185,7 +194,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         return s;
       })
     );
-
+  
+    // --- SUCCESS NOTIFICATION ---
     showToast({
       title: 'Booking Canceled',
       description: 'Your spot has been successfully canceled.',
@@ -196,14 +206,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const joinWaitlist = async (sessionId: string) => {
     if (!currentUser) return;
     
-    const sessionToJoin = sessions.find(s => s.id === sessionId);
-    if (!sessionToJoin) return;
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
     
-    if (sessionToJoin.waitlist.includes(currentUser.id)) {
+    if (session.waitlist.includes(currentUser.id)) {
       showToast({ title: 'Already on Waitlist', description: 'You are already on the waitlist for this session.', variant: 'destructive' });
       return;
     }
-    if (sessionToJoin.players.length < sessionToJoin.maxPlayers) {
+    if (session.players.length < session.maxPlayers) {
       showToast({ title: 'Spots Available', description: 'There are open spots. You can book directly.', variant: 'destructive' });
       return;
     }
