@@ -1,7 +1,7 @@
 /**
  * @fileoverview User login page.
- * Provides a form for users to sign in with their email and password,
- * or to use Google for authentication. Also links to the registration page.
+ * Provides a form for users to sign in with their email and password.
+ * Also links to the registration page.
  */
 
 'use client';
@@ -27,7 +27,7 @@ import { useAuth } from '@/context/auth-context';
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { signInWithEmail, signInWithGoogle, user, loading } = useAuth();
+  const { signInWithEmail, user, loading } = useAuth();
   const [email, setEmail] = React.useState('admin@invernesseagles.com');
   const [password, setPassword] = React.useState('password');
   const [isEmailLoading, setIsEmailLoading] = React.useState(false);
@@ -53,11 +53,6 @@ export default function LoginPage() {
     // Error toast is handled by the context
     setIsEmailLoading(false);
   };
-  
-  const handleGoogleLogin = () => {
-    // No need to set loading here, as the auth context will handle it during redirect.
-    signInWithGoogle();
-  }
 
   const isFormDisabled = isEmailLoading || loading;
 
@@ -110,21 +105,6 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={isFormDisabled}>
               {isEmailLoading ? 'Signing in...' : 'Sign in'}
             </Button>
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <Button variant="outline" onClick={handleGoogleLogin} disabled={isFormDisabled} type="button">
-                Google
-              </Button>
-            </div>
           </CardContent>
           <CardFooter className="flex justify-center">
             <div className="text-sm text-muted-foreground">

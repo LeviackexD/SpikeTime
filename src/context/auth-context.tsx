@@ -12,9 +12,6 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
   type User as FirebaseUser
 } from 'firebase/auth';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
@@ -31,7 +28,6 @@ interface AuthContextType {
   loading: boolean;
   logout: () => void;
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
-  signInWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<boolean>;
 }
 
@@ -53,6 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (profile) {
           setUser(profile);
         } else {
+          // Create a default profile if not found in mock data
           setUser({
             id: firebaseUser.uid,
             name: firebaseUser.displayName || 'New User',
@@ -73,34 +70,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => unsubscribe();
   }, []);
-  
-  React.useEffect(() => {
-    const handleRedirectResult = async () => {
-        try {
-            setLoading(true);
-            const result = await getRedirectResult(auth);
-            if (result) {
-                toast({
-                  title: 'Login Successful!',
-                  description: `Welcome, ${result.user.displayName}!`,
-                  variant: 'success',
-                });
-                router.push('/');
-            }
-        } catch (error) {
-            handleAuthError(error);
-        } finally {
-            // Even if there's no redirect result, we should stop loading.
-            // onAuthStateChanged will handle the final user state.
-            const isPossiblyRedirecting = !user && publicRoutes.includes(pathname);
-            if (!isPossiblyRedirecting) {
-                 setLoading(false);
-            }
-        }
-    }
-    handleRedirectResult();
-  }, [auth, router, toast]);
-
 
   React.useEffect(() => {
     if (!loading && !user && !publicRoutes.includes(pathname)) {
@@ -124,9 +93,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           break;
         case 'auth/network-request-failed':
           description = 'Network error. Please check your internet connection and emulator status.';
-          break;
-        case 'auth/popup-blocked':
-          description = 'The login pop-up was blocked by the browser. Please allow pop-ups for this site.';
           break;
         default:
           console.error('Firebase Auth Error:', error);
@@ -160,18 +126,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signInWithGoogle = async (): Promise<void> => {
-    const provider = new GoogleAuthProvider();
-    try {
-        setLoading(true);
-        await signInWithRedirect(auth, provider);
-        // The user will be redirected. The result is handled by getRedirectResult.
-    } catch (error) {
-        handleAuthError(error);
-        setLoading(false);
-    }
-  };
-
   const signUpWithEmail = async (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
     try {
         await createUserWithEmailAndPassword(auth, email, pass);
@@ -183,12 +137,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
   
-  if (loading) {
+  if (loading && !user && !publicRoutes.includes(pathname)) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, signInWithEmail, signInWithGoogle, signUpWithEmail }}>
+    <AuthContext.Provider value={{ user, loading, logout, signInWithEmail, signUpWithEmail }}>
       {children}
     </AuthContext.Provider>
   );
