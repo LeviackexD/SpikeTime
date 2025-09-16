@@ -44,15 +44,7 @@ const mockSessionMessages: Message[] = [
     },
 ];
 
-export const mockSessions: Session[] = [
-  { id: 's1', date: getFutureDate(2), startTime: '18:00', endTime: '20:00', location: 'Main Beach Court', level: 'Intermediate', players: ['u1','u2','u3','u4','u5'], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s1/400/300`, messages: mockSessionMessages },
-  { id: 's2', date: getFutureDate(2), startTime: '20:00', endTime: '22:00', location: 'Side Court 2', level: 'Advanced', players: ['u2','u3'], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s2/400/300`, messages: [] },
-  { id: 's3', date: getFutureDate(4), startTime: '19:00', endTime: '21:00', location: 'Community Center', level: 'Beginner', players: ['u4'], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s3/400/300`, messages: [] },
-  { id: 's4', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Sunset Park', level: 'Intermediate', players: ['u1','u2','u3','u4','u5','u6','u7','u8','u9','u10','u11','u12'], maxPlayers: 12, waitlist: ['u13'], imageUrl: `https://picsum.photos/seed/s4/400/300`, messages: [] },
-  { id: 's5', date: getFutureDate(7), startTime: '18:00', endTime: '20:00', location: 'Main Beach Court', level: 'Advanced', players: ['u1','u2','u3','u4','u5','u6','u7','u8','u9','u10','u11','u12'], maxPlayers: 12, waitlist: ['u5'], imageUrl: `https://picsum.photos/seed/s5/400/300`, messages: [] },
-  { id: 's6', date: getFutureDate(10), startTime: '10:00', endTime: '12:00', location: 'City Sports Complex', level: 'Intermediate', players: [], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s6/400/300`, messages: [] },
-  { id: 's7', date: new Date().toISOString().split('T')[0], startTime: '18:00', endTime: '20:00', location: 'East Side Beach', level: 'Intermediate', players: ['u4','u5','u6','u7','u8','u9','u10','u11'], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s7/400/300`, messages: [] },
-];
+export const mockSessions: Session[] = [];
 
 export const mockAnnouncements: Announcement[] = [
   { id: 'a1', title: 'Summer Tournament', content: 'Sign-ups for the annual summer tournament are now open! Find a partner and register by the end of the month.', date: getFutureDate(-1) },
