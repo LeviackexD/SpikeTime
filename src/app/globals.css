@@ -78,7 +78,7 @@ body {
 }
 
 @layer components {
-    .day-with-session:not([aria-selected]) .rdp-button {
-      @apply bg-accent;
+    .day-with-session:not([aria-selected]) > .rdp-button {
+      @apply bg-red-200 dark:bg-destructive/30;
     }
 }

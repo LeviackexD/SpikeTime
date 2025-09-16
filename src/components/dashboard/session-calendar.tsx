@@ -54,12 +54,6 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
     const dateString = day.toISOString().split('T')[0];
     const daySessions = filteredSessionsByDate[dateString] || [];
     
-    const uniqueLevels = [...new Set(daySessions.map(s => s.level))] as SkillLevel[];
-
-    const dayHasSessions = uniqueLevels.length > 0;
-    // Use the color of the first session level for simplicity
-    const dayColorClass = dayHasSessions ? skillLevelColors[uniqueLevels[0]] : '';
-
     const content = (
         <>
             {day.getDate()}
