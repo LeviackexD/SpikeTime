@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Main page for real-time chat.
  * Users can participate in group chats for sessions they are booked into,
@@ -8,7 +9,7 @@
 
 import * as React from 'react';
 import type { NextPage } from 'next';
-import { useSessions } from '@/context/session-context';
+import { useSessions, getSafeDate } from '@/context/session-context';
 import type { Session, Message, User, DirectChat } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -22,6 +23,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewChatModal from '@/components/chat/new-chat-modal';
 import { useAuth } from '@/context/auth-context';
+import { Timestamp } from 'firebase/firestore';
 
 const ChatPage: NextPage = () => {
   const { 
@@ -42,7 +44,7 @@ const ChatPage: NextPage = () => {
     if (!currentUser) return [];
     return sessions.filter(session => 
       session.players.includes(currentUser.id)
-    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    ).sort((a, b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime());
   }, [sessions, currentUser]
   );
   
@@ -70,7 +72,7 @@ const ChatPage: NextPage = () => {
   }
 
   const handleStartNewChat = async (user: User) => {
-    const existingChat = directChats.find(chat => chat.participants.some(p => p.id === user.id));
+    const existingChat = directChats.find(chat => chat.participantIds.includes(user.id));
     if (existingChat) {
       setSelectedChatId(existingChat.id);
     } else {
@@ -182,7 +184,7 @@ const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheet
                     </Avatar>
                     <div className="flex-1 truncate">
                         <p className="font-semibold">{session.level} Session</p>
-                        <p className="text-sm text-muted-foreground truncate">{new Date(session.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric'})}</p>
+                        <p className="text-sm text-muted-foreground truncate">{getSafeDate(session.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric'})}</p>
                     </div>
                     </button>
                 ))}
@@ -247,8 +249,8 @@ const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheet
 interface ChatWindowProps {
     session?: Session;
     directChat?: DirectChat;
-    onAddSessionMessage: (sessionId: string, message: Omit<Message, 'id'|'sender'>) => void;
-    onAddDirectMessage: (chatId: string, message: Omit<Message, 'id'|'sender'>) => void;
+    onAddSessionMessage: (sessionId: string, message: Omit<Message, 'id'|'sender'|'timestamp'>) => void;
+    onAddDirectMessage: (chatId: string, message: Omit<Message, 'id'|'sender'|'timestamp'>) => void;
     onOpenSheet: () => void;
     chatKey: string | null;
     title: string;
@@ -263,7 +265,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
   const isMobile = useIsMobile();
   
   const currentChat = activeTab === 'sessions' ? session : directChat;
-  const messages = (currentChat?.messages || []).sort((a,b) => new Date(a.timestamp as string).getTime() - new Date(b.timestamp as string).getTime());
+  const messages = (currentChat?.messages || []).sort((a,b) => getSafeDate(a.timestamp).getTime() - getSafeDate(b.timestamp).getTime());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -277,10 +279,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
     e.preventDefault();
     if (!newMessage.trim() || !currentUser) return;
 
-    const message: Omit<Message, 'id'|'sender'> = {
-        content: newMessage.trim(),
-        timestamp: new Date().toISOString(),
-    };
+    const message = { content: newMessage.trim() };
     
     if (activeTab === 'sessions' && session) {
       onAddSessionMessage(session.id, message);
@@ -291,7 +290,15 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
     setNewMessage('');
   };
   
-  const participants = activeTab === 'sessions' ? currentChat?.players : currentChat?.participants;
+  const getParticipants = () => {
+      if (activeTab === 'sessions' && session) {
+          return session.players.length;
+      }
+      if (activeTab === 'direct' && directChat) {
+          return directChat.participants.length;
+      }
+      return 0;
+  }
   const avatarUrl = activeTab === 'sessions' ? session?.imageUrl : directChat?.participants.find(p => p.id !== currentUser.id)?.avatarUrl;
   const avatarFallback = title.charAt(0);
 
@@ -321,7 +328,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
         </Avatar>
         <div>
           <h3 className="font-bold text-lg">{title}</h3>
-          <p className="text-sm text-muted-foreground">{Array.isArray(participants) ? participants.length : 0} members</p>
+          <p className="text-sm text-muted-foreground">{getParticipants()} members</p>
         </div>
       </header>
       <div className="flex-1 p-4 overflow-y-auto bg-muted/20">
@@ -342,7 +349,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
                        {!isCurrentUser && showAvatar && <p className="text-xs font-semibold mb-1">{message.sender.name}</p>}
                        <p className="text-sm">{message.content}</p>
                        <p className="text-xs text-right mt-1 opacity-70">
-                        {new Date(message.timestamp as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'})}
+                        {getSafeDate(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'})}
                        </p>
                     </div>
                      {isCurrentUser && (

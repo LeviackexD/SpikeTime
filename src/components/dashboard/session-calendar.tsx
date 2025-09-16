@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Main calendar component for displaying sessions.
  * It uses react-day-picker to render a calendar, highlighting days with scheduled sessions
@@ -18,6 +19,7 @@ import {
 import type { DayProps } from 'react-day-picker';
 import { skillLevelColors } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { getSafeDate } from '@/context/session-context';
 
 interface SessionCalendarProps {
   sessions: Session[];
@@ -29,7 +31,7 @@ interface SessionCalendarProps {
 export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter }: SessionCalendarProps) {
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
-      const date = new Date(session.date).toISOString().split('T')[0];
+      const date = getSafeDate(session.date).toISOString().split('T')[0];
       if (!acc[date]) {
         acc[date] = [];
       }
@@ -51,9 +53,6 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
   }, [sessionsByDate, skillFilter]);
 
   const DayContent = ({ date: day, ...props }: DayProps) => {
-    const dateString = day.toISOString().split('T')[0];
-    const daySessions = filteredSessionsByDate[dateString] || [];
-    
     return <p>{day.getDate()}</p>;
   };
   

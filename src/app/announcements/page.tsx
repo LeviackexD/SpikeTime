@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Displays a list of all club announcements.
  * Users can view all announcements in a grid format and open a modal for more details.
@@ -15,14 +16,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { mockAnnouncements } from '@/lib/mock-data';
 import { Megaphone } from 'lucide-react';
 import SummarizeButton from '@/components/ai/summarize-button';
 import type { Announcement } from '@/lib/types';
 import AnnouncementDetailsModal from '@/components/announcements/announcement-details-modal';
+import { useSessions, getSafeDate } from '@/context/session-context';
 
 const AnnouncementsPage: NextPage = () => {
   const [selectedAnnouncement, setSelectedAnnouncement] = React.useState<Announcement | null>(null);
+  const { announcements } = useSessions();
 
   const handleOpenModal = (announcement: Announcement) => {
     setSelectedAnnouncement(announcement);
@@ -33,8 +35,8 @@ const AnnouncementsPage: NextPage = () => {
   };
   
   const announcementText = React.useMemo(() => {
-    return mockAnnouncements.map(a => `${a.title}: ${a.content}`).join('\n\n');
-  }, []);
+    return announcements.map(a => `${a.title}: ${a.content}`).join('\n\n');
+  }, [announcements]);
 
   return (
     <>
@@ -53,7 +55,7 @@ const AnnouncementsPage: NextPage = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {mockAnnouncements.map((announcement, index) => (
+          {announcements.map((announcement, index) => (
             <Card 
               key={announcement.id} 
               className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300 animate-slide-up-and-fade"
@@ -63,7 +65,7 @@ const AnnouncementsPage: NextPage = () => {
               <CardHeader>
                 <CardTitle className="font-headline text-xl">{announcement.title}</CardTitle>
                 <CardDescription>
-                  {new Date(announcement.date).toLocaleDateString('en-US', {
+                  {getSafeDate(announcement.date).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric',

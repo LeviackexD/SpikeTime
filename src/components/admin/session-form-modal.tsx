@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A modal form for creating or editing volleyball sessions.
  * Collects all session details like date, time, location, and skill level.
@@ -25,13 +26,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Session, SkillLevel } from '@/lib/types';
+import { getSafeDate } from '@/context/session-context';
 
-type SessionFormData = Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>
+type SessionFormData = Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string };
+type EditableSession = Omit<Session, 'date'> & { date: string };
 
 interface SessionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (session: Session | SessionFormData) => void;
+  onSave: (session: SessionFormData | EditableSession) => void;
   session: Session | null;
 }
 
@@ -51,8 +54,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     React.useEffect(() => {
         if (isOpen) {
             if(session) {
-                // When editing, ensure date is in 'YYYY-MM-DD' format for the input
-                const sessionDate = new Date(session.date);
+                const sessionDate = getSafeDate(session.date);
                 const formattedDate = sessionDate.toISOString().split('T')[0];
                 setFormData({
                     date: formattedDate,
@@ -61,10 +63,9 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     location: session.location,
                     level: session.level,
                     maxPlayers: session.maxPlayers,
-                    imageUrl: session.imageUrl,
+                    imageUrl: session.imageUrl || '',
                 });
             } else {
-                 // For new sessions, use today's date in 'YYYY-MM-DD' format
                 setFormData({ ...emptySession, date: new Date().toISOString().split('T')[0] });
             }
         }
@@ -85,12 +86,9 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // The date is already in 'YYYY-MM-DD' string format.
-        // We combine it with time before saving.
         const dateWithTime = `${formData.date}T00:00:00.000Z`;
         const dataToSave = { 
             ...formData,
-            // The context will handle converting this ISO string to a Firestore Timestamp
             date: dateWithTime,
         };
         

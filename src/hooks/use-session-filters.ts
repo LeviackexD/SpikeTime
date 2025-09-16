@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Custom hooks for filtering and sorting volleyball sessions.
  * This separates the logic from the presentation components.
@@ -5,6 +6,7 @@
 
 import * as React from 'react';
 import type { Session, User } from '@/lib/types';
+import { getSafeDate } from '@/context/session-context';
 
 /**
  * A hook that returns a memoized list of sessions the user is booked into.
@@ -19,11 +21,11 @@ export function useUpcomingSessions(currentUser: User | null, sessions: Session[
 
     return sessions
       .filter(session => {
-        const sessionDate = new Date(session.date);
+        const sessionDate = getSafeDate(session.date);
         sessionDate.setHours(0, 0, 0, 0);
         return currentUser && sessionDate >= today && session.players.includes(currentUser.id);
       })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort((a, b) => getSafeDate(a.date).getTime() - getSafeDate(b.date).getTime());
   }, [currentUser, sessions]);
 }
 
@@ -40,10 +42,10 @@ export function useAvailableSessions(currentUser: User | null, sessions: Session
 
     return sessions
       .filter(session => {
-        const sessionDate = new Date(session.date);
+        const sessionDate = getSafeDate(session.date);
         sessionDate.setHours(0, 0, 0, 0);
         return currentUser && sessionDate >= today && !session.players.includes(currentUser.id);
       })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort((a, b) => getSafeDate(a.date).getTime() - getSafeDate(b.date).getTime());
   }, [currentUser, sessions]);
 }

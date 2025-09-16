@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A modal form for creating or editing announcements.
  * It's used within the admin page.
@@ -23,7 +24,7 @@ import type { Announcement } from '@/lib/types';
 interface AnnouncementFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (announcement: Announcement) => void;
+  onSave: (announcement: Omit<Announcement, 'id' | 'date'>) => void;
   announcement: Announcement | null;
 }
 
@@ -33,13 +34,15 @@ const emptyAnnouncement: Omit<Announcement, 'id' | 'date'> = {
 };
 
 export default function AnnouncementFormModal({ isOpen, onClose, onSave, announcement }: AnnouncementFormModalProps) {
-    const [formData, setFormData] = React.useState<Omit<Announcement, 'id' | 'date'>>(announcement || emptyAnnouncement);
+    const [formData, setFormData] = React.useState<Omit<Announcement, 'id' | 'date'>>(emptyAnnouncement);
 
     React.useEffect(() => {
-        if(announcement) {
-            setFormData({ title: announcement.title, content: announcement.content });
-        } else {
-            setFormData(emptyAnnouncement);
+        if(isOpen) {
+            if(announcement) {
+                setFormData({ title: announcement.title, content: announcement.content });
+            } else {
+                setFormData(emptyAnnouncement);
+            }
         }
     }, [announcement, isOpen]);
 
@@ -50,10 +53,7 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({
-            ...(announcement || { id: '', date: '' }),
-            ...formData,
-        });
+        onSave(formData);
     }
 
   return (
@@ -82,7 +82,7 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
             </div>
             <DialogFooter>
                 <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                <Button type="submit">Save Announcement</Button>
+                <Button type="submit">Save</Button>
             </DialogFooter>
         </form>
       </DialogContent>

@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Provides a full-page calendar view of all volleyball sessions.
  * Users can filter sessions by skill level and click on a date to see the
@@ -19,7 +20,7 @@ import {
 import { Calendar as CalendarIcon, Filter } from 'lucide-react';
 import SessionDetailsCard from '@/components/sessions/session-details-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSessions } from '@/context/session-context';
+import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -51,7 +52,7 @@ const CalendarPage: NextPage = () => {
   }
 
   const filteredSessions = sessions.filter(session => {
-    const sessionDate = new Date(session.date);
+    const sessionDate = getSafeDate(session.date);
     const isSameDay = sessionDate.toDateString() === selectedDate.toDateString();
     const skillMatch = skillFilter === 'All' || session.level === skillFilter;
     return isSameDay && skillMatch;

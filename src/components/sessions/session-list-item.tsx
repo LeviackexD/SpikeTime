@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A card component for displaying a summary of a single session in a list.
  * Used on the main dashboard to show upcoming and available sessions.
@@ -20,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Session } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
-import { useSessions } from '@/context/session-context';
+import { useSessions, getSafeDate } from '@/context/session-context';
 import PlayerAvatar from './player-avatar';
 import {
   CheckCircle,
@@ -66,19 +67,19 @@ export default function SessionListItem({
   
   const getPlayer = (id: string) => users.find(u => u.id === id);
 
-  const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+  const sessionDate = getSafeDate(session.date);
+  const sessionDateTime = new Date(`${sessionDate.toISOString().split('T')[0]}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
 
-  const formatDate = (dateString: string) => {
-     const date = new Date(dateString);
+  const formatDate = (date: Date) => {
      const day = date.toLocaleDateString('en-US', { day: '2-digit', timeZone: 'UTC' });
      const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
      return { day, month };
   };
   
-  const { day, month } = formatDate(session.date);
+  const { day, month } = formatDate(sessionDate);
 
   return (
     <Card 
@@ -178,7 +179,7 @@ export default function SessionListItem({
                 Leave Waitlist
               </Button>
             ) : (
-              <Button
+             isFull && <Button
                 className="w-full"
                 variant="secondary"
                 onClick={() => onWaitlist(session.id)}

@@ -35,7 +35,7 @@ export interface Message {
 
 export interface Session {
   id: string;
-  date: string;
+  date: string | Timestamp;
   startTime: string;
   endTime: string;
   location: string;
@@ -52,7 +52,7 @@ export interface Announcement {
   id: string;
   title: string;
   content: string;
-  date: string;
+  date: string | Timestamp;
 }
 
 export interface DirectChat {

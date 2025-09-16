@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A card component that displays detailed information about a single session.
  * Used on the calendar page to list sessions for a selected day.
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react';
 import type { Session } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
+import { getSafeDate } from '@/context/session-context';
 
 interface SessionDetailsCardProps {
   session: Session;
@@ -50,11 +52,11 @@ export default function SessionDetailsCard({
   const isRegistered = session.players.includes(currentUser.id);
   const isOnWaitlist = session.waitlist.includes(currentUser.id);
 
-  const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+  const sessionDate = getSafeDate(session.date);
+  const sessionDateTime = new Date(`${sessionDate.toISOString().split('T')[0]}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
-
 
   return (
     <Card className="flex flex-col md:flex-row overflow-hidden transition-all hover:shadow-xl w-full animate-scale-in">
@@ -82,11 +84,11 @@ export default function SessionDetailsCard({
                     </h3>
                 </div>
                 <div className='text-right'>
-                  <p className="font-semibold text-primary">{new Date(session.date).toLocaleDateString('en-US', {
+                  <p className="font-semibold text-primary">{sessionDate.toLocaleDateString('en-US', {
                           weekday: 'long',
                           timeZone: 'UTC',
                       })}</p>
-                  <p className="text-sm">{new Date(session.date).toLocaleDateString('en-US', {
+                  <p className="text-sm">{sessionDate.toLocaleDateString('en-US', {
                           month: 'long',
                           day: 'numeric',
                           year: 'numeric',
@@ -137,7 +139,7 @@ export default function SessionDetailsCard({
                     Leave Waitlist
                 </Button>
               ) : (
-                <Button
+                isFull && <Button
                     className="w-full"
                     variant="secondary"
                     onClick={() => onWaitlist(session.id)}

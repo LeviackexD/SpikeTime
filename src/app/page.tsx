@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview The main dashboard page for authenticated users.
  * Displays a welcome message, a list of the user's upcoming sessions,
@@ -28,12 +29,9 @@ import AnnouncementDetailsModal from '@/components/announcements/announcement-de
 import SessionListItem from '@/components/sessions/session-list-item';
 
 // Context and Hooks
-import { useSessions } from '@/context/session-context';
+import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useUpcomingSessions, useAvailableSessions } from '@/hooks/use-session-filters';
-
-// Mock Data (for announcements)
-import { mockAnnouncements } from '@/lib/mock-data';
 
 // Types
 import type { Session, Announcement } from '@/lib/types';
@@ -46,13 +44,13 @@ const DashboardPage: NextPage = () => {
   const [selectedAnnouncement, setSelectedAnnouncement] = React.useState<Announcement | null>(null);
 
   // --- HOOKS ---
-  const { sessions, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
+  const { sessions, announcements, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
   const { user: currentUser } = useAuth();
   
   // --- DERIVED STATE FROM CUSTOM HOOKS ---
   const upcomingSessions = useUpcomingSessions(currentUser, sessions);
   const availableSessions = useAvailableSessions(currentUser, sessions);
-  const recentAnnouncements = mockAnnouncements.slice(0, 3);
+  const recentAnnouncements = announcements.slice(0, 3);
 
   // --- EVENT HANDLERS ---
   const handleViewPlayers = (session: Session) => {
@@ -170,7 +168,7 @@ const DashboardPage: NextPage = () => {
                             >
                               <h3 className="font-semibold text-foreground">{announcement.title}</h3>
                               <p className="text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
-                              <p className="text-xs text-muted-foreground mt-1">{new Date(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{getSafeDate(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>
                             </button>
                           </li>
                         ))}

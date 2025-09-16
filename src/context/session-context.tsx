@@ -2,12 +2,28 @@
 'use client';
 
 import * as React from 'react';
-import { mockSessions, mockUsers, mockDirectChats } from '@/lib/mock-data';
-import type { Session, Message, User, DirectChat } from '@/lib/types';
+import {
+  collection,
+  query,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove,
+  writeBatch,
+  where,
+  getDocs,
+  Timestamp,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { Session, Message, User, DirectChat, Announcement } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useAuth } from './auth-context';
-
+import { mockUsers } from '@/lib/mock-data'; // Keep for profile enrichment
 
 type ToastInfo = {
   title: string;
@@ -17,44 +33,97 @@ type ToastInfo = {
 
 interface SessionContextType {
   sessions: Session[];
-  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => Promise<void>;
-  updateSession: (session: Session) => Promise<void>;
+  announcements: Announcement[];
+  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => Promise<void>;
+  updateSession: (session: Omit<Session, 'date'> & { date: string }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<void>;
   cancelBooking: (sessionId: string) => Promise<void>;
   joinWaitlist: (sessionId: string) => Promise<void>;
   leaveWaitlist: (sessionId: string) => Promise<void>;
-  addMessage: (sessionId: string, message: Omit<Message, 'id' | 'sender'>) => Promise<void>;
+  addMessage: (sessionId: string, message: Omit<Message, 'id' | 'sender' | 'timestamp'>) => Promise<void>;
+  createAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
+  updateAnnouncement: (announcement: Omit<Announcement, 'date'>) => Promise<void>;
+  deleteAnnouncement: (announcementId: string) => Promise<void>;
   directChats: DirectChat[];
   createDirectChat: (otherUser: User) => Promise<string>;
-  addDirectMessage: (chatId: string, message: Omit<Message, 'id' | 'sender'>) => Promise<void>;
+  addDirectMessage: (chatId: string, message: Omit<Message, 'id' | 'sender' | 'timestamp'>) => Promise<void>;
   users: User[];
 }
 
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
+const getSafeDate = (date: string | Timestamp): Date => {
+    if (date instanceof Timestamp) {
+      return date.toDate();
+    }
+    return new Date(date);
+  };
+
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const { user: currentUser } = useAuth();
-  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
-  const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
+  const [sessions, setSessions] = React.useState<Session[]>([]);
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
+  const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
   const [users, setUsers] = React.useState<User[]>(mockUsers);
   const { toast } = useToast();
   const { requestPermission, showNotification, isPermissionGranted } = useNotifications();
   const scheduledNotificationsRef = React.useRef<Set<string>>(new Set());
 
+  // --- Real-time Listeners ---
 
   React.useEffect(() => {
-    requestPermission();
-  }, [requestPermission]);
+    const q = query(collection(db, 'sessions'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const sessionsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Session[];
+      setSessions(sessionsData.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+    }, (error) => {
+      console.error("Error fetching sessions:", error);
+      toast({ title: 'Error', description: 'Could not fetch sessions.', variant: 'destructive'});
+    });
+    return () => unsubscribe();
+  }, [toast]);
+  
+  React.useEffect(() => {
+    const q = query(collection(db, 'announcements'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const announcementsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Announcement[];
+      setAnnouncements(announcementsData.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+    }, (error) => {
+      console.error("Error fetching announcements:", error);
+      toast({ title: 'Error', description: 'Could not fetch announcements.', variant: 'destructive'});
+    });
+    return () => unsubscribe();
+  }, [toast]);
 
+  React.useEffect(() => {
+    if (!currentUser) return;
+    const q = query(collection(db, 'direct-chats'), where('participantIds', 'array-contains', currentUser.id));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const chatsData = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            // Enrich participants with full user objects
+            const participants = (data.participantIds || []).map((id: string) => users.find(u => u.id === id)).filter(Boolean);
+            return { id: doc.id, ...data, participants } as DirectChat;
+        });
+        setDirectChats(chatsData);
+    }, (error) => {
+        console.error("Error fetching direct chats:", error);
+    });
+    return () => unsubscribe();
+  }, [currentUser, users]);
+
+  // --- Notification Scheduler ---
   React.useEffect(() => {
     if (isPermissionGranted && currentUser) {
       const upcomingSessions = sessions.filter(session =>
-        session.players.some(pId => pId === currentUser.id) && new Date(`${session.date}T${session.startTime}`) > new Date()
+        session.players.some(pId => pId === currentUser.id) && getSafeDate(session.date) > new Date()
       );
 
       upcomingSessions.forEach(session => {
-        const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+        const sessionDate = getSafeDate(session.date);
+        const sessionDateTime = new Date(`${sessionDate.toISOString().split('T')[0]}T${session.startTime}`);
+
         const notificationTime = new Date(sessionDateTime.getTime() - 2 * 60 * 60 * 1000); // 2 hours before
         const now = new Date();
         
@@ -77,7 +146,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, [sessions, isPermissionGranted, showNotification, currentUser]);
 
-
   const showToast = (toastInfo: ToastInfo) => {
     toast({
       title: toastInfo.title,
@@ -86,38 +154,53 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     });
   };
 
-  const createSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>) => {
-    // In a real app, this would be an API call. Here, we just update local state.
-    const newSession: Session = {
-      ...sessionData,
-      id: `s${Date.now()}`,
-      players: [],
-      waitlist: [],
-      messages: [],
-    };
-    setSessions(prev => [newSession, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-    showToast({
-        title: 'Session Created!',
-        description: 'The new session has been successfully added.',
-        variant: 'success',
-    });
+  // --- Firestore Operations ---
+
+  const createSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => {
+    if (!currentUser) return;
+    try {
+      await addDoc(collection(db, 'sessions'), {
+        ...sessionData,
+        date: Timestamp.fromDate(new Date(sessionData.date)),
+        players: [],
+        waitlist: [],
+        messages: [],
+        createdBy: currentUser.id,
+      });
+      showToast({ title: 'Session Created!', description: 'The new session has been successfully added.', variant: 'success' });
+    } catch (error) {
+      console.error("Error creating session: ", error);
+      showToast({ title: 'Error', description: 'Failed to create session.', variant: 'destructive' });
+    }
   };
 
-  const updateSession = async (updatedSession: Session) => {
-    setSessions(prev =>
-      prev.map(s => (s.id === updatedSession.id ? updatedSession : s))
-    );
-    showToast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
+  const updateSession = async (updatedSession: Omit<Session, 'date'> & { date: string }) => {
+    const sessionRef = doc(db, 'sessions', updatedSession.id);
+    try {
+      await updateDoc(sessionRef, {
+        ...updatedSession,
+        date: Timestamp.fromDate(new Date(updatedSession.date)),
+      });
+      showToast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
+    } catch (error) {
+       console.error("Error updating session: ", error);
+       showToast({ title: 'Error', description: 'Failed to update session.', variant: 'destructive' });
+    }
   };
 
   const deleteSession = async (sessionId: string) => {
-    setSessions(prev => prev.filter(s => s.id !== sessionId));
-    showToast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
+    try {
+      await deleteDoc(doc(db, 'sessions', sessionId));
+      showToast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
+    } catch (error) {
+      console.error("Error deleting session: ", error);
+      showToast({ title: 'Error', description: 'Failed to delete session.', variant: 'destructive' });
+    }
   };
   
   const bookSession = async (sessionId: string) => {
     if (!currentUser) return;
-
+    const sessionRef = doc(db, 'sessions', sessionId);
     const session = sessions.find(s => s.id === sessionId);
     if (!session) return;
     
@@ -130,184 +213,198 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       return;
     }
     
-    setSessions(prev =>
-      prev.map(s => 
-        s.id === sessionId 
-        ? { 
-            ...s, 
-            players: [...s.players, currentUser.id],
-            // If user was on waitlist, remove them
-            waitlist: s.waitlist.filter(id => id !== currentUser.id),
-          } 
-        : s
-      )
-    );
-    showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
+    try {
+      await updateDoc(sessionRef, {
+        players: arrayUnion(currentUser.id),
+        waitlist: arrayRemove(currentUser.id), // If user was on waitlist, remove them
+      });
+      showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
+    } catch (error) {
+      console.error("Error booking session: ", error);
+      showToast({ title: 'Error', description: 'Failed to book your spot.', variant: 'destructive' });
+    }
   };
   
   const cancelBooking = async (sessionId: string) => {
     if (!currentUser) return;
+    const sessionRef = doc(db, 'sessions', sessionId);
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
   
-    const sessionToCancel = sessions.find(s => s.id === sessionId);
-    
-    // --- VALIDATIONS ---
-    if (!sessionToCancel) {
-      console.error("Session not found");
+    if (!session.players.includes(currentUser.id)) {
+      showToast({ title: 'Not Registered', description: "You aren't registered for this session.", variant: 'destructive' });
       return;
     }
   
-    if (!sessionToCancel.players.includes(currentUser.id)) {
-      showToast({
-        title: 'Not Registered',
-        description: "You aren't registered for this session.",
-        variant: 'destructive',
-      });
-      return;
-    }
-  
-    const sessionDateTime = new Date(`${sessionToCancel.date}T${sessionToCancel.startTime}`);
+    const sessionDateTime = new Date(`${getSafeDate(session.date).toISOString().split('T')[0]}T${session.startTime}`);
     const now = new Date();
     const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   
     if (hoursUntilSession <= 12) {
-      showToast({
-        title: 'Cancellation Period Over',
-        description: 'You can only cancel a session more than 12 hours in advance.',
-        variant: 'destructive',
-      });
+      showToast({ title: 'Cancellation Period Over', description: 'You can only cancel a session more than 12 hours in advance.', variant: 'destructive' });
       return;
     }
     
-    // --- STATE UPDATE ---
-    setSessions(prevSessions =>
-      prevSessions.map(s => {
-        if (s.id === sessionId) {
-          // Remove the current user
-          let newPlayers = s.players.filter(pId => pId !== currentUser.id);
-          let newWaitlist = [...s.waitlist];
-  
-          // Check if a spot has opened up and if there's a waitlist
-          const spotOpened = newPlayers.length < s.maxPlayers;
-          if (spotOpened && newWaitlist.length > 0) {
-            const nextPlayerId = newWaitlist.shift(); // Get the first person from the waitlist
-            if (nextPlayerId) {
-              newPlayers.push(nextPlayerId); // Add them to the players list
-              // TODO: In a real app, notify this user they've been moved from the waitlist.
-            }
-          }
-          return { ...s, players: newPlayers, waitlist: newWaitlist };
+    try {
+        const batch = writeBatch(db);
+        batch.update(sessionRef, {
+            players: arrayRemove(currentUser.id)
+        });
+
+        // If a spot opens up, move first person from waitlist
+        if (session.waitlist.length > 0) {
+            const nextPlayerId = session.waitlist[0];
+            batch.update(sessionRef, {
+                players: arrayUnion(nextPlayerId),
+                waitlist: arrayRemove(nextPlayerId)
+            });
+            // In a real app, you'd send a notification to nextPlayerId here.
+            console.log(`User ${nextPlayerId} moved from waitlist to session ${sessionId}.`);
         }
-        return s;
-      })
-    );
-  
-    // --- SUCCESS NOTIFICATION ---
-    showToast({
-      title: 'Booking Canceled',
-      description: 'Your spot has been successfully canceled.',
-      variant: 'success',
-    });
+        await batch.commit();
+
+        showToast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+    } catch (error) {
+        console.error("Error canceling booking: ", error);
+        showToast({ title: 'Error', description: 'Failed to cancel your booking.', variant: 'destructive' });
+    }
   };
 
   const joinWaitlist = async (sessionId: string) => {
     if (!currentUser) return;
-    
     const session = sessions.find(s => s.id === sessionId);
     if (!session) return;
     
-    if (session.waitlist.includes(currentUser.id)) {
-      showToast({ title: 'Already on Waitlist', description: 'You are already on the waitlist for this session.', variant: 'destructive' });
+    if (session.waitlist.includes(currentUser.id) || session.players.includes(currentUser.id)) {
+      showToast({ title: 'Action Not Allowed', description: 'You are already registered or on the waitlist.', variant: 'destructive' });
       return;
     }
-    if (session.players.includes(currentUser.id)) {
-        showToast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
-        return;
-    }
 
-    setSessions(prev => prev.map(s => 
-        s.id === sessionId 
-        ? { ...s, waitlist: [...s.waitlist, currentUser.id] }
-        : s
-    ));
-    showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+    try {
+        await updateDoc(doc(db, 'sessions', sessionId), {
+            waitlist: arrayUnion(currentUser.id)
+        });
+        showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+    } catch (error) {
+        console.error("Error joining waitlist: ", error);
+        showToast({ title: 'Error', description: 'Failed to join the waitlist.', variant: 'destructive' });
+    }
   };
   
   const leaveWaitlist = async (sessionId: string) => {
     if (!currentUser) return;
-
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) {
-        showToast({ title: 'Error', description: 'Session not found.', variant: 'destructive' });
-        return;
+    try {
+        await updateDoc(doc(db, 'sessions', sessionId), {
+            waitlist: arrayRemove(currentUser.id)
+        });
+        showToast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
+    } catch (error) {
+        console.error("Error leaving waitlist: ", error);
+        showToast({ title: 'Error', description: 'Failed to leave the waitlist.', variant: 'destructive' });
     }
-
-    if (!session.waitlist.includes(currentUser.id)) {
-        showToast({ title: 'Not on Waitlist', description: "You aren't on the waitlist for this session.", variant: 'destructive' });
-        return;
-    }
-
-    setSessions(prev =>
-        prev.map(s =>
-            s.id === sessionId
-                ? { ...s, waitlist: s.waitlist.filter(id => id !== currentUser.id) }
-                : s
-        )
-    );
-
-    showToast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
   };
 
-  const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender'>) => {
+  const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
     if (!currentUser) return;
-    const newMessage: Message = {
-      ...messageContent,
+    const sessionRef = doc(db, 'sessions', sessionId);
+    const newMessage = {
       id: `m${Date.now()}`,
       sender: currentUser,
+      content: messageContent.content,
+      timestamp: serverTimestamp(),
     };
-    setSessions(prev =>
-      prev.map(s =>
-        s.id === sessionId ? { ...s, messages: [...s.messages, newMessage] } : s
-      )
-    );
+
+    try {
+      await updateDoc(sessionRef, {
+        messages: arrayUnion(newMessage)
+      });
+    } catch (error) {
+       console.error("Error adding message: ", error);
+       showToast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
+    }
   };
+
+   const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
+    try {
+      await addDoc(collection(db, 'announcements'), {
+        ...announcementData,
+        date: serverTimestamp(),
+      });
+      showToast({ title: 'Announcement Created!', description: 'The new announcement is now live.', variant: 'success' });
+    } catch (error) {
+      console.error("Error creating announcement: ", error);
+      showToast({ title: 'Error', description: 'Failed to create announcement.', variant: 'destructive' });
+    }
+  };
+
+  const updateAnnouncement = async (announcement: Omit<Announcement, 'date'>) => {
+    try {
+      await updateDoc(doc(db, 'announcements', announcement.id), announcement);
+      showToast({ title: 'Announcement Updated', description: 'The announcement has been successfully updated.', variant: 'success' });
+    } catch (error) {
+      console.error("Error updating announcement: ", error);
+      showToast({ title: 'Error', description: 'Failed to update announcement.', variant: 'destructive' });
+    }
+  };
+
+  const deleteAnnouncement = async (announcementId: string) => {
+    try {
+      await deleteDoc(doc(db, 'announcements', announcementId));
+      showToast({ title: 'Announcement Deleted', description: 'The announcement has been removed.', variant: 'success' });
+    } catch (error) {
+      console.error("Error deleting announcement: ", error);
+      showToast({ title: 'Error', description: 'Failed to delete announcement.', variant: 'destructive' });
+    }
+  };
+
 
   const createDirectChat = async (otherUser: User) => {
     if (!currentUser) return '';
     
-    // Check if a chat already exists
-    const existingChat = directChats.find(chat => chat.participants.some(p => p.id === otherUser.id));
-    if (existingChat) {
-      return existingChat.id;
+    const q = query(collection(db, 'direct-chats'), where('participantIds', '==', [currentUser.id, otherUser.id].sort()));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+        return querySnapshot.docs[0].id;
     }
     
-    const newChat: DirectChat = {
-        id: `dc${Date.now()}`,
-        participants: [currentUser, otherUser],
-        participantIds: [currentUser.id, otherUser.id],
-        messages: [],
-    };
-    setDirectChats(prev => [newChat, ...prev]);
-    return newChat.id;
+    try {
+        const newChatRef = await addDoc(collection(db, 'direct-chats'), {
+            participantIds: [currentUser.id, otherUser.id].sort(),
+            messages: [],
+        });
+        return newChatRef.id;
+    } catch (error) {
+        console.error("Error creating direct chat:", error);
+        return '';
+    }
   }
 
-  const addDirectMessage = async (chatId: string, messageContent: Omit<Message, 'id' | 'sender'>) => {
+  const addDirectMessage = async (chatId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
      if (!currentUser) return;
-    const newMessage: Message = {
-      ...messageContent,
+    const chatRef = doc(db, 'direct-chats', chatId);
+    const newMessage = {
       id: `m${Date.now()}`,
-      sender: currentUser,
+      sender: currentUser, // Storing the full user object, might be better to store ID and enrich on client
+      content: messageContent.content,
+      timestamp: serverTimestamp(),
     };
-    setDirectChats(prev =>
-      prev.map(c =>
-        c.id === chatId ? { ...c, messages: [...c.messages, newMessage] } : c
-      )
-    );
+
+    try {
+        await updateDoc(chatRef, {
+            messages: arrayUnion(newMessage)
+        });
+    } catch (error) {
+        console.error("Error adding direct message:", error);
+        showToast({ title: 'Error', description: 'Failed to send direct message.', variant: 'destructive' });
+    }
   }
 
   return (
     <SessionContext.Provider
       value={{ 
         sessions, 
+        announcements,
         createSession, 
         updateSession, 
         deleteSession, 
@@ -316,6 +413,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         joinWaitlist,
         leaveWaitlist,
         addMessage,
+        createAnnouncement,
+        updateAnnouncement,
+        deleteAnnouncement,
         directChats,
         createDirectChat,
         addDirectMessage,
@@ -334,3 +434,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+export { getSafeDate };

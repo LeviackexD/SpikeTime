@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A modal dialog that displays comprehensive details about a session.
  * It shows the list of registered players and the waitlist, and provides
@@ -20,8 +21,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut } from 'lucide-react';
-import { useSessions } from '@/context/session-context';
+import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
+import { Timestamp } from 'firebase/firestore';
 
 
 interface PlayerListProps {
@@ -115,12 +117,8 @@ export default function SessionDetailsModal({
     }
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return 'Invalid Date';
-    }
-    return date.toLocaleDateString('en-US', {
+  const formatDate = (date: string | Timestamp) => {
+    return getSafeDate(date).toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -129,7 +127,8 @@ export default function SessionDetailsModal({
     });
   }
   
-  const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+  const sessionDate = getSafeDate(session.date);
+  const sessionDateTime = new Date(`${sessionDate.toISOString().split('T')[0]}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
@@ -205,7 +204,7 @@ export default function SessionDetailsModal({
                       Leave Waitlist
                   </Button>
                 ) : (
-                  <Button
+                  isFull && <Button
                       variant="secondary"
                       onClick={() => handleAction(onWaitlist)}
                   >

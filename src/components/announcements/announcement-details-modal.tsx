@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A modal dialog to display the full details of an announcement.
  * Triggered when a user clicks on an announcement card.
@@ -17,6 +18,9 @@ import {
 import { Button } from '@/components/ui/button';
 import type { Announcement } from '@/lib/types';
 import { Calendar } from 'lucide-react';
+import { getSafeDate } from '@/context/session-context';
+import { Timestamp } from 'firebase/firestore';
+
 
 interface AnnouncementDetailsModalProps {
   isOpen: boolean;
@@ -27,8 +31,8 @@ interface AnnouncementDetailsModalProps {
 export default function AnnouncementDetailsModal({ isOpen, onClose, announcement }: AnnouncementDetailsModalProps) {
   if (!announcement) return null;
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (date: string | Timestamp) => {
+    return getSafeDate(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

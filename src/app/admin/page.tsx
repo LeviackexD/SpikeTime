@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Admin management page for volleyball sessions and club announcements.
  * Allows administrators to create, view, update, and delete sessions and announcements.
@@ -33,15 +34,15 @@ import SessionDetailsModal from '@/components/sessions/session-details-modal';
 import AnnouncementFormModal from '@/components/admin/announcement-form-modal';
 import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useSessions } from '@/context/session-context';
+import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
-import { mockAnnouncements } from '@/lib/mock-data';
 import type { Session, Announcement } from '@/lib/types';
+import { Timestamp } from 'firebase/firestore';
 
 // --- Helper Functions ---
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+const formatDate = (date: string | Timestamp) => {
+  return getSafeDate(date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -174,12 +175,16 @@ export default function AdminPage() {
     bookSession,
     cancelBooking,
     joinWaitlist,
+    leaveWaitlist,
+    announcements,
+    createAnnouncement,
+    updateAnnouncement,
+    deleteAnnouncement,
   } = useSessions();
   const isMobile = useIsMobile();
 
   // --- STATE ---
   const [activeTab, setActiveTab] = React.useState('sessions');
-  const [announcements, setAnnouncements] = React.useState<Announcement[]>(mockAnnouncements);
 
   // Session Modals State
   const [isSessionModalOpen, setIsSessionModalOpen] = React.useState(false);
@@ -240,13 +245,11 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveSession = async (
-    sessionData: Session | Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'>
-  ) => {
+  const handleSaveSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string } | (Omit<Session, 'date'> & { date: string })) => {
     if ('id' in sessionData) {
-      await updateSession(sessionData as Session);
+        await updateSession(sessionData as Omit<Session, 'date'> & { date: string });
     } else {
-      await createSession(sessionData);
+        await createSession(sessionData as Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string });
     }
     setIsSessionModalOpen(false);
     setSelectedSession(null);
@@ -265,26 +268,17 @@ export default function AdminPage() {
 
   const confirmDeleteAnnouncement = () => {
     if (announcementToDelete) {
-      setAnnouncements(announcements.filter((a) => a.id !== announcementToDelete.id));
+      deleteAnnouncement(announcementToDelete.id);
       setAnnouncementToDelete(null);
       setIsDeleteAnnouncementDialogOpen(false);
     }
   };
 
-  const handleSaveAnnouncement = (announcementData: Announcement) => {
+  const handleSaveAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
     if (selectedAnnouncement) {
-      setAnnouncements(
-        announcements.map((a) => (a.id === announcementData.id ? announcementData : a))
-      );
+      await updateAnnouncement({ ...announcementData, id: selectedAnnouncement.id });
     } else {
-      setAnnouncements([
-        ...announcements,
-        {
-          ...announcementData,
-          id: `a${announcements.length + 1}`,
-          date: new Date().toISOString(),
-        },
-      ]);
+      await createAnnouncement(announcementData);
     }
     setIsAnnouncementModalOpen(false);
     setSelectedAnnouncement(null);
@@ -465,6 +459,7 @@ export default function AdminPage() {
         onBook={bookSession}
         onCancel={cancelBooking}
         onWaitlist={joinWaitlist}
+        onLeaveWaitlist={leaveWaitlist}
       />
 
       <AnnouncementFormModal
