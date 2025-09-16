@@ -94,7 +94,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       waitlist: [],
       messages: [],
     };
-    setSessions(prev => [newSession, ...prev]);
+    setSessions(prev => [newSession, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     showToast({
         title: 'Session Created!',
         description: 'The new session has been successfully added.',
@@ -117,68 +117,77 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string) => {
     if (!currentUser) return;
 
+    const sessionToBook = sessions.find(s => s.id === sessionId);
+    if (!sessionToBook) return;
+
+    if (sessionToBook.players.includes(currentUser.id)) {
+      showToast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
+      return;
+    }
+    if (sessionToBook.players.length >= sessionToBook.maxPlayers) {
+      showToast({ title: 'Session Full', description: 'This session is full. You can join the waitlist.', variant: 'destructive' });
+      return;
+    }
+
     setSessions(prev =>
-      prev.map(s => {
-        if (s.id === sessionId) {
-          if (s.players.includes(currentUser.id)) {
-            showToast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
-            return s;
-          }
-          if (s.players.length >= s.maxPlayers) {
-            showToast({ title: 'Session Full', description: 'This session is full. You can join the waitlist.', variant: 'destructive' });
-            return s;
-          }
-          showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${s.level} session.`, variant: 'success' });
-          return { ...s, players: [...s.players, currentUser.id] };
-        }
-        return s;
-      })
+      prev.map(s => 
+        s.id === sessionId 
+        ? { ...s, players: [...s.players, currentUser.id] } 
+        : s
+      )
     );
+    showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${sessionToBook.level} session.`, variant: 'success' });
   };
 
   const cancelBooking = async (sessionId: string) => {
     if (!currentUser) return;
+    
+    const sessionToCancel = sessions.find(s => s.id === sessionId);
+    if (!sessionToCancel) return;
 
-    setSessions(prev => prev.map(s => {
-      if (s.id === sessionId) {
-        // Create new lists for players and waitlist
-        const newPlayers = s.players.filter(pId => pId !== currentUser.id);
-        let newWaitlist = [...s.waitlist];
+    setSessions(prev => {
+        return prev.map(s => {
+            if (s.id === sessionId) {
+                const newPlayers = s.players.filter(pId => pId !== currentUser.id);
+                let newWaitlist = [...s.waitlist];
 
-        // If a spot opened up and there's a waitlist, move the first person
-        if (newPlayers.length < s.maxPlayers && newWaitlist.length > 0) {
-          const nextPlayerId = newWaitlist.shift(); // Get and remove first person from waitlist
-          if (nextPlayerId) {
-            newPlayers.push(nextPlayerId); // Add them to players
-            // TODO: Notify this user
-          }
-        }
-        
-        showToast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
-        return { ...s, players: newPlayers, waitlist: newWaitlist };
-      }
-      return s;
-    }));
+                if (newPlayers.length < s.maxPlayers && newWaitlist.length > 0) {
+                    const nextPlayerId = newWaitlist.shift();
+                    if (nextPlayerId) {
+                        newPlayers.push(nextPlayerId);
+                        // TODO: Notify this user
+                    }
+                }
+                return { ...s, players: newPlayers, waitlist: newWaitlist };
+            }
+            return s;
+        });
+    });
+
+    showToast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
   };
 
   const joinWaitlist = async (sessionId: string) => {
     if (!currentUser) return;
     
-    setSessions(prev => prev.map(s => {
-      if (s.id === sessionId) {
-        if (s.waitlist.includes(currentUser.id)) {
-          showToast({ title: 'Already on Waitlist', description: 'You are already on the waitlist for this session.', variant: 'destructive' });
-          return s;
-        }
-        if (s.players.length < s.maxPlayers) {
-          showToast({ title: 'Spots Available', description: 'There are open spots. You can book directly.', variant: 'destructive' });
-          return s;
-        }
-        showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
-        return { ...s, waitlist: [...s.waitlist, currentUser.id] };
-      }
-      return s;
-    }));
+    const sessionToJoin = sessions.find(s => s.id === sessionId);
+    if (!sessionToJoin) return;
+    
+    if (sessionToJoin.waitlist.includes(currentUser.id)) {
+      showToast({ title: 'Already on Waitlist', description: 'You are already on the waitlist for this session.', variant: 'destructive' });
+      return;
+    }
+    if (sessionToJoin.players.length < sessionToJoin.maxPlayers) {
+      showToast({ title: 'Spots Available', description: 'There are open spots. You can book directly.', variant: 'destructive' });
+      return;
+    }
+
+    setSessions(prev => prev.map(s => 
+        s.id === sessionId 
+        ? { ...s, waitlist: [...s.waitlist, currentUser.id] }
+        : s
+    ));
+    showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
   };
 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender'>) => {
