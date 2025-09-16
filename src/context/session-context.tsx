@@ -141,30 +141,56 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
   const cancelBooking = async (sessionId: string) => {
     if (!currentUser) return;
-    
-    const sessionToCancel = sessions.find(s => s.id === sessionId);
+
+    let sessionToCancel = sessions.find(s => s.id === sessionId);
     if (!sessionToCancel) return;
 
-    setSessions(prev => {
-        return prev.map(s => {
-            if (s.id === sessionId) {
-                const newPlayers = s.players.filter(pId => pId !== currentUser.id);
-                let newWaitlist = [...s.waitlist];
+    if (!sessionToCancel.players.includes(currentUser.id)) {
+      showToast({
+        title: 'Not Registered',
+        description: "You aren't registered for this session.",
+        variant: 'destructive',
+      });
+      return;
+    }
 
-                if (newPlayers.length < s.maxPlayers && newWaitlist.length > 0) {
-                    const nextPlayerId = newWaitlist.shift();
-                    if (nextPlayerId) {
-                        newPlayers.push(nextPlayerId);
-                        // TODO: Notify this user
-                    }
-                }
-                return { ...s, players: newPlayers, waitlist: newWaitlist };
+    const sessionDateTime = new Date(`${sessionToCancel.date}T${sessionToCancel.startTime}`);
+    const now = new Date();
+    const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    if (hoursUntilSession <= 24) {
+      showToast({
+        title: 'Cancellation Period Over',
+        description: 'You can only cancel a session more than 24 hours in advance.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSessions(prevSessions =>
+      prevSessions.map(s => {
+        if (s.id === sessionId) {
+          const newPlayers = s.players.filter(pId => pId !== currentUser.id);
+          let newWaitlist = [...s.waitlist];
+
+          if (s.players.length <= s.maxPlayers && newWaitlist.length > 0) {
+            const nextPlayerId = newWaitlist.shift();
+            if (nextPlayerId) {
+              newPlayers.push(nextPlayerId);
+              // TODO: Notify this user they have been moved from the waitlist
             }
-            return s;
-        });
-    });
+          }
+          return { ...s, players: newPlayers, waitlist: newWaitlist };
+        }
+        return s;
+      })
+    );
 
-    showToast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+    showToast({
+      title: 'Booking Canceled',
+      description: 'Your spot has been successfully canceled.',
+      variant: 'success',
+    });
   };
 
   const joinWaitlist = async (sessionId: string) => {
