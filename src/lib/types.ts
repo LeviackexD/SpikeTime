@@ -6,9 +6,9 @@ export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced';
 export type PlayerPosition = 'Setter' | 'Hitter' | 'Libero' | 'Blocker';
 
 export const skillLevelColors: Record<SkillLevel, string> = {
-  'Beginner': 'bg-green-500',
-  'Intermediate': 'bg-blue-500',
-  'Advanced': 'bg-orange-500',
+  'Beginner': 'hsl(142 71% 45%)',     // Green
+  'Intermediate': 'hsl(217 91% 60%)',  // Blue
+  'Advanced': 'hsl(25 95% 53%)',     // Orange
 };
 
 

@@ -1,14 +1,14 @@
 /**
  * @fileoverview Main calendar component for displaying sessions.
- * It uses react-day-picker to render a calendar, highlighting days with scheduled sessions.
- * Days are color-coded based on the session's skill level.
+ * It uses react-day-picker to render a calendar, highlighting days with scheduled sessions
+ * by displaying colored dots for each skill level present on that day.
  */
 
 'use client';
 
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import type { Session } from '@/lib/types';
+import type { Session, SkillLevel } from '@/lib/types';
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +16,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { DayProps } from 'react-day-picker';
+import { skillLevelColors } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface SessionCalendarProps {
   sessions: Session[];
@@ -50,12 +52,26 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
 
   const DayContent = ({ date: day, ...props }: DayProps) => {
     const dateString = day.toISOString().split('T')[0];
-    const daySessions = filteredSessionsByDate[dateString] || [];
+    const daySessions = sessionsByDate[dateString] || []; // Use all sessions for dots, not filtered ones
     
+    // Get unique skill levels for the day to display dots
+    const skillLevelsOnDay = Array.from(new Set(daySessions.map(s => s.level))) as SkillLevel[];
+
     const content = (
-        <>
-            {day.getDate()}
-        </>
+      <div className="relative flex flex-col items-center justify-center h-full w-full">
+        <span>{day.getDate()}</span>
+        {skillLevelsOnDay.length > 0 && (
+          <div className="absolute bottom-1 flex space-x-1">
+            {skillLevelsOnDay.map(level => (
+              <div
+                key={level}
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: skillLevelColors[level] }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     );
 
     if (daySessions.length === 0) {
@@ -74,6 +90,10 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
                          <ul className="space-y-1 list-none p-0">
                           {daySessions.map(session => (
                               <li key={session.id} className="flex items-center gap-2">
+                                <div
+                                    className="h-2 w-2 rounded-full"
+                                    style={{ backgroundColor: skillLevelColors[session.level] }}
+                                />
                                 <span className="font-semibold">{session.level}:</span> {session.startTime} - {session.endTime}
                               </li>
                           ))}
@@ -98,9 +118,6 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
                 return !!filteredSessionsByDate[dateString];
             }
         }}
-         modifiersClassNames={{
-            hasSessions: 'day-with-session',
-         }}
         classNames={{
             months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
             month: 'space-y-4 w-full',
