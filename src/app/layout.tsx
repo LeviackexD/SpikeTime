@@ -2,14 +2,15 @@
 import type { Metadata } from 'next';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from '@/components/ui/toaster';
-import './globals.css';
 import { SessionProvider } from '@/context/session-context';
 import { ThemeProvider } from '@/context/theme-provider';
 import { AuthProvider } from '@/context/auth-context';
 
+import './globals.css';
+
 export const metadata: Metadata = {
-  title: 'Inverness Eagles',
-  description: 'Inverness Eagles Volleyball Club',
+  title: 'SpikeTime - Inverness Eagles',
+  description: 'Volleyball session management for the Inverness Eagles club.',
 };
 
 export default function RootLayout({
@@ -29,9 +30,9 @@ export default function RootLayout({
           <AuthProvider>
             <SessionProvider>
               <AppLayout>{children}</AppLayout>
+              <Toaster />
             </SessionProvider>
           </AuthProvider>
-          <Toaster />
         </ThemeProvider>
       </body>
     </html>

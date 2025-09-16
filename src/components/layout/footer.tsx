@@ -5,7 +5,6 @@
 
 'use client';
 
-import Link from 'next/link';
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react';
 
@@ -51,6 +50,8 @@ export default function Footer() {
         </div>
 
       </div>
+
+      {/* Copyright Notice */}
       <div className="border-t border-primary-foreground/10 py-6">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
           <p>&copy; {new Date().getFullYear()} Inverness Eagles. All Rights Reserved.</p>
