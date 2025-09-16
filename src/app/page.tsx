@@ -22,10 +22,10 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 
 // Custom Components
-import SessionListItem from '@/components/sessions/session-list-item';
 import SectionHeader from '@/components/layout/section-header';
 import SessionDetailsModal from '@/components/sessions/session-details-modal';
 import AnnouncementDetailsModal from '@/components/announcements/announcement-details-modal';
+import SessionGrid from '@/components/sessions/session-grid';
 
 // Context and Hooks
 import { useSessions } from '@/context/session-context';
@@ -106,19 +106,13 @@ const DashboardPage: NextPage = () => {
             </div>
             <AccordionContent className="pt-4">
               {upcomingSessions.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {upcomingSessions.map((session, index) => (
-                    <SessionListItem 
-                        key={session.id}
-                        session={session}
-                        onBook={bookSession}
-                        onCancel={cancelBooking}
-                        onWaitlist={joinWaitlist}
-                        onViewPlayers={handleViewPlayers}
-                        priority={index === 0}
-                    />
-                  ))}
-                </div>
+                <SessionGrid
+                  sessions={upcomingSessions}
+                  onBook={bookSession}
+                  onCancel={cancelBooking}
+                  onWaitlist={joinWaitlist}
+                  onViewPlayers={handleViewPlayers}
+                />
               ) : (
                 <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed">
                   <p className="text-muted-foreground mb-4">You have no upcoming sessions booked.</p>
@@ -138,18 +132,13 @@ const DashboardPage: NextPage = () => {
             </div>
             <AccordionContent className="pt-4">
               {availableSessions.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {availableSessions.map((session) => (
-                    <SessionListItem 
-                        key={session.id}
-                        session={session}
-                        onBook={bookSession}
-                        onCancel={cancelBooking}
-                        onWaitlist={joinWaitlist}
-                        onViewPlayers={handleViewPlayers}
-                    />
-                  ))}
-                </div>
+                <SessionGrid
+                  sessions={availableSessions}
+                  onBook={bookSession}
+                  onCancel={cancelBooking}
+                  onWaitlist={joinWaitlist}
+                  onViewPlayers={handleViewPlayers}
+                />
               ) : (
                 <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed">
                   <p className="text-muted-foreground">No other sessions available at the moment.</p>
