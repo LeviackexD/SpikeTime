@@ -13,7 +13,8 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   type User as FirebaseUser
 } from 'firebase/auth';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
@@ -30,7 +31,7 @@ interface AuthContextType {
   loading: boolean;
   logout: () => void;
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
-  signInWithGoogle: () => Promise<boolean>;
+  signInWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<boolean>;
 }
 
@@ -48,14 +49,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        // User is signed in. Find the corresponding profile data from our mock data.
-        // In a real app, you would fetch this from Firestore.
         const profile = mockUsers.find(u => u.email === firebaseUser.email);
         if (profile) {
           setUser(profile);
         } else {
-          // If no profile is found, create a basic one from the FirebaseUser object.
-          // This could happen if a user signs up but their profile isn't in mockUsers.
           setUser({
             id: firebaseUser.uid,
             name: firebaseUser.displayName || 'New User',
@@ -69,7 +66,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           });
         }
       } else {
-        // User is signed out
         setUser(null);
       }
       setLoading(false);
@@ -77,6 +73,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => unsubscribe();
   }, []);
+  
+  React.useEffect(() => {
+    const handleRedirectResult = async () => {
+        try {
+            setLoading(true);
+            const result = await getRedirectResult(auth);
+            if (result) {
+                toast({
+                  title: 'Login Successful!',
+                  description: `Welcome, ${result.user.displayName}!`,
+                  variant: 'success',
+                });
+                router.push('/');
+            }
+        } catch (error) {
+            handleAuthError(error);
+        } finally {
+            // Even if there's no redirect result, we should stop loading.
+            // onAuthStateChanged will handle the final user state.
+            const isPossiblyRedirecting = !user && publicRoutes.includes(pathname);
+            if (!isPossiblyRedirecting) {
+                 setLoading(false);
+            }
+        }
+    }
+    handleRedirectResult();
+  }, [auth, router, toast]);
+
 
   React.useEffect(() => {
     if (!loading && !user && !publicRoutes.includes(pathname)) {
@@ -100,6 +124,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           break;
         case 'auth/network-request-failed':
           description = 'Network error. Please check your internet connection and emulator status.';
+          break;
+        case 'auth/popup-blocked':
+          description = 'The login pop-up was blocked by the browser. Please allow pop-ups for this site.';
           break;
         default:
           console.error('Firebase Auth Error:', error);
@@ -126,7 +153,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-        // onAuthStateChanged will handle setting the user
         return true;
     } catch (error) {
         handleAuthError(error);
@@ -134,22 +160,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signInWithGoogle = async (): Promise<boolean> => {
+  const signInWithGoogle = async (): Promise<void> => {
     const provider = new GoogleAuthProvider();
     try {
-        await signInWithPopup(auth, provider);
-        // onAuthStateChanged will handle setting the user
-        return true;
+        setLoading(true);
+        await signInWithRedirect(auth, provider);
+        // The user will be redirected. The result is handled by getRedirectResult.
     } catch (error) {
         handleAuthError(error);
-        return false;
+        setLoading(false);
     }
   };
 
   const signUpWithEmail = async (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
     try {
         await createUserWithEmailAndPassword(auth, email, pass);
-        // NOTE: In a real app, you'd create a user document in Firestore here with the 'additionalData'
         console.log('User created. In a real app, save this to Firestore:', { email, ...additionalData });
         return true;
     } catch (error) {

@@ -27,10 +27,10 @@ import { useAuth } from '@/context/auth-context';
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { signInWithEmail, signInWithGoogle, user } = useAuth();
+  const { signInWithEmail, signInWithGoogle, user, loading } = useAuth();
   const [email, setEmail] = React.useState('admin@invernesseagles.com');
   const [password, setPassword] = React.useState('password');
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isEmailLoading, setIsEmailLoading] = React.useState(false);
 
   React.useEffect(() => {
     if (user) {
@@ -40,7 +40,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsEmailLoading(true);
     const success = await signInWithEmail(email, password);
     if (success) {
       toast({
@@ -51,22 +51,15 @@ export default function LoginPage() {
       router.push('/');
     }
     // Error toast is handled by the context
-    setIsLoading(false);
+    setIsEmailLoading(false);
   };
   
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    const success = await signInWithGoogle();
-     if (success) {
-      toast({
-        title: 'Login Successful!',
-        description: 'Welcome!',
-        variant: 'success',
-      });
-      router.push('/');
-    }
-    setIsLoading(false);
+  const handleGoogleLogin = () => {
+    // No need to set loading here, as the auth context will handle it during redirect.
+    signInWithGoogle();
   }
+
+  const isFormDisabled = isEmailLoading || loading;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -77,7 +70,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-headline">Welcome Back!</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account.
+            {loading ? 'Checking authentication...' : 'Enter your credentials to access your account.'}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
@@ -91,7 +84,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@example.com"
                 required
-                disabled={isLoading}
+                disabled={isFormDisabled}
               />
             </div>
             <div className="space-y-2">
@@ -111,11 +104,11 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required 
-                disabled={isLoading}
+                disabled={isFormDisabled}
                 />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+            <Button type="submit" className="w-full" disabled={isFormDisabled}>
+              {isEmailLoading ? 'Signing in...' : 'Sign in'}
             </Button>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
@@ -128,7 +121,7 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4">
-              <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading} type="button">
+              <Button variant="outline" onClick={handleGoogleLogin} disabled={isFormDisabled} type="button">
                 Google
               </Button>
             </div>
