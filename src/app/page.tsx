@@ -84,7 +84,7 @@ const DashboardPage: NextPage = () => {
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p>Loading user data...</p>
+        <p className="text-muted-foreground">Loading user data...</p>
       </div>
     );
   }
