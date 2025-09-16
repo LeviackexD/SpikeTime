@@ -163,10 +163,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const now = new Date();
     const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   
-    if (hoursUntilSession <= 24) {
+    if (hoursUntilSession <= 12) {
       showToast({
         title: 'Cancellation Period Over',
-        description: 'You can only cancel a session more than 24 hours in advance.',
+        description: 'You can only cancel a session more than 12 hours in advance.',
         variant: 'destructive',
       });
       return;

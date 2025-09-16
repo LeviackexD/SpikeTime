@@ -61,7 +61,7 @@ export default function SessionListItem({
   const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const canCancel = hoursUntilSession > 24;
+  const canCancel = hoursUntilSession > 12;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -84,7 +84,7 @@ export default function SessionListItem({
         <Tooltip>
           <TooltipTrigger asChild>{children}</TooltipTrigger>
           <TooltipContent>
-            <p>Cannot cancel less than 24 hours before the session.</p>
+            <p>Cannot cancel less than 12 hours before the session.</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

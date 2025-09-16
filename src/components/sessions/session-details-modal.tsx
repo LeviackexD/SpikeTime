@@ -130,7 +130,7 @@ export default function SessionDetailsModal({
   const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const canCancel = hoursUntilSession > 24;
+  const canCancel = hoursUntilSession > 12;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -186,7 +186,7 @@ export default function SessionDetailsModal({
                 variant="outline" 
                 onClick={() => handleAction(onCancel)}
                 disabled={!canCancel}
-                title={!canCancel ? "Cancellations must be made more than 24 hours in advance." : "Cancel your spot"}
+                title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
               >
                 <XCircle className="mr-2 h-4 w-4" /> Cancel My Spot
               </Button>

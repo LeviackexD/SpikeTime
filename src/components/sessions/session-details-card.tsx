@@ -50,7 +50,7 @@ export default function SessionDetailsCard({
   const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const canCancel = hoursUntilSession > 24;
+  const canCancel = hoursUntilSession > 12;
 
 
   return (
@@ -116,7 +116,7 @@ export default function SessionDetailsCard({
               variant="outline"
               onClick={() => onCancel(session.id)}
               disabled={!canCancel}
-              title={!canCancel ? "Cancellations must be made more than 24 hours in advance." : "Cancel your spot"}
+              title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
             >
               <XCircle className="mr-2 h-4 w-4" />
               Cancel My Spot
