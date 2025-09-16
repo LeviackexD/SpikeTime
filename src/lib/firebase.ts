@@ -1,43 +1,24 @@
-import { initializeApp, getApps, getApp, FirebaseOptions } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator, initializeFirestore, memoryLocalCache, Firestore } from 'firebase/firestore';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
+// Import the functions you need from the SDKs you need
+import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
 const firebaseConfig: FirebaseOptions = {
-  projectId: 'spiketime-8retn',
-  appId: '1:662625552477:web:42463451e309e268a765b4',
-  storageBucket: 'spiketime-8retn.firebasestorage.app',
-  apiKey: 'AIzaSyBFd6lo5OJuLABP-_rUO8Zl69WjhxvvA_4',
-  authDomain: 'spiketime-8retn.firebaseapp.com',
-  measurementId: '',
-  messagingSenderId: '662625552477',
+  apiKey: "AIzaSyBFd6lo5OJuLABP-_rUO8Zl69WjhxvvA_4",
+  authDomain: "spiketime-8retn.firebaseapp.com",
+  databaseURL: "https://spiketime-8retn-default-rtdb.firebaseio.com",
+  projectId: "spiketime-8retn",
+  storageBucket: "spiketime-8retn.firebasestorage.app",
+  messagingSenderId: "662625552477",
+  appId: "1:662625552477:web:3100fccb92648c09a765b4"
 };
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Use memory cache which works in all environments (client/server)
-// This avoids issues with server-side rendering in Next.js
-const db: Firestore = initializeFirestore(app, {
-  cache: memoryLocalCache(),
-});
-
-
-// Connect to emulators in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    // Check if emulators are already running to avoid re-connecting
-    // This is a common pattern to prevent errors in Next.js with HMR
-    if (!auth.emulatorConfig) {
-        connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-    }
-    // Firestore emulator connection doesn't have a check like auth, but we can wrap it.
-    // A simple check is to see if the internal _settings.host has been set.
-    // This is a bit of a hack, but it's effective.
-    // @ts-ignore
-    if (db._settings.host !== '127.0.0.1:8080') {
-         connectFirestoreEmulator(db, '127.0.0.1', 8080);
-    }
-}
-
-
-export { app, db, auth };
+export { app, auth, db };
