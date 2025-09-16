@@ -1,16 +1,26 @@
 /**
  * @fileoverview Manages user authentication state and provides auth-related functions.
- * This is a MOCK implementation for prototype purposes. It uses a hardcoded
- * user from `mock-data.ts` and does not perform real authentication.
+ * Connects to the real Firebase Authentication service.
  */
 
 'use client';
 
 import * as React from 'react';
+import { 
+  getAuth, 
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
+  type User as FirebaseUser
+} from 'firebase/auth';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
-import { currentUser as mockCurrentUser, mockUsers } from '@/lib/mock-data';
+import { mockUsers } from '@/lib/mock-data';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { auth } from '@/lib/firebase';
 
 // Define a type for the user that can be null
 type AuthUser = User | null;
@@ -19,9 +29,8 @@ interface AuthContextType {
   user: AuthUser;
   loading: boolean;
   logout: () => void;
-  // These functions are mocks and will simulate success/failure
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<boolean>;
   signUpWithEmail: (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<boolean>;
 }
 
@@ -30,57 +39,128 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 const publicRoutes = ['/login', '/register'];
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = React.useState<AuthUser>(mockCurrentUser);
-  const [loading, setLoading] = React.useState(false); // Set to false as we are not fetching
+  const [user, setUser] = React.useState<AuthUser>(null);
+  const [loading, setLoading] = React.useState(true); 
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
   React.useEffect(() => {
-    // This effect redirects users if they are not logged in and not on a public page.
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        // User is signed in. Find the corresponding profile data from our mock data.
+        // In a real app, you would fetch this from Firestore.
+        const profile = mockUsers.find(u => u.email === firebaseUser.email);
+        if (profile) {
+          setUser(profile);
+        } else {
+          // If no profile is found, create a basic one from the FirebaseUser object.
+          // This could happen if a user signs up but their profile isn't in mockUsers.
+          setUser({
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName || 'New User',
+            email: firebaseUser.email!,
+            avatarUrl: firebaseUser.photoURL || `https://picsum.photos/seed/${firebaseUser.uid}/100/100`,
+            role: 'user',
+            skillLevel: 'Beginner',
+            favoritePosition: 'Hitter',
+            username: firebaseUser.email!.split('@')[0],
+            stats: { sessionsPlayed: 0 },
+          });
+        }
+      } else {
+        // User is signed out
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
     if (!loading && !user && !publicRoutes.includes(pathname)) {
       router.push('/login');
     }
   }, [user, loading, router, pathname]);
 
-  const logout = () => {
-    setUser(null);
-    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-    router.push('/login');
+  const handleAuthError = (error: any) => {
+     let description = 'An unexpected error occurred. Please try again.';
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          description = 'Invalid email or password.';
+          break;
+        case 'auth/email-already-in-use':
+          description = 'This email address is already in use.';
+          break;
+        case 'auth/weak-password':
+          description = 'The password is too weak. It must be at least 6 characters long.';
+          break;
+        case 'auth/network-request-failed':
+          description = 'Network error. Please check your internet connection and emulator status.';
+          break;
+        default:
+          console.error('Firebase Auth Error:', error);
+          break;
+      }
+       toast({
+        title: 'Authentication Failed',
+        description: description,
+        variant: 'destructive',
+      });
+  }
+
+  const logout = async () => {
+    try {
+        await signOut(auth);
+        setUser(null);
+        toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+        router.push('/login');
+    } catch (error) {
+        handleAuthError(error);
+    }
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-     // Find a user that matches the email. In a real app, you'd also check the password hash.
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser) {
-        setUser(foundUser);
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        // onAuthStateChanged will handle setting the user
         return true;
+    } catch (error) {
+        handleAuthError(error);
+        return false;
     }
-    return false;
   };
 
-  const signInWithGoogle = async (): Promise<void> => {
-    // Simulate Google sign-in by logging in as the default mock user
-    setUser(mockCurrentUser);
-    toast({ title: 'Login Successful', description: `Welcome back, ${mockCurrentUser.name}!` });
-    router.push('/');
+  const signInWithGoogle = async (): Promise<boolean> => {
+    const provider = new GoogleAuthProvider();
+    try {
+        await signInWithPopup(auth, provider);
+        // onAuthStateChanged will handle setting the user
+        return true;
+    } catch (error) {
+        handleAuthError(error);
+        return false;
+    }
   };
 
   const signUpWithEmail = async (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
-    // Simulate sign-up. In a real app, this would create a new user record.
-    // For this mock, we'll just log the attempt and simulate success.
-    console.log('Simulating sign-up for:', email, additionalData);
-    // Here, we don't actually add the user to the mockUsers array to keep the prototype simple.
-    // We just pretend it worked and redirect to login.
-    return true;
+    try {
+        await createUserWithEmailAndPassword(auth, email, pass);
+        // NOTE: In a real app, you'd create a user document in Firestore here with the 'additionalData'
+        console.log('User created. In a real app, save this to Firestore:', { email, ...additionalData });
+        return true;
+    } catch (error) {
+        handleAuthError(error);
+        return false;
+    }
   };
   
-  // In a real app with Firebase, you'd have a loading screen.
-  // Here we can render children immediately as auth is synchronous.
-  // if (loading && !publicRoutes.includes(pathname)) {
-  //   return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  // }
-
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, logout, signInWithEmail, signInWithGoogle, signUpWithEmail }}>

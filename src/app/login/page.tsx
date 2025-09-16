@@ -27,10 +27,16 @@ import { useAuth } from '@/context/auth-context';
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { signInWithEmail, signInWithGoogle } = useAuth();
+  const { signInWithEmail, signInWithGoogle, user } = useAuth();
   const [email, setEmail] = React.useState('admin@invernesseagles.com');
   const [password, setPassword] = React.useState('password');
   const [isLoading, setIsLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,22 +49,23 @@ export default function LoginPage() {
         variant: 'success',
       });
       router.push('/');
-    } else {
-      toast({
-        title: 'Login Failed',
-        description: 'Invalid email or password. With mock data, any user email from mock-data.ts will work.',
-        variant: 'destructive',
-      });
     }
+    // Error toast is handled by the context
     setIsLoading(false);
   };
   
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    await signInWithGoogle();
-    // This will now be handled by the mock in AuthContext
+    const success = await signInWithGoogle();
+     if (success) {
+      toast({
+        title: 'Login Successful!',
+        description: 'Welcome!',
+        variant: 'success',
+      });
+      router.push('/');
+    }
     setIsLoading(false);
-    router.push('/');
   }
 
   return (
@@ -121,7 +128,7 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4">
-              <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading}>
+              <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading} type="button">
                 Google
               </Button>
             </div>
