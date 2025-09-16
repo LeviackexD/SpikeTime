@@ -33,11 +33,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 // Custom Components & Icons
 import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
-import { VolleyballIcon } from '../icons/volleyball-icon';
 import Footer from './footer';
 
 // Hooks & Utils
@@ -147,6 +146,7 @@ function MobileNav() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="flex flex-col p-0 bg-primary text-primary-foreground border-primary-foreground/20">
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <div className="p-4 border-b border-primary-foreground/20">
             <InvernessEaglesLogo className="h-8 w-auto" />
           </div>
