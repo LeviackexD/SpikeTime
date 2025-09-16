@@ -28,8 +28,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { signInWithEmail, signInWithGoogle } = useAuth();
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  const [email, setEmail] = React.useState('admin@invernesseagles.com');
+  const [password, setPassword] = React.useState('password');
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -46,7 +46,7 @@ export default function LoginPage() {
     } else {
       toast({
         title: 'Login Failed',
-        description: 'Invalid email or password.',
+        description: 'Invalid email or password. With mock data, any user email from mock-data.ts will work.',
         variant: 'destructive',
       });
     }
@@ -58,6 +58,7 @@ export default function LoginPage() {
     await signInWithGoogle();
     // This will now be handled by the mock in AuthContext
     setIsLoading(false);
+    router.push('/');
   }
 
   return (
