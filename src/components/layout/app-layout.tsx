@@ -47,7 +47,7 @@ import { cn } from '@/lib/utils';
 
 // --- NAVIGATION ---
 const navItems = [
-  { href: '/', icon: VolleyballIcon, label: 'Sessions' },
+  { href: '/', icon: Home, label: 'Dashboard' },
   { href: '/calendar', icon: Calendar, label: 'Calendar' },
   { href: '/announcements', icon: Megaphone, label: 'Announcements' },
   { href: '/chat', icon: MessageCircle, label: 'Chat' },
