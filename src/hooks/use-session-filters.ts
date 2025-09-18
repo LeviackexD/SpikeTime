@@ -23,7 +23,8 @@ export function useUpcomingSessions(currentUser: User | null, sessions: Session[
       .filter(session => {
         const sessionDate = getSafeDate(session.date);
         sessionDate.setHours(0, 0, 0, 0);
-        return currentUser && sessionDate >= today && session.players.includes(currentUser.id);
+        const players = session.players as User[];
+        return currentUser && sessionDate >= today && players.some(p => p.id === currentUser.id);
       })
       .sort((a, b) => getSafeDate(a.date).getTime() - getSafeDate(b.date).getTime());
   }, [currentUser, sessions]);
@@ -44,7 +45,8 @@ export function useAvailableSessions(currentUser: User | null, sessions: Session
       .filter(session => {
         const sessionDate = getSafeDate(session.date);
         sessionDate.setHours(0, 0, 0, 0);
-        return currentUser && sessionDate >= today && !session.players.includes(currentUser.id);
+        const players = session.players as User[];
+        return currentUser && sessionDate >= today && !players.some(p => p.id === currentUser.id);
       })
       .sort((a, b) => getSafeDate(a.date).getTime() - getSafeDate(b.date).getTime());
   }, [currentUser, sessions]);

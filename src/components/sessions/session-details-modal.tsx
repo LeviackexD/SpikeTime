@@ -28,17 +28,11 @@ import { Timestamp } from 'firebase/firestore';
 
 interface PlayerListProps {
   title: string;
-  playerIds: string[];
-  allUsers: User[];
+  players: User[];
   emptyMessage: string;
 }
 
-const PlayerList: React.FC<PlayerListProps> = ({ title, playerIds, allUsers, emptyMessage }) => {
-  const players = React.useMemo(() => 
-    playerIds.map(id => allUsers.find(user => user.id === id)).filter(Boolean) as User[],
-    [playerIds, allUsers]
-  );
-
+const PlayerList: React.FC<PlayerListProps> = ({ title, players, emptyMessage }) => {
   if (players.length === 0) {
     return (
       <div>
@@ -99,15 +93,17 @@ export default function SessionDetailsModal({
   onLeaveWaitlist,
 }: SessionDetailsModalProps) {
   const { user: currentUser } = useAuth();
-  const { users: allUsers } = useSessions();
   
   if (!session || !currentUser) return null;
 
   const spotsFilled = session.players.length;
   const progressValue = (spotsFilled / session.maxPlayers) * 100;
+  
+  const playersList = session.players as User[];
+  const waitlistList = session.waitlist as User[];
 
-  const isRegistered = session.players.includes(currentUser.id);
-  const isOnWaitlist = session.waitlist.includes(currentUser.id);
+  const isRegistered = playersList.some(p => p.id === currentUser.id);
+  const isOnWaitlist = waitlistList.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
   
   const handleAction = (action: (id: string) => void) => {
@@ -167,15 +163,13 @@ export default function SessionDetailsModal({
 
           <PlayerList 
             title="Registered Players"
-            playerIds={session.players}
-            allUsers={allUsers}
+            players={playersList}
             emptyMessage="No players have registered yet."
           />
 
           <PlayerList 
             title="Waitlist"
-            playerIds={session.waitlist}
-            allUsers={allUsers}
+            players={waitlistList}
             emptyMessage="The waitlist is empty."
           />
 

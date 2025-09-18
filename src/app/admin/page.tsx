@@ -36,7 +36,7 @@ import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dia
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
-import type { Session, Announcement } from '@/lib/types';
+import type { Session, Announcement, User } from '@/lib/types';
 import { Timestamp } from 'firebase/firestore';
 
 // --- Helper Functions ---
@@ -245,9 +245,12 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string } | (Omit<Session, 'date'> & { date: string })) => {
+  const handleSaveSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string } | (Omit<Session, 'date' | 'players' | 'waitlist'> & { date: string, players: User[], waitlist: User[] })) => {
+    const playerIds = ('players' in sessionData && Array.isArray(sessionData.players)) ? (sessionData.players as User[]).map(p => p.id) : [];
+    const waitlistIds = ('waitlist' in sessionData && Array.isArray(sessionData.waitlist)) ? (sessionData.waitlist as User[]).map(p => p.id) : [];
+
     if ('id' in sessionData) {
-        await updateSession(sessionData as Omit<Session, 'date'> & { date: string });
+        await updateSession({ ...sessionData, players: playerIds, waitlist: waitlistIds });
     } else {
         await createSession(sessionData as Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string });
     }

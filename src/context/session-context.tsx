@@ -23,7 +23,6 @@ import type { Session, Message, User, DirectChat, Announcement } from '@/lib/typ
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useAuth } from './auth-context';
-import { mockUsers } from '@/lib/mock-data'; // Keep for profile enrichment
 
 type ToastInfo = {
   title: string;
@@ -35,7 +34,7 @@ interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
   createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => Promise<void>;
-  updateSession: (session: Omit<Session, 'date'> & { date: string }) => Promise<void>;
+  updateSession: (session: Omit<Session, 'date' | 'players' | 'waitlist'> & { date: string, players: string[], waitlist: string[] }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<void>;
   cancelBooking: (sessionId: string) => Promise<void>;
@@ -65,24 +64,49 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
   const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
-  const [users, setUsers] = React.useState<User[]>(mockUsers);
+  const [users, setUsers] = React.useState<User[]>([]);
   const { toast } = useToast();
   const { requestPermission, showNotification, isPermissionGranted } = useNotifications();
   const scheduledNotificationsRef = React.useRef<Set<string>>(new Set());
 
   // --- Real-time Listeners ---
+  
+  React.useEffect(() => {
+    const q = query(collection(db, 'users'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[];
+        setUsers(usersData);
+    }, (error) => {
+        console.error("Error fetching users:", error);
+    });
+    return () => unsubscribe();
+  }, []);
 
   React.useEffect(() => {
+    if (users.length === 0) return;
+
     const q = query(collection(db, 'sessions'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const sessionsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Session[];
+      const sessionsData = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        const enrichedPlayers = (data.players || []).map((id: string) => users.find(u => u.id === id)).filter(Boolean);
+        const enrichedWaitlist = (data.waitlist || []).map((id: string) => users.find(u => u.id === id)).filter(Boolean);
+        
+        return { 
+          id: doc.id, 
+          ...data,
+          players: enrichedPlayers,
+          waitlist: enrichedWaitlist,
+         } as Session;
+      });
+
       setSessions(sessionsData.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
     }, (error) => {
       console.error("Error fetching sessions:", error);
       toast({ title: 'Error', description: 'Could not fetch sessions.', variant: 'destructive'});
     });
     return () => unsubscribe();
-  }, [toast]);
+  }, [toast, users]);
   
   React.useEffect(() => {
     const q = query(collection(db, 'announcements'));
@@ -97,13 +121,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   }, [toast]);
 
   React.useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || users.length === 0) return;
     const q = query(collection(db, 'direct-chats'), where('participantIds', 'array-contains', currentUser.id));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const chatsData = querySnapshot.docs.map(doc => {
             const data = doc.data();
             // Enrich participants with full user objects
-            const participants = (data.participantIds || []).map((id: string) => users.find(u => u.id === id)).filter(Boolean);
+            const participants = (data.participantIds || []).map((id: string) => users.find(u => u.id === id)).filter(Boolean) as User[];
             return { id: doc.id, ...data, participants } as DirectChat;
         });
         setDirectChats(chatsData);
@@ -117,7 +141,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   React.useEffect(() => {
     if (isPermissionGranted && currentUser) {
       const upcomingSessions = sessions.filter(session =>
-        session.players.some(pId => pId === currentUser.id) && getSafeDate(session.date) > new Date()
+        (session.players as User[]).some(p => p.id === currentUser.id) && getSafeDate(session.date) > new Date()
       );
 
       upcomingSessions.forEach(session => {
@@ -174,7 +198,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  const updateSession = async (updatedSession: Omit<Session, 'date'> & { date: string }) => {
+  const updateSession = async (updatedSession: Omit<Session, 'date' | 'players' | 'waitlist'> & { date: string, players: string[], waitlist: string[] }) => {
     const sessionRef = doc(db, 'sessions', updatedSession.id);
     try {
       await updateDoc(sessionRef, {
@@ -204,7 +228,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const session = sessions.find(s => s.id === sessionId);
     if (!session) return;
     
-    if (session.players.includes(currentUser.id)) {
+    if ((session.players as User[]).some(p => p.id === currentUser.id)) {
       showToast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
       return;
     }
@@ -231,7 +255,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const session = sessions.find(s => s.id === sessionId);
     if (!session) return;
   
-    if (!session.players.includes(currentUser.id)) {
+    if (!(session.players as User[]).some(p => p.id === currentUser.id)) {
       showToast({ title: 'Not Registered', description: "You aren't registered for this session.", variant: 'destructive' });
       return;
     }
@@ -252,8 +276,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         });
 
         // If a spot opens up, move first person from waitlist
-        if (session.waitlist.length > 0) {
-            const nextPlayerId = session.waitlist[0];
+        const waitlistAsUsers = session.waitlist as User[];
+        if (waitlistAsUsers.length > 0) {
+            const nextPlayerId = waitlistAsUsers[0].id;
             batch.update(sessionRef, {
                 players: arrayUnion(nextPlayerId),
                 waitlist: arrayRemove(nextPlayerId)
@@ -275,7 +300,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const session = sessions.find(s => s.id === sessionId);
     if (!session) return;
     
-    if (session.waitlist.includes(currentUser.id) || session.players.includes(currentUser.id)) {
+    if ((session.waitlist as User[]).some(p => p.id === currentUser.id) || (session.players as User[]).some(p => p.id === currentUser.id)) {
       showToast({ title: 'Action Not Allowed', description: 'You are already registered or on the waitlist.', variant: 'destructive' });
       return;
     }
@@ -307,9 +332,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
     if (!currentUser) return;
     const sessionRef = doc(db, 'sessions', sessionId);
+    
+    // Find the user profile from the `users` state
+    const senderProfile = users.find(u => u.id === currentUser.id);
+    if (!senderProfile) {
+        showToast({ title: 'Error', description: 'Could not find your user profile to send message.', variant: 'destructive' });
+        return;
+    }
+
     const newMessage = {
       id: `m${Date.now()}`,
-      sender: currentUser,
+      sender: senderProfile, 
       content: messageContent.content,
       timestamp: serverTimestamp(),
     };
@@ -361,7 +394,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const createDirectChat = async (otherUser: User) => {
     if (!currentUser) return '';
     
-    const q = query(collection(db, 'direct-chats'), where('participantIds', '==', [currentUser.id, otherUser.id].sort()));
+    // Sort IDs to ensure consistency in queries
+    const sortedParticipantIds = [currentUser.id, otherUser.id].sort();
+    
+    const q = query(collection(db, 'direct-chats'), where('participantIds', '==', sortedParticipantIds));
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
@@ -370,12 +406,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     
     try {
         const newChatRef = await addDoc(collection(db, 'direct-chats'), {
-            participantIds: [currentUser.id, otherUser.id].sort(),
+            participantIds: sortedParticipantIds,
             messages: [],
         });
         return newChatRef.id;
     } catch (error) {
         console.error("Error creating direct chat:", error);
+        showToast({ title: 'Error', description: 'Failed to create a new chat.', variant: 'destructive' });
         return '';
     }
   }
@@ -383,9 +420,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const addDirectMessage = async (chatId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
      if (!currentUser) return;
     const chatRef = doc(db, 'direct-chats', chatId);
+
+    const senderProfile = users.find(u => u.id === currentUser.id);
+    if (!senderProfile) {
+        showToast({ title: 'Error', description: 'Could not find your user profile to send message.', variant: 'destructive' });
+        return;
+    }
+
     const newMessage = {
       id: `m${Date.now()}`,
-      sender: currentUser, // Storing the full user object, might be better to store ID and enrich on client
+      sender: senderProfile,
       content: messageContent.content,
       timestamp: serverTimestamp(),
     };

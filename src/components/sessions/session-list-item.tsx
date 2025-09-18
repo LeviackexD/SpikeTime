@@ -19,9 +19,9 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import type { Session } from '@/lib/types';
+import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
-import { useSessions, getSafeDate } from '@/context/session-context';
+import { getSafeDate } from '@/context/session-context';
 import PlayerAvatar from './player-avatar';
 import {
   CheckCircle,
@@ -54,18 +54,18 @@ export default function SessionListItem({
   animationDelay = 0,
 }: SessionListItemProps) {
   const { user: currentUser } = useAuth();
-  const { users } = useSessions();
 
   if (!currentUser) return null;
 
-  const isFull = session.players.length >= session.maxPlayers;
-  const isRegistered = session.players.includes(currentUser.id);
-  const isOnWaitlist = session.waitlist.includes(currentUser.id);
+  const players = session.players as User[];
+  const waitlist = session.waitlist as User[];
 
-  const spotsLeft = session.maxPlayers - session.players.length;
-  const progressValue = (session.players.length / session.maxPlayers) * 100;
-  
-  const getPlayer = (id: string) => users.find(u => u.id === id);
+  const isFull = players.length >= session.maxPlayers;
+  const isRegistered = players.some(p => p.id === currentUser.id);
+  const isOnWaitlist = waitlist.some(p => p.id === currentUser.id);
+
+  const spotsLeft = session.maxPlayers - players.length;
+  const progressValue = (players.length / session.maxPlayers) * 100;
 
   const sessionDate = getSafeDate(session.date);
   const sessionDateTime = new Date(`${sessionDate.toISOString().split('T')[0]}T${session.startTime}`);
@@ -126,13 +126,12 @@ export default function SessionListItem({
         <div className="space-y-2">
             <div className="flex justify-between items-center">
               <div className="flex -space-x-2 overflow-hidden">
-                {session.players.slice(0, 4).map(playerId => {
-                    const player = getPlayer(playerId);
-                    return player && <PlayerAvatar key={player.id} player={player} />;
+                {players.slice(0, 4).map(player => {
+                    return <PlayerAvatar key={player.id} player={player} />;
                 })}
-                {session.players.length > 4 && (
+                {players.length > 4 && (
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
-                        +{session.players.length - 4}
+                        +{players.length - 4}
                     </div>
                 )}
               </div>

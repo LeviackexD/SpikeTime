@@ -43,7 +43,7 @@ const ChatPage: NextPage = () => {
   const mySessions = React.useMemo(() => {
     if (!currentUser) return [];
     return sessions.filter(session => 
-      session.players.includes(currentUser.id)
+      (session.players as User[]).some(p => p.id === currentUser.id)
     ).sort((a, b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime());
   }, [sessions, currentUser]
   );

@@ -40,9 +40,9 @@ export interface Session {
   endTime: string;
   location: string;
   level: SkillLevel;
-  players: string[];
+  players: string[] | User[];
   maxPlayers: number;
-  waitlist: string[];
+  waitlist: string[] | User[];
   imageUrl?: string;
   messages: Message[];
   createdBy?: string; // Admin User ID
