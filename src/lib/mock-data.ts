@@ -80,6 +80,13 @@ export const mockUsers: User[] = [
         attendanceRate: 99,
     }
   },
+   { id: 'user-6', name: 'Chloe Kim', username: 'chloek', email: 'chloe@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=user-6', role: 'user', skillLevel: 'Beginner', favoritePosition: 'Libero', stats: { sessionsPlayed: 5, attendanceRate: 100 } },
+  { id: 'user-7', name: 'Ben Carter', username: 'benc', email: 'ben@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=user-7', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Setter', stats: { sessionsPlayed: 22, attendanceRate: 90 } },
+  { id: 'user-8', name: 'Sofia Rossi', username: 'sofiar', email: 'sofia@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=user-8', role: 'user', skillLevel: 'Advanced', favoritePosition: 'Hitter', stats: { sessionsPlayed: 75, attendanceRate: 96 } },
+  { id: 'user-9', name: 'Liam Wilson', username: 'liamw', email: 'liam@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=user-9', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Blocker', stats: { sessionsPlayed: 31, attendanceRate: 91 } },
+  { id: 'user-10', name: 'Ava Chen', username: 'avac', email: 'ava@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=user-10', role: 'user', skillLevel: 'Beginner', favoritePosition: 'Setter', stats: { sessionsPlayed: 8, attendanceRate: 95 } },
+  { id: 'user-11', name: 'Noah Brown', username: 'noahb', email: 'noah@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=user-11', role: 'user', skillLevel: 'Advanced', favoritePosition: 'Libero', stats: { sessionsPlayed: 55, attendanceRate: 93 } },
+  { id: 'user-12', name: 'Isabella Wong', username: 'isabellaw', email: 'isabella@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=user-12', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Hitter', stats: { sessionsPlayed: 41, attendanceRate: 94 } },
 ];
 
 // --- CURRENT USER ---
@@ -147,9 +154,9 @@ export const mockSessions: Session[] = [
     endTime: '22:00',
     location: 'Community Center',
     level: 'Beginner',
-    players: Array(12).fill(null).map((_, i) => mockUsers[i % 5] || mockUsers[2]), // Full session
+    players: mockUsers.slice(0, 12), // Full session with unique players
     maxPlayers: 12,
-    waitlist: [mockUsers[3]],
+    waitlist: [],
     imageUrl: 'https://picsum.photos/seed/s4/400/300',
     messages: [],
   },
