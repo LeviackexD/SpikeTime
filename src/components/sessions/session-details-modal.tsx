@@ -27,53 +27,6 @@ import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
-
-interface PlayerListProps {
-  title: string;
-  players: User[];
-  emptyMessage: string;
-}
-
-const PlayerList: React.FC<PlayerListProps> = ({ title, players, emptyMessage }) => {
-  if (players.length === 0) {
-    return (
-      <div>
-        <h3 className="mb-3 font-semibold flex items-center gap-2">
-          <Users className="h-5 w-5 text-muted-foreground" />
-          {title} (0)
-        </h3>
-        <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
-            <p className="text-muted-foreground text-center text-sm">{emptyMessage}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-        <h3 className="mb-3 font-semibold flex items-center gap-2">
-            <Users className="h-5 w-5 text-muted-foreground" />
-            {title} ({players.length})
-        </h3>
-        <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
-          <TooltipProvider>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {players.map((player) => (
-                  <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                      <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
-                      <div className="flex-grow">
-                          <p className="font-semibold text-sm">{player.name}</p>
-                          <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
-                      </div>
-                  </div>
-              ))}
-            </div>
-          </TooltipProvider>
-        </div>
-    </div>
-  );
-};
-
 interface SessionDetailsModalProps {
   session: Session | null;
   isOpen: boolean;
@@ -195,17 +148,61 @@ export default function SessionDetailsModal({
             <Progress value={progressValue} className="h-2" />
           </div>
 
-          <PlayerList 
-            title="Registered Players"
-            players={playersList}
-            emptyMessage="No players have registered yet."
-          />
+          <div>
+            <h3 className="mb-3 font-semibold flex items-center gap-2">
+              <Users className="h-5 w-5 text-muted-foreground" />
+              Registered Players ({playersList.length})
+            </h3>
+            {playersList.length > 0 ? (
+              <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
+                <TooltipProvider>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {playersList.map((player) => (
+                      <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                        <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                        <div className="flex-grow">
+                            <p className="font-semibold text-sm">{player.name}</p>
+                            <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </TooltipProvider>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
+                <p className="text-muted-foreground text-center text-sm">No players have registered yet.</p>
+              </div>
+            )}
+          </div>
 
-          <PlayerList 
-            title="Waitlist"
-            players={waitlistList}
-            emptyMessage="The waitlist is empty."
-          />
+          <div>
+            <h3 className="mb-3 font-semibold flex items-center gap-2">
+              <Users className="h-5 w-5 text-muted-foreground" />
+              Waitlist ({waitlistList.length})
+            </h3>
+            {waitlistList.length > 0 ? (
+              <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
+                 <TooltipProvider>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {waitlistList.map((player) => (
+                      <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                        <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                        <div className="flex-grow">
+                            <p className="font-semibold text-sm">{player.name}</p>
+                            <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </TooltipProvider>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
+                <p className="text-muted-foreground text-center text-sm">The waitlist is empty.</p>
+              </div>
+            )}
+          </div>
 
         </div>
         <DialogFooter className='sm:justify-between items-center flex-shrink-0 pt-4'>
