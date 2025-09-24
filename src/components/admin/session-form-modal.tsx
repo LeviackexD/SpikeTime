@@ -27,9 +27,10 @@ import {
 } from '@/components/ui/select';
 import type { Session, SkillLevel, User } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
+import { getSafeDate } from '@/context/session-context';
 
 // The data shape for the form, using a simple string for the date.
-type SessionFormData = Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string };
+type SessionFormData = Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date' | 'createdBy'> & { date: string };
 
 // The shape for saving, which might include the ID for updates.
 type SaveSessionData = SessionFormData | (SessionFormData & { id: string, players: User[], waitlist: User[] });
@@ -45,13 +46,13 @@ interface SessionFormModalProps {
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
 const emptySession: SessionFormData = {
-  date: getTodayString(),
   startTime: '',
   endTime: '',
   location: '',
   level: 'Intermediate',
   maxPlayers: 12,
   imageUrl: '',
+  date: getTodayString(),
 };
 
 export default function SessionFormModal({ isOpen, onClose, onSave, session }: SessionFormModalProps) {
@@ -61,8 +62,8 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     React.useEffect(() => {
         if (isOpen) {
             if (session) {
-                // When editing, get the 'YYYY-MM-DD' part from the ISO string or Date object
-                const date = new Date(session.date);
+                // When editing, get the 'YYYY-MM-DD' part from the date
+                const date = getSafeDate(session.date);
                 const formattedDate = !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : getTodayString();
                 
                 setFormData({

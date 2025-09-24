@@ -1,8 +1,10 @@
-// This file is a placeholder for Firebase configuration.
-// In the reverted state, it is not actively used, but kept for future integration.
+// This file is the central point for Firebase configuration and service initialization.
 import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getDatabase } from "firebase/database";
 
-// Your web app's Firebase configuration
+// Your web app's Firebase configuration, read from environment variables.
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -12,7 +14,12 @@ const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+// Initialize Firebase app only once.
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-export { app };
+// Initialize and export Firebase services.
+const auth = getAuth(app);
+const db = getFirestore(app);
+const rtdb = getDatabase(app);
+
+export { app, auth, db, rtdb };

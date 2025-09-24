@@ -56,7 +56,7 @@ export default function LoginPage() {
     else {
          toast({
             title: t('toasts.authFailedTitle'),
-            description: 'Invalid email or password in mock data.',
+            description: t('toasts.authFailedTitle'), // Generic message for security
             variant: 'destructive',
         });
     }

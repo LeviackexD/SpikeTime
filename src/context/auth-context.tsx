@@ -2,8 +2,17 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import { mockUsers, currentUser as initialUser } from '@/lib/mock-data';
+import { useRouter, usePathname } from 'next/navigation';
+import {
+  onAuthStateChanged,
+  signOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  type User as FirebaseUser,
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, get } from 'firebase/database';
+import { auth, db, rtdb } from '@/lib/firebase';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from './language-context';
@@ -15,7 +24,11 @@ interface AuthContextType {
   loading: boolean;
   logout: () => void;
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
-  signUpWithEmail: (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<boolean>;
+  signUpWithEmail: (
+    email: string,
+    pass: string,
+    additionalData: { name: string; skillLevel: SkillLevel; favoritePosition: PlayerPosition }
+  ) => Promise<boolean>;
   updateUser: (updatedData: Partial<User>) => void;
 }
 
@@ -25,65 +38,113 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<AuthUser>(null);
   const [loading, setLoading] = React.useState(true);
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
   const { t } = useLanguage();
-  
-  // Simulate initial auth check
+
   React.useEffect(() => {
-    setLoading(true);
-    const storedUser = sessionStorage.getItem('currentUser');
-    if (storedUser) {
-        setUser(JSON.parse(storedUser));
-    } else {
-        setUser(initialUser);
-    }
-    setLoading(false);
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
+      if (firebaseUser) {
+        // User is signed in, get their profile from Firestore and check admin status.
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const adminRef = ref(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
 
-  const storeUser = (userToStore: AuthUser) => {
-    if (userToStore) {
-        sessionStorage.setItem('currentUser', JSON.stringify(userToStore));
-    } else {
-        sessionStorage.removeItem('currentUser');
-    }
-  }
+        try {
+          const [userDocSnap, adminSnap] = await Promise.all([
+            getDoc(userDocRef),
+            get(adminRef)
+          ]);
 
-  const logout = () => {
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data() as Omit<User, 'id' | 'role'>;
+            const isAdmin = adminSnap.exists() && adminSnap.val() === true;
+            
+            const profile: User = {
+              id: firebaseUser.uid,
+              ...userData,
+              email: firebaseUser.email || userData.email || '',
+              role: isAdmin ? 'admin' : 'user',
+            };
+            setUser(profile);
+            
+             // Redirect if logged-in user is on an auth page
+            if(pathname === '/login' || pathname === '/register') {
+                router.replace('/');
+            }
+
+          } else {
+             console.warn("User document not found in Firestore, logging out.");
+             await signOut(auth);
+             setUser(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setUser(null);
+        }
+
+      } else {
+        // User is signed out.
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router, pathname]);
+
+  const logout = async () => {
+    await signOut(auth);
     setUser(null);
-    storeUser(null);
     toast({ title: t('toasts.logoutTitle'), description: t('toasts.logoutDescription') });
     router.push('/login');
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    setLoading(true);
-    // This is a mock sign-in. In a real app, you'd validate against a backend.
-    const foundUser = mockUsers.find(u => u.email === email);
-    
-    if (foundUser) {
-        setUser(foundUser);
-        storeUser(foundUser);
-        setLoading(false);
-        return true;
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      return true;
+    } catch (error) {
+      console.error("Sign in failed:", error);
+      return false;
     }
-    
-    setLoading(false);
-    return false;
   };
 
-  const signUpWithEmail = async (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
-     // This is a mock sign-up. In a real app, you'd create a new user in your database.
-    console.log("New user signed up (mock):", { email, ...additionalData });
-    // In this mock setup, we don't add the new user to the list,
-    // we just simulate a successful sign-up.
-    return true;
+  const signUpWithEmail = async (
+    email: string,
+    pass: string,
+    additionalData: { name: string; skillLevel: SkillLevel; favoritePosition: PlayerPosition }
+  ): Promise<boolean> => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      const firebaseUser = userCredential.user;
+
+      // Now, create the user document in Firestore.
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      await setDoc(userDocRef, {
+        name: additionalData.name,
+        username: email.split('@')[0], // Simple username generation
+        avatarUrl: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
+        skillLevel: additionalData.skillLevel,
+        favoritePosition: additionalData.favoritePosition,
+        role: 'user', // Default role
+        stats: { sessionsPlayed: 0, attendanceRate: 100 },
+        createdAt: serverTimestamp(),
+      });
+      return true;
+    } catch (error) {
+      console.error("Sign up failed:", error);
+      return false;
+    }
   };
 
   const updateUser = (updatedData: Partial<User>) => {
     if (user) {
       const newUser = { ...user, ...updatedData };
       setUser(newUser);
-      storeUser(newUser);
+      // In a real app, you would also update the Firestore document here.
+      // e.g., const userDocRef = doc(db, 'users', user.id);
+      // await updateDoc(userDocRef, updatedData);
     }
   };
 

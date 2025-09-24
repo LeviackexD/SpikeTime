@@ -129,7 +129,7 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="skillLevel">{t('registerPage.skillLevelLabel')}</Label>
-              <Select required onValueChange={handleSelectChange('skillLevel')} disabled={isLoading}>
+              <Select required onValueChange={handleSelectChange('skillLevel')} disabled={isLoading} value={formData.skillLevel}>
                 <SelectTrigger id="skillLevel">
                   <SelectValue placeholder={t('registerPage.skillLevelPlaceholder')} />
                 </SelectTrigger>
@@ -142,7 +142,7 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="favoritePosition">{t('registerPage.favoritePositionLabel')}</Label>
-              <Select required onValueChange={handleSelectChange('favoritePosition')} disabled={isLoading}>
+              <Select required onValueChange={handleSelectChange('favoritePosition')} disabled={isLoading} value={formData.favoritePosition}>
                 <SelectTrigger id="favoritePosition">
                   <SelectValue placeholder={t('registerPage.favoritePositionPlaceholder')} />
                 </SelectTrigger>
