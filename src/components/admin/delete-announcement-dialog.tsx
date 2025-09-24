@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A confirmation dialog for deleting an announcement.
  * Ensures the admin is sure before proceeding with the deletion.
@@ -15,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useLanguage } from '@/context/language-context';
 
 interface DeleteAnnouncementDialogProps {
   isOpen: boolean;
@@ -27,19 +29,19 @@ export default function DeleteAnnouncementDialog({
   onClose,
   onConfirm,
 }: DeleteAnnouncementDialogProps) {
+  const { t } = useLanguage();
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogTitle>{t('modals.deleteDialog.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the
-            announcement.
+            {t('modals.deleteDialog.announcementDescription')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Continue</AlertDialogAction>
+          <AlertDialogCancel onClick={onClose}>{t('modals.cancel')}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>{t('modals.continue')}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

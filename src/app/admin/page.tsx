@@ -36,13 +36,14 @@ import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dia
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import type { Session, Announcement, User } from '@/lib/types';
 import { Timestamp } from 'firebase/firestore';
 
 // --- Helper Functions ---
 
-const formatDate = (date: string | Timestamp) => {
-  return getSafeDate(date).toLocaleDateString('en-US', {
+const formatDate = (date: string | Timestamp, locale: string) => {
+  return getSafeDate(date).toLocaleDateString(locale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -57,11 +58,15 @@ const SessionCards = ({
   handleEditSession,
   handleViewPlayers,
   handleDeleteSessionClick,
+  t,
+  locale
 }: {
   sessions: Session[];
   handleEditSession: (session: Session) => void;
   handleViewPlayers: (session: Session) => void;
   handleDeleteSessionClick: (session: Session) => void;
+  t: (key: string) => string;
+  locale: string;
 }) => (
   <div className="space-y-4">
     {sessions.map((session) => (
@@ -69,9 +74,9 @@ const SessionCards = ({
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle>{session.level}</CardTitle>
+              <CardTitle>{t(`skillLevels.${session.level}`)}</CardTitle>
               <div className="text-sm text-muted-foreground">
-                {formatDate(session.date)} - {session.startTime} - {session.endTime}
+                {formatDate(session.date, locale)} - {session.startTime} - {session.endTime}
               </div>
             </div>
             <DropdownMenu>
@@ -82,16 +87,16 @@ const SessionCards = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleEditSession(session)}>
-                  Edit
+                  {t('adminPage.actions.edit')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleViewPlayers(session)}>
-                  View Players
+                  {t('adminPage.actions.viewPlayers')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-red-500"
                   onClick={() => handleDeleteSessionClick(session)}
                 >
-                  Delete
+                  {t('adminPage.actions.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -99,16 +104,16 @@ const SessionCards = ({
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div>
-            <span className="font-semibold">Players: </span>
+            <span className="font-semibold">{t('adminPage.sessionTable.players')}: </span>
             {(session.players as User[]).length} / {session.maxPlayers}
-            {(session.waitlist as User[]).length > 0 && ` (+${(session.waitlist as User[]).length} waitlist)`}
+            {(session.waitlist as User[]).length > 0 && ` ${t('adminPage.statusValues.waitlist').replace('{count}', String((session.waitlist as User[]).length))}`}
           </div>
           <div>
-            <span className="font-semibold">Status: </span>
+            <span className="font-semibold">{t('adminPage.sessionTable.status')}: </span>
             <Badge
               variant={(session.players as User[]).length >= session.maxPlayers ? 'destructive' : 'secondary'}
             >
-              {(session.players as User[]).length >= session.maxPlayers ? 'Full' : 'Open'}
+              {(session.players as User[]).length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
             </Badge>
           </div>
         </CardContent>
@@ -121,10 +126,14 @@ const AnnouncementCards = ({
   announcements,
   handleEditAnnouncement,
   handleDeleteAnnouncementClick,
+  t,
+  locale
 }: {
   announcements: Announcement[];
   handleEditAnnouncement: (announcement: Announcement) => void;
   handleDeleteAnnouncementClick: (announcement: Announcement) => void;
+  t: (key: string) => string;
+  locale: string;
 }) => (
   <div className="space-y-4">
     {announcements.map((ann) => (
@@ -133,7 +142,7 @@ const AnnouncementCards = ({
           <div className="flex justify-between items-start">
             <div>
               <CardTitle>{ann.title}</CardTitle>
-              <div className="text-sm text-muted-foreground">{formatDate(ann.date)}</div>
+              <div className="text-sm text-muted-foreground">{formatDate(ann.date, locale)}</div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -142,12 +151,12 @@ const AnnouncementCards = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>{t('adminPage.actions.edit')}</DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-red-500"
                   onClick={() => handleDeleteAnnouncementClick(ann)}
                 >
-                  Delete
+                  {t('adminPage.actions.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -167,6 +176,7 @@ export default function AdminPage() {
   // --- HOOKS ---
   const { user } = useAuth();
   const router = useRouter();
+  const { t, locale } = useLanguage();
   const {
     sessions,
     createSession,
@@ -291,26 +301,26 @@ export default function AdminPage() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date & Time</TableHead>
-            <TableHead>Level</TableHead>
-            <TableHead>Players</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>{t('adminPage.sessionTable.dateAndTime')}</TableHead>
+            <TableHead>{t('adminPage.sessionTable.level')}</TableHead>
+            <TableHead>{t('adminPage.sessionTable.players')}</TableHead>
+            <TableHead>{t('adminPage.sessionTable.status')}</TableHead>
+            <TableHead className="text-right">{t('adminPage.sessionTable.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sessions.map((session) => (
             <TableRow key={session.id}>
               <TableCell>
-                <div className="font-medium">{formatDate(session.date)}</div>
+                <div className="font-medium">{formatDate(session.date, locale)}</div>
                 <div className="text-sm text-muted-foreground">
                   {session.startTime} - {session.endTime}
                 </div>
               </TableCell>
-              <TableCell>{session.level}</TableCell>
+              <TableCell>{t(`skillLevels.${session.level}`)}</TableCell>
               <TableCell>
                 {(session.players as User[]).length} / {session.maxPlayers}
-                {(session.waitlist as User[]).length > 0 && ` (+${(session.waitlist as User[]).length} waitlist)`}
+                {(session.waitlist as User[]).length > 0 && ` ${t('adminPage.statusValues.waitlist').replace('{count}', String((session.waitlist as User[]).length))}`}
               </TableCell>
               <TableCell>
                 <Badge
@@ -318,7 +328,7 @@ export default function AdminPage() {
                     (session.players as User[]).length >= session.maxPlayers ? 'destructive' : 'secondary'
                   }
                 >
-                  {(session.players as User[]).length >= session.maxPlayers ? 'Full' : 'Open'}
+                  {(session.players as User[]).length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
@@ -330,16 +340,16 @@ export default function AdminPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleEditSession(session)}>
-                      Edit
+                      {t('adminPage.actions.edit')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleViewPlayers(session)}>
-                      View Players
+                      {t('adminPage.actions.viewPlayers')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-red-500"
                       onClick={() => handleDeleteSessionClick(session)}
                     >
-                      Delete
+                      {t('adminPage.actions.delete')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -356,10 +366,10 @@ export default function AdminPage() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Content</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>{t('adminPage.announcementTable.title')}</TableHead>
+            <TableHead>{t('adminPage.announcementTable.content')}</TableHead>
+            <TableHead>{t('adminPage.announcementTable.date')}</TableHead>
+            <TableHead className="text-right">{t('adminPage.announcementTable.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -367,7 +377,7 @@ export default function AdminPage() {
             <TableRow key={ann.id}>
               <TableCell className="font-medium">{ann.title}</TableCell>
               <TableCell className="max-w-xs md:max-w-sm truncate">{ann.content}</TableCell>
-              <TableCell>{formatDate(ann.date)}</TableCell>
+              <TableCell>{formatDate(ann.date, locale)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -377,13 +387,13 @@ export default function AdminPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>
-                      Edit
+                      {t('adminPage.actions.edit')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-red-500"
                       onClick={() => handleDeleteAnnouncementClick(ann)}
                     >
-                      Delete
+                      {t('adminPage.actions.delete')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -396,7 +406,7 @@ export default function AdminPage() {
   );
   
   if (user?.role !== 'admin') {
-    return <div className="text-center p-8">Redirecting...</div>; // or a loading spinner
+    return <div className="text-center p-8">{t('adminPage.redirecting')}</div>; // or a loading spinner
   }
 
   return (
@@ -404,12 +414,12 @@ export default function AdminPage() {
       <Tabs defaultValue="sessions" onValueChange={setActiveTab}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <TabsList className="grid w-full grid-cols-2 sm:w-auto">
-            <TabsTrigger value="sessions">Sessions</TabsTrigger>
-            <TabsTrigger value="announcements">Announcements</TabsTrigger>
+            <TabsTrigger value="sessions">{t('adminPage.tabs.sessions')}</TabsTrigger>
+            <TabsTrigger value="announcements">{t('adminPage.tabs.announcements')}</TabsTrigger>
           </TabsList>
           <Button onClick={handleCreateNew} className="w-full sm:w-auto">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Create New
+            {t('adminPage.createNew')}
           </Button>
         </div>
         <TabsContent value="sessions" className="mt-6">
@@ -419,6 +429,8 @@ export default function AdminPage() {
               handleEditSession={handleEditSession}
               handleViewPlayers={handleViewPlayers}
               handleDeleteSessionClick={handleDeleteSessionClick}
+              t={t}
+              locale={locale}
             />
           ) : (
             renderSessionTable()
@@ -430,6 +442,8 @@ export default function AdminPage() {
               announcements={announcements}
               handleEditAnnouncement={handleEditAnnouncement}
               handleDeleteAnnouncementClick={handleDeleteAnnouncementClick}
+              t={t}
+              locale={locale}
             />
           ) : (
             renderAnnouncementTable()
@@ -477,5 +491,3 @@ export default function AdminPage() {
     </>
   );
 }
-
-    

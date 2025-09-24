@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A modal dialog that displays comprehensive details about a session.
  * It shows the list of registered players and the waitlist, and provides
@@ -21,6 +22,7 @@ import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut } from 'lucide-react';
 import { getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import type { Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
@@ -46,6 +48,7 @@ export default function SessionDetailsModal({
   onLeaveWaitlist,
 }: SessionDetailsModalProps) {
   const { user: currentUser } = useAuth();
+  const { t, locale } = useLanguage();
   const { toast } = useToast();
   
   if (!session || !currentUser) return null;
@@ -70,7 +73,7 @@ export default function SessionDetailsModal({
   }
 
   const formatDate = (date: string | Timestamp) => {
-    return getSafeDate(date).toLocaleDateString('en-US', {
+    return getSafeDate(date).toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -88,33 +91,33 @@ export default function SessionDetailsModal({
   const bookAction = () => {
     handleAction(
       onBook, 
-      { title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.` },
-      { title: 'Booking Failed', description: 'The session is full or you are already registered.' }
+      { title: t('toasts.bookingConfirmedTitle'), description: t('toasts.bookingConfirmedDescription', { level: t(`skillLevels.${session.level}`) }) },
+      { title: t('toasts.bookingFailedTitle'), description: t('toasts.bookingFailedDescription') }
     );
   }
   const cancelAction = () => {
      if (!canCancel) {
-      toast({ title: 'Cancellation Failed', description: 'You can only cancel more than 12 hours in advance.', variant: 'destructive' });
+      toast({ title: t('toasts.cancellationFailedTitle'), description: t('toasts.cancellationFailedTime'), variant: 'destructive' });
       return;
     }
     handleAction(
       onCancel, 
-      { title: 'Booking Canceled', description: 'Your spot has been successfully canceled.' },
-      { title: 'Cancellation Failed', description: 'Could not cancel your booking.' }
+      { title: t('toasts.bookingCanceledTitle'), description: t('toasts.bookingCanceledDescription') },
+      { title: t('toasts.cancellationFailedTitle'), description: t('toasts.cancellationFailedDescription') }
     );
   }
   const joinWaitlistAction = () => {
     handleAction(
       onWaitlist, 
-      { title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up." },
-      { title: 'Waitlist Failed', description: 'You might already be registered or on the waitlist.' }
+      { title: t('toasts.waitlistJoinedTitle'), description: t('toasts.waitlistJoinedDescription') },
+      { title: t('toasts.waitlistJoinFailedTitle'), description: t('toasts.waitlistJoinFailedDescription') }
     );
   }
   const leaveWaitlistAction = () => {
     handleAction(
       onLeaveWaitlist, 
-      { title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.' },
-      { title: 'Action Failed', description: 'Could not leave the waitlist.' }
+      { title: t('toasts.waitlistLeftTitle'), description: t('toasts.waitlistLeftDescription') },
+      { title: t('toasts.waitlistLeaveFailedTitle'), description: t('toasts.waitlistLeaveFailedDescription') }
     );
   }
 
@@ -122,9 +125,9 @@ export default function SessionDetailsModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px] flex flex-col max-h-[90vh]">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="font-headline text-2xl">{session.level} Session</DialogTitle>
+          <DialogTitle className="font-headline text-2xl">{t(`skillLevels.${session.level}`)} Session</DialogTitle>
           <DialogDescription>
-            Session details and registered players.
+            {t('modals.sessionDetails.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="flex-grow overflow-y-auto pr-4 -mr-4 space-y-6">
@@ -143,7 +146,7 @@ export default function SessionDetailsModal({
             <div className="mb-2 flex justify-between text-sm font-medium">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
-                <span>Spots Filled</span>
+                <span>{t('modals.sessionDetails.spotsFilled')}</span>
               </div>
               <span>{spotsFilled} / {session.maxPlayers}</span>
             </div>
@@ -154,7 +157,7 @@ export default function SessionDetailsModal({
             <div>
               <h3 className="mb-3 font-semibold flex items-center gap-2">
                 <Users className="h-5 w-5 text-muted-foreground" />
-                Registered Players ({session.players.length})
+                {t('modals.sessionDetails.registeredPlayers', { count: session.players.length })}
               </h3>
               {session.players.length > 0 ? (
                 <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
@@ -164,7 +167,7 @@ export default function SessionDetailsModal({
                           <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
                           <div className="flex-grow">
                               <p className="font-semibold text-sm">{player.name}</p>
-                              <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                              <p className="text-xs text-muted-foreground">{t(`skillLevels.${player.skillLevel}`)}</p>
                           </div>
                         </div>
                       ))}
@@ -172,7 +175,7 @@ export default function SessionDetailsModal({
                 </div>
               ) : (
                 <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
-                  <p className="text-muted-foreground text-center text-sm">No players have registered yet.</p>
+                  <p className="text-muted-foreground text-center text-sm">{t('modals.sessionDetails.noPlayers')}</p>
                 </div>
               )}
             </div>
@@ -180,7 +183,7 @@ export default function SessionDetailsModal({
             <div>
               <h3 className="mb-3 font-semibold flex items-center gap-2">
                 <Users className="h-5 w-5 text-muted-foreground" />
-                Waitlist ({session.waitlist.length})
+                {t('modals.sessionDetails.waitlist', { count: session.waitlist.length })}
               </h3>
               {session.waitlist.length > 0 ? (
                 <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
@@ -190,7 +193,7 @@ export default function SessionDetailsModal({
                           <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
                           <div className="flex-grow">
                               <p className="font-semibold text-sm">{player.name}</p>
-                              <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                              <p className="text-xs text-muted-foreground">{t(`skillLevels.${player.skillLevel}`)}</p>
                           </div>
                         </div>
                       ))}
@@ -198,7 +201,7 @@ export default function SessionDetailsModal({
                 </div>
               ) : (
                 <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
-                  <p className="text-muted-foreground text-center text-sm">The waitlist is empty.</p>
+                  <p className="text-muted-foreground text-center text-sm">{t('modals.sessionDetails.waitlistEmpty')}</p>
                 </div>
               )}
             </div>
@@ -212,27 +215,27 @@ export default function SessionDetailsModal({
                     variant="outline" 
                     onClick={cancelAction}
                     disabled={!canCancel}
-                    title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
+                    title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
                 >
-                    <XCircle className="mr-2 h-4 w-4" /> Cancel My Spot
+                    <XCircle className="mr-2 h-4 w-4" /> {t('modals.sessionDetails.cancelSpot')}
                 </Button>
             ) : isOnWaitlist ? (
                 <div className='flex gap-2'>
                     {!isFull &&
                     <Button onClick={bookAction}>
-                        Book My Spot
+                        {t('modals.sessionDetails.bookSpot')}
                     </Button>
                     }
                     <Button variant="secondary" onClick={leaveWaitlistAction}>
                         <LogOut className="mr-2 h-4 w-4" />
-                        Leave Waitlist
+                        {t('modals.sessionDetails.leaveWaitlist')}
                     </Button>
                 </div>
             ) : (
                 <div className="flex items-center gap-2 flex-wrap">
                     {!isFull && (
                     <Button onClick={bookAction}>
-                        Book My Spot
+                        {t('modals.sessionDetails.bookSpot')}
                     </Button>
                     )}
                     <Button
@@ -240,13 +243,13 @@ export default function SessionDetailsModal({
                         onClick={joinWaitlistAction}
                     >
                         <UserPlus className="mr-2 h-4 w-4" />
-                        Join Waitlist
+                        {t('modals.sessionDetails.joinWaitlist')}
                     </Button>
                 </div>
             )}
             </div>
            <Button variant="ghost" onClick={onClose}>
-            Close
+            {t('modals.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

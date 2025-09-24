@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 
 interface EditProfileModalProps {
@@ -34,6 +35,7 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileModalProps) {
+    const { t } = useLanguage();
     const [formData, setFormData] = React.useState<User | null>(user);
     const [isUploading, setIsUploading] = React.useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -59,8 +61,8 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
             const file = e.target.files[0];
             if (file.size > 2 * 1024 * 1024) { // 2MB limit
                 toast({
-                    title: "Image too large",
-                    description: "Please select an image smaller than 2MB.",
+                    title: t('toasts.imageTooLargeTitle'),
+                    description: t('toasts.imageTooLargeDescription'),
                     variant: "destructive"
                 });
                 return;
@@ -72,8 +74,8 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
               reader.onloadend = () => {
                   setFormData(prev => prev ? { ...prev, avatarUrl: reader.result as string } : null);
                   toast({
-                      title: "Avatar updated",
-                      description: "Your new avatar is ready. Save your profile to keep the changes.",
+                      title: t('toasts.avatarUpdatedTitle'),
+                      description: t('toasts.avatarUpdatedDescription'),
                       variant: "success",
                   });
                   setIsUploading(false);
@@ -94,15 +96,15 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="font-headline">Edit Profile</DialogTitle>
+          <DialogTitle className="font-headline">{t('modals.editProfile.title')}</DialogTitle>
           <DialogDescription>
-            Update your personal information. Click save when you're done.
+            {t('modals.editProfile.description')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
                 <div className="space-y-2">
-                  <Label>Avatar</Label>
+                  <Label>{t('modals.editProfile.avatar')}</Label>
                   <div className="flex items-center gap-4">
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={formData.avatarUrl} alt={formData.name} />
@@ -110,7 +112,7 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                     </Avatar>
                     <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
                       {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      {isUploading ? 'Uploading...' : 'Change Picture'}
+                      {isUploading ? t('modals.editProfile.uploading') : t('modals.editProfile.changePicture')}
                     </Button>
                     <Input 
                       type="file" 
@@ -124,40 +126,40 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">{t('modals.editProfile.fullName')}</Label>
                     <Input id="name" value={formData.name} onChange={handleChange} required />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="skillLevel">Skill Level</Label>
+                    <Label htmlFor="skillLevel">{t('profilePage.skillLevel')}</Label>
                     <Select value={formData.skillLevel} onValueChange={handleSelectChange('skillLevel')}>
                         <SelectTrigger id="skillLevel">
-                            <SelectValue placeholder="Select your skill level" />
+                            <SelectValue placeholder={t('registerPage.skillLevelPlaceholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Beginner">Beginner</SelectItem>
-                            <SelectItem value="Intermediate">Intermediate</SelectItem>
-                            <SelectItem value="Advanced">Advanced</SelectItem>
+                            <SelectItem value="Beginner">{t('skillLevels.Beginner')}</SelectItem>
+                            <SelectItem value="Intermediate">{t('skillLevels.Intermediate')}</SelectItem>
+                            <SelectItem value="Advanced">{t('skillLevels.Advanced')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="favoritePosition">Favorite Position</Label>
+                    <Label htmlFor="favoritePosition">{t('profilePage.favoritePosition')}</Label>
                     <Select value={formData.favoritePosition} onValueChange={handleSelectChange('favoritePosition')}>
                         <SelectTrigger id="favoritePosition">
-                            <SelectValue placeholder="Select your favorite position" />
+                            <SelectValue placeholder={t('registerPage.favoritePositionPlaceholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Setter">Setter</SelectItem>
-                            <SelectItem value="Hitter">Hitter</SelectItem>
-                            <SelectItem value="Libero">Libero</SelectItem>
-                            <SelectItem value="Blocker">Blocker</SelectItem>
+                            <SelectItem value="Setter">{t('positions.Setter')}</SelectItem>
+                            <SelectItem value="Hitter">{t('positions.Hitter')}</SelectItem>
+                            <SelectItem value="Libero">{t('positions.Libero')}</SelectItem>
+                            <SelectItem value="Blocker">{t('positions.Blocker')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                <Button type="submit">Save Changes</Button>
+                <Button type="button" variant="outline" onClick={onClose}>{t('modals.cancel')}</Button>
+                <Button type="submit">{t('modals.saveChanges')}</Button>
             </DialogFooter>
         </form>
       </DialogContent>

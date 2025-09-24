@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview New user registration page.
  * Provides a form for new users to create an account with their name, email,
@@ -31,11 +32,13 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { SkillLevel, PlayerPosition } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { signUpWithEmail } = useAuth();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
     name: '',
@@ -58,8 +61,8 @@ export default function RegisterPage() {
     e.preventDefault();
     if (!formData.skillLevel || !formData.favoritePosition) {
         toast({
-            title: 'Incomplete Form',
-            description: 'Please select a skill level and favorite position.',
+            title: t('toasts.incompleteFormTitle'),
+            description: t('toasts.incompleteFormDescription'),
             variant: 'destructive'
         });
         return;
@@ -74,15 +77,15 @@ export default function RegisterPage() {
 
     if (success) {
       toast({
-          title: 'Account Created!',
-          description: 'You can now log in with your credentials.',
+          title: t('toasts.accountCreatedTitle'),
+          description: t('toasts.accountCreatedDescription'),
           variant: 'success'
       });
       router.push('/login');
     } else {
        toast({
-          title: 'Registration Failed',
-          description: 'This email might already be in use or the password is too weak.',
+          title: t('toasts.registrationFailedTitle'),
+          description: t('toasts.registrationFailedDescription'),
           variant: 'destructive'
       });
     }
@@ -97,19 +100,19 @@ export default function RegisterPage() {
           <div className="flex justify-center">
             <InvernessEaglesLogo className="h-12 w-auto" />
           </div>
-          <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
+          <CardTitle className="text-2xl font-headline">{t('registerPage.title')}</CardTitle>
           <CardDescription>
-            Join the Inverness Eagles community today!
+            {t('registerPage.description')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleRegister}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t('registerPage.nameLabel')}</Label>
               <Input id="name" placeholder="Alex Johnson" value={formData.name} onChange={handleInputChange} required disabled={isLoading} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('registerPage.emailLabel')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -121,45 +124,45 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('registerPage.passwordLabel')}</Label>
               <Input id="password" type="password" value={formData.password} onChange={handleInputChange} required disabled={isLoading} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="skillLevel">Skill Level</Label>
+              <Label htmlFor="skillLevel">{t('registerPage.skillLevelLabel')}</Label>
               <Select required onValueChange={handleSelectChange('skillLevel')} disabled={isLoading}>
                 <SelectTrigger id="skillLevel">
-                  <SelectValue placeholder="Select your skill level" />
+                  <SelectValue placeholder={t('registerPage.skillLevelPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Beginner">Beginner</SelectItem>
-                  <SelectItem value="Intermediate">Intermediate</SelectItem>
-                  <SelectItem value="Advanced">Advanced</SelectItem>
+                  <SelectItem value="Beginner">{t('skillLevels.Beginner')}</SelectItem>
+                  <SelectItem value="Intermediate">{t('skillLevels.Intermediate')}</SelectItem>
+                  <SelectItem value="Advanced">{t('skillLevels.Advanced')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="favoritePosition">Favorite Position</Label>
+              <Label htmlFor="favoritePosition">{t('registerPage.favoritePositionLabel')}</Label>
               <Select required onValueChange={handleSelectChange('favoritePosition')} disabled={isLoading}>
                 <SelectTrigger id="favoritePosition">
-                  <SelectValue placeholder="Select your favorite position" />
+                  <SelectValue placeholder={t('registerPage.favoritePositionPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Setter">Setter</SelectItem>
-                  <SelectItem value="Hitter">Hitter</SelectItem>
-                  <SelectItem value="Libero">Libero</SelectItem>
-                  <SelectItem value="Blocker">Blocker</SelectItem>
+                  <SelectItem value="Setter">{t('positions.Setter')}</SelectItem>
+                  <SelectItem value="Hitter">{t('positions.Hitter')}</SelectItem>
+                  <SelectItem value="Libero">{t('positions.Libero')}</SelectItem>
+                  <SelectItem value="Blocker">{t('positions.Blocker')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? t('registerPage.creatingAccount') : t('registerPage.createAccount')}
             </Button>
           </CardContent>
           <CardFooter className="flex justify-center">
             <div className="text-sm text-muted-foreground">
-              Already have an account?{' '}
+              {t('registerPage.haveAccount')}{' '}
               <Link href="/login" className="underline font-semibold text-primary">
-                Sign in
+                {t('registerPage.signIn')}
               </Link>
             </div>
           </CardFooter>

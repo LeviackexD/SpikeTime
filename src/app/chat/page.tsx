@@ -23,6 +23,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewChatModal from '@/components/chat/new-chat-modal';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 
 const ChatPage: NextPage = () => {
   const { 
@@ -34,6 +35,8 @@ const ChatPage: NextPage = () => {
     users,
   } = useSessions();
   const { user: currentUser } = useAuth();
+  const { t } = useLanguage();
+
   const [selectedChatId, setSelectedChatId] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState('sessions');
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
@@ -79,13 +82,13 @@ const ChatPage: NextPage = () => {
 
   const getChatTitle = () => {
     if(activeTab === 'sessions' && selectedSession) {
-        return `${selectedSession.level} Session`
+        return `${t(`skillLevels.${selectedSession.level}`)} Session`
     }
     if (activeTab === 'direct' && selectedDirectChat && currentUser) {
         const otherUser = selectedDirectChat.participants.find(p => p.id !== currentUser.id);
         return otherUser?.name || 'Direct Message';
     }
-    return 'Select a chat';
+    return t('chatPage.selectChatTitle');
   }
   
   if (!currentUser) {
@@ -144,19 +147,20 @@ interface ChatListProps {
 
 const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheetOpen, setIsSheetOpen, activeTab, setActiveTab, onNewChatClick, currentUser }: ChatListProps) => {
   const isMobile = useIsMobile();
+  const { t, locale } = useLanguage();
 
   const chatListContent = (
     <div className={cn("flex flex-col", isMobile ? "h-full" : "h-full border-r")}>
       <div className="p-4 border-b">
         <h2 className="text-xl font-bold font-headline flex items-center gap-2">
             <MessageCircle className="h-6 w-6 text-primary" />
-            Chats
+            {t('chatPage.title')}
         </h2>
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col">
         <TabsList className="m-2 grid w-auto grid-cols-2">
-            <TabsTrigger value="sessions">Sessions</TabsTrigger>
-            <TabsTrigger value="direct">Direct</TabsTrigger>
+            <TabsTrigger value="sessions">{t('chatPage.tabs.sessions')}</TabsTrigger>
+            <TabsTrigger value="direct">{t('chatPage.tabs.direct')}</TabsTrigger>
         </TabsList>
         <TabsContent value="sessions" className="flex-grow overflow-hidden">
             <ScrollArea className="h-full">
@@ -177,8 +181,8 @@ const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheet
                         <AvatarFallback>{session.level.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 truncate">
-                        <p className="font-semibold">{session.level} Session</p>
-                        <p className="text-sm text-muted-foreground truncate">{getSafeDate(session.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric'})}</p>
+                        <p className="font-semibold">{t(`skillLevels.${session.level}`)} Session</p>
+                        <p className="text-sm text-muted-foreground truncate">{getSafeDate(session.date).toLocaleDateString(locale, { month: 'long', day: 'numeric'})}</p>
                     </div>
                     </button>
                 ))}
@@ -189,7 +193,7 @@ const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheet
             <div className="p-2 pt-0">
                  <Button variant="outline" className="w-full" onClick={onNewChatClick}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    New Chat
+                    {t('chatPage.newChat')}
                 </Button>
             </div>
             <ScrollArea className="h-full">
@@ -214,7 +218,7 @@ const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheet
                             </Avatar>
                             <div className="flex-1 truncate">
                                 <p className="font-semibold">{otherUser.name}</p>
-                                <p className="text-sm text-muted-foreground truncate">{chat.messages.at(-1)?.content ?? 'No messages yet'}</p>
+                                <p className="text-sm text-muted-foreground truncate">{chat.messages.at(-1)?.content ?? t('chatPage.noMessages')}</p>
                             </div>
                         </button>
                     )
@@ -230,7 +234,7 @@ const ChatList = ({ sessions, directChats, selectedChatId, onSelectChat, isSheet
     return (
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetContent side="left" className="p-0 w-80">
-                <SheetTitle className="sr-only">Chats</SheetTitle>
+                <SheetTitle className="sr-only">{t('chatPage.title')}</SheetTitle>
                 {chatListContent}
             </SheetContent>
         </Sheet>
@@ -257,6 +261,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
   const [newMessage, setNewMessage] = React.useState('');
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
   
   const currentChat = activeTab === 'sessions' ? session : directChat;
   const messages = (currentChat?.messages || []).sort((a,b) => getSafeDate(a.timestamp).getTime() - getSafeDate(b.timestamp).getTime());
@@ -301,9 +306,9 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
     return (
       <div className="flex-1 flex flex-col items-center justify-center h-full bg-muted/20">
          <MessageCircle className="h-16 w-16 text-muted-foreground/50 mb-4" />
-         <h3 className="text-xl font-semibold text-muted-foreground">Select a chat</h3>
-         <p className="text-muted-foreground">Choose a conversation to start messaging.</p>
-         {isMobile && <Button onClick={onOpenSheet} className="mt-4">Select Chat</Button>}
+         <h3 className="text-xl font-semibold text-muted-foreground">{t('chatPage.selectChatTitle')}</h3>
+         <p className="text-muted-foreground">{t('chatPage.selectChatSubtitle')}</p>
+         {isMobile && <Button onClick={onOpenSheet} className="mt-4">{t('chatPage.selectChatButton')}</Button>}
       </div>
     );
   }
@@ -322,7 +327,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
         </Avatar>
         <div>
           <h3 className="font-bold text-lg">{title}</h3>
-          <p className="text-sm text-muted-foreground">{getParticipants()} members</p>
+          <p className="text-sm text-muted-foreground">{t('chatPage.members', { count: getParticipants() })}</p>
         </div>
       </header>
       <div className="flex-1 p-4 overflow-y-auto bg-muted/20">
@@ -364,12 +369,12 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
             key={chatKey}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
+            placeholder={t('chatPage.messagePlaceholder')}
             autoComplete="off"
           />
           <Button type="submit" size="icon" disabled={!newMessage.trim()}>
             <Send className="h-5 w-5" />
-            <span className="sr-only">Send</span>
+            <span className="sr-only">{t('chatPage.send')}</span>
           </Button>
         </form>
       </footer>

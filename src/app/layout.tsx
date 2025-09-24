@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { SessionProvider } from '@/context/session-context';
 import { ThemeProvider } from '@/context/theme-provider';
 import { AuthProvider } from '@/context/auth-context';
+import { LanguageProvider } from '@/context/language-context';
 
 import './globals.css';
 
@@ -27,12 +28,14 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>
-            <SessionProvider>
-              <AppLayout>{children}</AppLayout>
-              <Toaster />
-            </SessionProvider>
-          </AuthProvider>
+            <LanguageProvider>
+                <AuthProvider>
+                    <SessionProvider>
+                    <AppLayout>{children}</AppLayout>
+                    <Toaster />
+                    </SessionProvider>
+                </AuthProvider>
+            </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

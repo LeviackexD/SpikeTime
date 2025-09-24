@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A button that triggers an AI flow to summarize a list of announcements.
  * It shows a loading state and displays the generated summary in a dialog.
@@ -18,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useLanguage } from '@/context/language-context';
 
 interface SummarizeButtonProps {
   announcements: string;
@@ -26,6 +28,7 @@ interface SummarizeButtonProps {
 export default function SummarizeButton({ announcements }: SummarizeButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   const handleSummarize = async () => {
     setIsLoading(true);
@@ -34,7 +37,7 @@ export default function SummarizeButton({ announcements }: SummarizeButtonProps)
       setSummary(result.summary);
     } catch (error) {
       console.error("Failed to summarize announcements:", error);
-      setSummary("Sorry, we couldn't generate a summary at this time.");
+      setSummary(t('toasts.aiSuggestionError'));
     }
     setIsLoading(false);
   };
@@ -55,7 +58,7 @@ export default function SummarizeButton({ announcements }: SummarizeButtonProps)
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 font-headline">
               <Sparkles className="text-primary" />
-              Announcements Summary
+              {t('modals.aiSummary.title')}
             </AlertDialogTitle>
             <AlertDialogDescription className="pt-4 whitespace-pre-wrap">
               {summary}
@@ -63,7 +66,7 @@ export default function SummarizeButton({ announcements }: SummarizeButtonProps)
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setSummary(null)}>
-              Got it!
+              {t('modals.gotIt')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

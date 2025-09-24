@@ -1,0 +1,304 @@
+
+{
+    "nav": {
+        "dashboard": "Dashboard",
+        "calendar": "Calendar",
+        "announcements": "Announcements",
+        "chat": "Chat",
+        "profile": "Profile",
+        "adminPanel": "Admin Panel",
+        "settings": "Settings",
+        "logout": "Log out"
+    },
+    "dashboard": {
+        "welcome": "Welcome back, {name}!",
+        "welcomeSubtitle": "Here's what's happening in your volleyball world.",
+        "mySessions": "My Upcoming Sessions",
+        "noUpcomingSessions": "You have no upcoming sessions booked.",
+        "browseSessions": "Browse Sessions",
+        "nextSessions": "Next Sessions",
+        "noAvailableSessions": "No other sessions available at the moment.",
+        "recentAnnouncements": "Recent Announcements",
+        "viewAll": "View all",
+        "loading": "Loading user data..."
+    },
+    "calendarPage": {
+        "title": "Session Planner",
+        "subtitle": "Browse the planner to find upcoming sessions. Click a day to see the notes.",
+        "notesFor": "Notes for {date}",
+        "noSessionsPinned": "No sessions pinned for this day."
+    },
+    "announcementsPage": {
+        "title": "Announcement Board",
+        "subtitle": "Stay up to date with all the news",
+        "newAnnouncement": "New Announcement",
+        "filters": {
+            "all": "📌 All",
+            "event": "🎉 Event",
+            "class": "🏐 Class",
+            "tournament": "🏆 Tournament",
+            "general": "📢 General"
+        }
+    },
+    "chatPage": {
+        "title": "Chats",
+        "tabs": {
+            "sessions": "Sessions",
+            "direct": "Direct"
+        },
+        "newChat": "New Chat",
+        "noMessages": "No messages yet",
+        "selectChatTitle": "Select a chat",
+        "selectChatSubtitle": "Choose a conversation to start messaging.",
+        "selectChatButton": "Select Chat",
+        "members": "{count} members",
+        "messagePlaceholder": "Type your message...",
+        "send": "Send",
+        "newChatModalTitle": "Start a New Chat",
+        "newChatModalDescription": "Select a user to start a direct message conversation.",
+        "searchUserPlaceholder": "Search for a user..."
+    },
+    "profilePage": {
+        "editProfile": "Edit Profile",
+        "playerDetails": "Player Details",
+        "skillLevel": "Skill Level",
+        "favoritePosition": "Favorite Position",
+        "sessionsPlayed": "Sessions Played",
+        "attendanceRate": "Attendance Rate",
+        "monthlyActivity": "Monthly Activity",
+        "monthlyActivitySubtitle": "Your session count for the last 6 months.",
+        "loading": "Loading profile..."
+    },
+    "settingsPage": {
+        "title": "Settings",
+        "subtitle": "Manage your account and preferences.",
+        "notifications": {
+            "title": "Notifications",
+            "description": "Choose how you want to be notified about sessions and announcements.",
+            "email": "Email Notifications",
+            "emailSubtitle": "Receive updates about sessions and news via email (coming soon).",
+            "push": "Push Notifications",
+            "pushSubtitle": "Get real-time updates on your mobile device (coming soon)."
+        },
+        "appearance": {
+            "title": "Appearance",
+            "description": "Customize the look and feel of the app.",
+            "darkMode": "Dark Mode"
+        },
+        "language": {
+            "title": "Language",
+            "description": "Choose the application language.",
+            "select": "Select Language"
+        },
+        "account": {
+            "title": "Account",
+            "description": "Manage your account settings.",
+            "changePassword": "Change Password"
+        }
+    },
+    "adminPage": {
+        "redirecting": "Redirecting...",
+        "tabs": {
+            "sessions": "Sessions",
+            "announcements": "Announcements"
+        },
+        "createNew": "Create New",
+        "sessionTable": {
+            "dateAndTime": "Date & Time",
+            "level": "Level",
+            "players": "Players",
+            "status": "Status",
+            "actions": "Actions"
+        },
+        "announcementTable": {
+            "title": "Title",
+            "content": "Content",
+            "date": "Date",
+            "actions": "Actions"
+        },
+        "statusValues": {
+            "full": "Full",
+            "open": "Open",
+            "waitlist": "(+{count} waitlist)"
+        },
+        "actions": {
+            "edit": "Edit",
+            "viewPlayers": "View Players",
+            "delete": "Delete"
+        }
+    },
+    "loginPage": {
+        "welcome": "Welcome Back!",
+        "checkingAuth": "Checking authentication...",
+        "description": "Enter your credentials to access your account.",
+        "emailLabel": "Email",
+        "passwordLabel": "Password",
+        "forgotPassword": "Forgot your password?",
+        "signIn": "Sign in",
+        "signingIn": "Signing in...",
+        "noAccount": "Don't have an account?",
+        "signUp": "Sign up"
+    },
+    "registerPage": {
+        "title": "Create an Account",
+        "description": "Join the Inverness Eagles community today!",
+        "nameLabel": "Full Name",
+        "emailLabel": "Email",
+        "passwordLabel": "Password",
+        "skillLevelLabel": "Skill Level",
+        "skillLevelPlaceholder": "Select your skill level",
+        "favoritePositionLabel": "Favorite Position",
+        "favoritePositionPlaceholder": "Select your favorite position",
+        "createAccount": "Create Account",
+        "creatingAccount": "Creating Account...",
+        "haveAccount": "Already have an account?",
+        "signIn": "Sign in"
+    },
+    "toasts": {
+        "loginSuccessTitle": "Login Successful!",
+        "loginSuccessDescription": "Welcome back!",
+        "logoutTitle": "Logged Out",
+        "logoutDescription": "You have been successfully logged out.",
+        "authFailedTitle": "Authentication Failed",
+        "incompleteFormTitle": "Incomplete Form",
+        "incompleteFormDescription": "Please select a skill level and favorite position.",
+        "registrationFailedTitle": "Registration Failed",
+        "registrationFailedDescription": "This email might already be in use or the password is too weak.",
+        "accountCreatedTitle": "Account Created!",
+        "accountCreatedDescription": "You can now log in with your credentials.",
+        "profileUpdatedTitle": "Profile Updated",
+        "profileUpdatedDescription": "Your profile information has been saved.",
+        "avatarUpdatedTitle": "Avatar updated",
+        "avatarUpdatedDescription": "Your new avatar is ready. Save your profile to keep the changes.",
+        "imageTooLargeTitle": "Image too large",
+        "imageTooLargeDescription": "Please select an image smaller than 2MB.",
+        "sessionCreatedTitle": "Session Created!",
+        "sessionCreatedDescription": "The new session has been successfully added.",
+        "sessionUpdatedTitle": "Session Updated",
+        "sessionUpdatedDescription": "The session has been successfully updated.",
+        "sessionDeletedTitle": "Session Deleted",
+        "sessionDeletedDescription": "The session has been successfully deleted.",
+        "bookingConfirmedTitle": "Booking Confirmed!",
+        "bookingConfirmedDescription": "You're all set for the {level} session.",
+        "bookingFailedTitle": "Booking Failed",
+        "bookingFailedDescription": "Could not book your spot. The session might be full.",
+        "bookingCanceledTitle": "Booking Canceled",
+        "bookingCanceledDescription": "Your spot has been successfully canceled.",
+        "cancellationFailedTitle": "Cancellation Failed",
+        "cancellationFailedDescription": "Could not cancel your booking.",
+        "cancellationFailedTime": "You can only cancel more than 12 hours in advance.",
+        "waitlistJoinedTitle": "You are on the waitlist!",
+        "waitlistJoinedDescription": "We'll notify you if a spot opens up.",
+        "waitlistJoinFailedTitle": "Could not join waitlist",
+        "waitlistJoinFailedDescription": "You might already be on the list.",
+        "waitlistLeftTitle": "Removed from Waitlist",
+        "waitlistLeftDescription": "You have successfully left the waitlist.",
+        "waitlistLeaveFailedTitle": "Action Failed",
+        "waitlistLeaveFailedDescription": "Could not leave the waitlist.",
+        "announcementCreatedTitle": "Announcement Created!",
+        "announcementCreatedDescription": "The new announcement is now live.",
+        "announcementUpdatedTitle": "Announcement Updated",
+        "announcementUpdatedDescription": "The announcement has been successfully updated.",
+        "announcementDeletedTitle": "Announcement Deleted",
+        "announcementDeletedDescription": "The announcement has been removed.",
+        "aiSuggestionError": "Sorry, we couldn't generate a suggestion at this time."
+    },
+    "modals": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "saveChanges": "Save Changes",
+        "continue": "Continue",
+        "close": "Close",
+        "greatThanks": "Great, thanks!",
+        "gotIt": "Got it!",
+        "deleteDialog": {
+            "title": "Are you absolutely sure?",
+            "sessionDescription": "This action cannot be undone. This will permanently delete the session and remove all associated data.",
+            "announcementDescription": "This action cannot be undone. This will permanently delete the announcement."
+        },
+        "sessionForm": {
+            "createTitle": "Create Session",
+            "createDescription": "Fill out the form to create a new session.",
+            "editTitle": "Edit Session",
+            "editDescription": "Update the details for this session.",
+            "date": "Date",
+            "startTime": "Start Time",
+            "endTime": "End Time",
+            "location": "Location",
+            "coverImageUrl": "Cover Image URL",
+            "level": "Level",
+            "selectLevel": "Select a level",
+            "maxPlayers": "Max Players"
+        },
+        "announcementForm": {
+            "createTitle": "Create Announcement",
+            "createDescription": "Fill out the form to create a new announcement for the corkboard.",
+            "editTitle": "Edit Announcement",
+            "editDescription": "Update the details for this announcement.",
+            "title": "Title",
+            "category": "Category",
+            "selectCategory": "Select a category",
+            "content": "Content"
+        },
+        "sessionDetails": {
+            "description": "Session details and registered players.",
+            "spotsFilled": "Spots Filled",
+            "registeredPlayers": "Registered Players ({count})",
+            "noPlayers": "No players have registered yet.",
+            "waitlist": "Waitlist ({count})",
+            "waitlistEmpty": "The waitlist is empty.",
+            "bookSpot": "Book My Spot",
+            "cancelSpot": "Cancel My Spot",
+            "joinWaitlist": "Join Waitlist",
+            "leaveWaitlist": "Leave Waitlist",
+            "cancellationTooltip": "Cancellations must be made more than 12 hours in advance."
+        },
+        "editProfile": {
+            "title": "Edit Profile",
+            "description": "Update your personal information. Click save when you're done.",
+            "avatar": "Avatar",
+            "changePicture": "Change Picture",
+            "uploading": "Uploading...",
+            "fullName": "Full Name"
+        },
+        "aiSuggestion": {
+            "title": "AI-Suggested Session Level",
+            "suggestedLevel": "Suggested Level:",
+            "reasoning": "Reasoning:"
+        },
+        "aiSummary": {
+            "title": "Announcements Summary"
+        }
+    },
+    "components": {
+        "sessionListItem": {
+            "spotsLeft": "{count} spots left",
+            "full": "Full",
+            "viewDetails": "View Details"
+        },
+        "sessionNoteCard": {
+            "spotsLeft": "{count} spots left"
+        }
+    },
+    "positions": {
+        "Setter": "Setter",
+        "Hitter": "Hitter",
+        "Libero": "Libero",
+        "Blocker": "Blocker"
+    },
+    "skillLevels": {
+        "Beginner": "Beginner",
+        "Intermediate": "Intermediate",
+        "Advanced": "Advanced"
+    },
+    "announcementCategories": {
+        "event": "Event",
+        "class": "Class",
+        "tournament": "Tournament",
+        "general": "General"
+    },
+    "languages": {
+        "en": "English",
+        "es": "Español"
+    }
+}

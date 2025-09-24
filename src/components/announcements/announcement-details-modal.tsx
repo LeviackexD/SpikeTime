@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import type { Announcement, AnnouncementCategory } from '@/lib/types';
 import { Calendar } from 'lucide-react';
 import { getSafeDate } from '@/context/session-context';
+import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 
 interface AnnouncementDetailsModalProps {
@@ -36,12 +37,13 @@ const categoryStyles: Record<AnnouncementCategory, { bg: string; text: string; p
 
 
 export default function AnnouncementDetailsModal({ isOpen, onClose, announcement }: AnnouncementDetailsModalProps) {
+  const { t, locale } = useLanguage();
   if (!announcement) return null;
 
   const styles = categoryStyles[announcement.category] || categoryStyles.general;
 
   const formatDate = (date: string) => {
-    return getSafeDate(date).toLocaleDateString('en-US', {
+    return getSafeDate(date).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -56,7 +58,7 @@ export default function AnnouncementDetailsModal({ isOpen, onClose, announcement
         <DialogHeader className="pt-4 text-left">
            <div className="mb-4">
             <span className={cn('px-3 py-1 rounded-full text-sm font-semibold', styles.bg.replace('bg-', 'bg-light-'), styles.text)}>
-            {announcement.category.charAt(0).toUpperCase() + announcement.category.slice(1)}
+              {t(`announcementCategories.${announcement.category}`)}
             </span>
           </div>
           <DialogTitle className="handwriting text-3xl font-bold text-brown text-left">{announcement.title}</DialogTitle>
@@ -71,7 +73,7 @@ export default function AnnouncementDetailsModal({ isOpen, onClose, announcement
           {announcement.content}
         </div>
         <DialogFooter>
-          <Button onClick={onClose} className="bg-brown text-cream button-hover">Close</Button>
+          <Button onClick={onClose} className="bg-brown text-cream button-hover">{t('modals.close')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

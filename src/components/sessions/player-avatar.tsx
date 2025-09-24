@@ -9,6 +9,7 @@ import {
     TooltipContent,
     TooltipTrigger,
   } from '@/components/ui/tooltip';
+import { useLanguage } from '@/context/language-context';
 
 interface PlayerAvatarProps {
     player: User;
@@ -16,6 +17,7 @@ interface PlayerAvatarProps {
 }
 
 export default function PlayerAvatar({ player, className }: PlayerAvatarProps) {
+    const { t } = useLanguage();
     if (!player || !player.name) {
         return <Avatar className={cn("bg-muted", className)}><AvatarFallback></AvatarFallback></Avatar>; 
     }
@@ -30,7 +32,7 @@ export default function PlayerAvatar({ player, className }: PlayerAvatarProps) {
             </TooltipTrigger>
             <TooltipContent>
                 <p className='font-semibold'>{player.name}</p>
-                <p className='text-muted-foreground'>{player.skillLevel}</p>
+                <p className='text-muted-foreground'>{t(`skillLevels.${player.skillLevel}`)}</p>
             </TooltipContent>
         </Tooltip>
     )

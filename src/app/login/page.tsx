@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview User login page.
  * Provides a form for users to sign in with their email and password.
@@ -23,11 +24,13 @@ import { InvernessEaglesLogo } from '@/components/icons/inverness-eagles-logo';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { signInWithEmail, user, loading } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = React.useState('admin@invernesseagles.com');
   const [password, setPassword] = React.useState('password');
   const [isEmailLoading, setIsEmailLoading] = React.useState(false);
@@ -44,8 +47,8 @@ export default function LoginPage() {
     const success = await signInWithEmail(email, password);
     if (success) {
       toast({
-        title: 'Login Successful!',
-        description: 'Welcome back!',
+        title: t('toasts.loginSuccessTitle'),
+        description: t('toasts.loginSuccessDescription'),
         variant: 'success',
       });
       router.push('/');
@@ -63,15 +66,15 @@ export default function LoginPage() {
           <div className="flex justify-center">
             <InvernessEaglesLogo className="h-12 w-auto" />
           </div>
-          <CardTitle className="text-2xl font-headline">Welcome Back!</CardTitle>
+          <CardTitle className="text-2xl font-headline">{t('loginPage.welcome')}</CardTitle>
           <CardDescription>
-            {loading ? 'Checking authentication...' : 'Enter your credentials to access your account.'}
+            {loading ? t('loginPage.checkingAuth') : t('loginPage.description')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('loginPage.emailLabel')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -84,12 +87,12 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('loginPage.passwordLabel')}</Label>
                 <Link
                   href="#"
                   className="ml-auto inline-block text-sm underline"
                 >
-                  Forgot your password?
+                  {t('loginPage.forgotPassword')}
                 </Link>
               </div>
               <Input 
@@ -103,14 +106,14 @@ export default function LoginPage() {
                 />
             </div>
             <Button type="submit" className="w-full" disabled={isFormDisabled}>
-              {isEmailLoading ? 'Signing in...' : 'Sign in'}
+              {isEmailLoading ? t('loginPage.signingIn') : t('loginPage.signIn')}
             </Button>
           </CardContent>
           <CardFooter className="flex justify-center">
             <div className="text-sm text-muted-foreground">
-              Don&apos;t have an account?{' '}
+              {t('loginPage.noAccount')}{' '}
               <Link href="/register" className="underline font-semibold text-primary">
-                Sign up
+                {t('loginPage.signUp')}
               </Link>
             </div>
           </CardFooter>

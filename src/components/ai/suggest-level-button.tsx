@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A button component that triggers an AI flow to suggest the optimal skill level for a session.
  * It takes an array of player skill levels, sends them to a Genkit flow, and displays the AI's suggestion in a dialog.
@@ -19,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { SuggestOptimalSessionLevelOutput } from '@/ai/flows/suggest-optimal-session-level';
+import { useLanguage } from '@/context/language-context';
 
 interface SuggestLevelButtonProps {
   playerSkillLevels: ("beginner" | "intermediate" | "advanced")[];
@@ -27,6 +29,7 @@ interface SuggestLevelButtonProps {
 export default function SuggestLevelButton({ playerSkillLevels }: SuggestLevelButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<SuggestOptimalSessionLevelOutput | null>(null);
+  const { t } = useLanguage();
 
   const handleSuggestLevel = async () => {
     setIsLoading(true);
@@ -35,7 +38,7 @@ export default function SuggestLevelButton({ playerSkillLevels }: SuggestLevelBu
       setSuggestion(result);
     } catch (error) {
       console.error("Failed to suggest optimal level:", error);
-      setSuggestion({ suggestedLevel: 'unknown' as any, reasoning: "Sorry, we couldn't generate a suggestion at this time." });
+      setSuggestion({ suggestedLevel: 'unknown' as any, reasoning: t('toasts.aiSuggestionError') });
     }
     setIsLoading(false);
   };
@@ -56,14 +59,14 @@ export default function SuggestLevelButton({ playerSkillLevels }: SuggestLevelBu
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 font-headline">
               <Sparkles className="text-primary" />
-              AI-Suggested Session Level
+              {t('modals.aiSuggestion.title')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
                 {suggestion && (
                 <div className="pt-4 text-left">
-                    <p className="font-semibold">Suggested Level: <span className="font-bold text-primary uppercase">{suggestion.suggestedLevel}</span></p>
+                    <p className="font-semibold">{t('modals.aiSuggestion.suggestedLevel')} <span className="font-bold text-primary uppercase">{t(`skillLevels.${suggestion.suggestedLevel as 'Beginner' | 'Intermediate' | 'Advanced'}`)}</span></p>
                     <p className="mt-2">
-                    <span className="font-semibold">Reasoning:</span> {suggestion.reasoning}
+                    <span className="font-semibold">{t('modals.aiSuggestion.reasoning')}</span> {suggestion.reasoning}
                     </p>
                 </div>
                 )}
@@ -71,7 +74,7 @@ export default function SuggestLevelButton({ playerSkillLevels }: SuggestLevelBu
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setSuggestion(null)}>
-              Great, thanks!
+              {t('modals.greatThanks')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

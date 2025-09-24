@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview User settings page.
  * Allows users to manage their preferences, including notification settings
@@ -19,10 +20,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bell, Palette, UserCircle, Moon, Sun } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Bell, Palette, UserCircle, Moon, Sun, Globe } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 export default function SettingsPage() {
   const { setTheme, theme } = useTheme();
+  const { locale, setLocale, t } = useLanguage();
   const [notifications, setNotifications] = React.useState({
     email: false,
     push: false,
@@ -39,8 +49,8 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold font-headline">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and preferences.</p>
+        <h1 className="text-3xl font-bold font-headline">{t('settingsPage.title')}</h1>
+        <p className="text-muted-foreground">{t('settingsPage.subtitle')}</p>
       </div>
 
       <div className="space-y-8">
@@ -48,17 +58,17 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
               <Bell className="h-6 w-6 text-primary" />
-              Notifications
+              {t('settingsPage.notifications.title')}
             </CardTitle>
             <CardDescription>
-              Choose how you want to be notified about sessions and announcements.
+              {t('settingsPage.notifications.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div>
-                <Label htmlFor="email-notifications" className="font-semibold">Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive updates about sessions and news via email (coming soon).</p>
+                <Label htmlFor="email-notifications" className="font-semibold">{t('settingsPage.notifications.email')}</Label>
+                <p className="text-sm text-muted-foreground">{t('settingsPage.notifications.emailSubtitle')}</p>
               </div>
               <Switch
                 id="email-notifications"
@@ -69,8 +79,8 @@ export default function SettingsPage() {
             </div>
              <div className="flex items-center justify-between rounded-lg border p-4">
               <div>
-                <Label htmlFor="push-notifications" className="font-semibold">Push Notifications</Label>
-                <p className="text-sm text-muted-foreground">Get real-time updates on your mobile device (coming soon).</p>
+                <Label htmlFor="push-notifications" className="font-semibold">{t('settingsPage.notifications.push')}</Label>
+                <p className="text-sm text-muted-foreground">{t('settingsPage.notifications.pushSubtitle')}</p>
               </div>
               <Switch
                 id="push-notifications"
@@ -86,10 +96,10 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
               <Palette className="h-6 w-6 text-primary" />
-              Appearance
+              {t('settingsPage.appearance.title')}
             </CardTitle>
             <CardDescription>
-              Customize the look and feel of the app.
+              {t('settingsPage.appearance.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -97,7 +107,7 @@ export default function SettingsPage() {
                <div className='flex items-center gap-2'>
                 <Sun className="h-5 w-5 transition-all scale-100 dark:scale-0" />
                 <Moon className="absolute h-5 w-5 transition-all scale-0 dark:scale-100" />
-                <Label htmlFor="dark-mode" className="font-semibold pl-4">Dark Mode</Label>
+                <Label htmlFor="dark-mode" className="font-semibold pl-4">{t('settingsPage.appearance.darkMode')}</Label>
                </div>
               <Switch 
                 id="dark-mode"
@@ -111,15 +121,40 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
-              <UserCircle className="h-6 w-6 text-primary" />
-              Account
+              <Globe className="h-6 w-6 text-primary" />
+              {t('settingsPage.language.title')}
             </CardTitle>
             <CardDescription>
-              Manage your account settings.
+              {t('settingsPage.language.description')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border p-4">
+                <Select value={locale} onValueChange={(value) => setLocale(value as 'en' | 'es')}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder={t('settingsPage.language.select')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="en">{t('languages.en')}</SelectItem>
+                        <SelectItem value="es">{t('languages.es')}</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-headline">
+              <UserCircle className="h-6 w-6 text-primary" />
+              {t('settingsPage.account.title')}
+            </CardTitle>
+            <CardDescription>
+              {t('settingsPage.account.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button variant="outline">Change Password</Button>
+            <Button variant="outline">{t('settingsPage.account.changePassword')}</Button>
           </CardContent>
         </Card>
       </div>

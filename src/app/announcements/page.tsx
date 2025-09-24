@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Displays a list of all club announcements on a corkboard-style interface.
  * Users can view announcements as colored notes, filter them by category,
@@ -15,13 +16,14 @@ import AnnouncementFormModal from '@/components/admin/announcement-form-modal';
 import type { Announcement, AnnouncementCategory } from '@/lib/types';
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 
-const categoryFilters: { label: string; value: AnnouncementCategory | 'all' }[] = [
-  { label: '📌 All', value: 'all' },
-  { label: '🎉 Event', value: 'event' },
-  { label: '🏐 Class', value: 'class' },
-  { label: '🏆 Tournament', value: 'tournament' },
-  { label: '📢 General', value: 'general' },
+const getCategoryFilters = (t: (key: string) => string) => [
+  { label: t('announcementsPage.filters.all'), value: 'all' },
+  { label: t('announcementsPage.filters.event'), value: 'event' },
+  { label: t('announcementsPage.filters.class'), value: 'class' },
+  { label: t('announcementsPage.filters.tournament'), value: 'tournament' },
+  { label: t('announcementsPage.filters.general'), value: 'general' },
 ];
 
 const categoryStyles: Record<AnnouncementCategory, { bg: string; text: string; pin: string }> = {
@@ -31,7 +33,7 @@ const categoryStyles: Record<AnnouncementCategory, { bg: string; text: string; p
   general: { bg: 'bg-paper-green', text: 'text-green-800', pin: 'bg-green-500' },
 };
 
-const NoteCard = ({ announcement, index }: { announcement: Announcement; index: number }) => {
+const NoteCard = ({ announcement, index, t, locale }: { announcement: Announcement; index: number, t: (key: string) => string; locale: string; }) => {
   const styles = categoryStyles[announcement.category] || categoryStyles.general;
   const rotationClass = `note-${(index % 6) + 1}`;
 
@@ -43,12 +45,12 @@ const NoteCard = ({ announcement, index }: { announcement: Announcement; index: 
       <div className={cn('pushpin', styles.pin)}></div>
       <div className="mb-4">
         <span className={cn('px-3 py-1 rounded-full text-sm font-semibold', styles.bg.replace('bg-', 'bg-light-'), styles.text)}>
-          {announcement.category.charAt(0).toUpperCase() + announcement.category.slice(1)}
+          {t(`announcementCategories.${announcement.category}`)}
         </span>
       </div>
       <h3 className="handwriting text-2xl font-bold text-brown mb-3">{announcement.title}</h3>
       <p className="text-brown-dark">{announcement.content}</p>
-       <p className="text-xs text-brown-light mt-4 text-right">{getSafeDate(announcement.date).toLocaleDateString('en-US', {
+       <p className="text-xs text-brown-light mt-4 text-right">{getSafeDate(announcement.date).toLocaleDateString(locale, {
           month: 'long', day: 'numeric'
       })}</p>
     </div>
@@ -57,10 +59,13 @@ const NoteCard = ({ announcement, index }: { announcement: Announcement; index: 
 
 
 const AnnouncementsPage: NextPage = () => {
-  const { announcements, createAnnouncement, updateAnnouncement } = useSessions();
+  const { announcements, createAnnouncement } = useSessions();
   const { user } = useAuth();
+  const { t, locale } = useLanguage();
   const [filter, setFilter] = React.useState<AnnouncementCategory | 'all'>('all');
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  
+  const categoryFilters = getCategoryFilters(t);
 
   const filteredAnnouncements = React.useMemo(() => {
     if (filter === 'all') return announcements;
@@ -84,14 +89,14 @@ const AnnouncementsPage: NextPage = () => {
                     <Megaphone className="w-8 h-8" />
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold handwriting text-brown-dark">Announcement Board</h1>
-                    <p className="text-muted-foreground opacity-80">Stay up to date with all the news</p>
+                    <h1 className="text-3xl font-bold handwriting text-brown-dark">{t('announcementsPage.title')}</h1>
+                    <p className="text-muted-foreground opacity-80">{t('announcementsPage.subtitle')}</p>
                 </div>
             </div>
             {user?.role === 'admin' && (
                 <Button onClick={() => setIsModalOpen(true)} className="bg-cream text-brown px-6 py-3 rounded-lg font-semibold button-hover flex items-center space-x-2 hover:bg-cream-dark">
                     <Plus className="w-5 h-5" />
-                    <span>New Announcement</span>
+                    <span>{t('announcementsPage.newAnnouncement')}</span>
                 </Button>
             )}
         </div>
@@ -116,7 +121,7 @@ const AnnouncementsPage: NextPage = () => {
         {/* Board */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {filteredAnnouncements.map((announcement, index) => (
-            <NoteCard key={announcement.id} announcement={announcement} index={index} />
+            <NoteCard key={announcement.id} announcement={announcement} index={index} t={t} locale={locale}/>
           ))}
         </div>
       </div>

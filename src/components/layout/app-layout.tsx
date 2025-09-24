@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Main layout component for the application.
  * It wraps all pages, providing a consistent structure with a header
@@ -42,16 +43,17 @@ import Footer from './footer';
 // Hooks & Utils
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 
 // --- NAVIGATION ---
-const navItems = [
-  { href: '/', icon: Home, label: 'Dashboard' },
-  { href: '/calendar', icon: Calendar, label: 'Calendar' },
-  { href: '/announcements', icon: Megaphone, label: 'Announcements' },
-  { href: '/chat', icon: MessageCircle, label: 'Chat' },
-  { href: '/profile', icon: User, label: 'Profile' },
-  { href: '/admin', icon: Shield, label: 'Admin Panel', adminOnly: true },
+const getNavItems = (t: (key: string) => string) => [
+  { href: '/', icon: Home, label: t('nav.dashboard') },
+  { href: '/calendar', icon: Calendar, label: t('nav.calendar') },
+  { href: '/announcements', icon: Megaphone, label: t('nav.announcements') },
+  { href: '/chat', icon: MessageCircle, label: t('nav.chat') },
+  { href: '/profile', icon: User, label: t('nav.profile') },
+  { href: '/admin', icon: Shield, label: t('nav.adminPanel'), adminOnly: true },
 ];
 
 /**
@@ -60,7 +62,8 @@ const navItems = [
  */
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const { t } = useLanguage();
+  const isAuthPage = pathname === `/${t('nav.login')}` || pathname === `/${t('nav.register')}`;
   const isAnnouncementsPage = pathname === '/announcements';
 
   if (isAuthPage) {
@@ -109,8 +112,10 @@ function AppHeader() {
 function DesktopNav() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isAnnouncementsPage = pathname === '/announcements';
 
+  const navItems = getNavItems(t);
 
   return (
     <nav className="hidden md:flex flex-1 justify-center md:items-center md:gap-5 lg:gap-6 text-sm lg:text-base font-medium">
@@ -148,7 +153,10 @@ function MobileNav() {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const pathname = usePathname();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isAnnouncementsPage = pathname === '/announcements';
+  
+  const navItems = getNavItems(t);
 
   return (
     <div className="flex items-center gap-2">
@@ -203,6 +211,7 @@ function MobileNav() {
  */
 function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user']> }) {
   const { logout } = useAuth();
+  const { t } = useLanguage();
   const pathname = usePathname();
   const isAnnouncementsPage = pathname === '/announcements';
 
@@ -227,27 +236,27 @@ function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user'
         <DropdownMenuItem asChild>
           <Link href="/profile">
             <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
+            <span>{t('nav.profile')}</span>
           </Link>
         </DropdownMenuItem>
         {user.role === 'admin' && (
           <DropdownMenuItem asChild>
             <Link href="/admin">
               <Shield className="mr-2 h-4 w-4" />
-              <span>Admin</span>
+              <span>{t('nav.adminPanel')}</span>
             </Link>
           </DropdownMenuItem>
         )}
         <DropdownMenuItem asChild>
           <Link href="/settings">
             <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+            <span>{t('nav.settings')}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>{t('nav.logout')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

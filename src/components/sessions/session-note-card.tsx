@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A card component that displays session details as a pinned note.
  * Used on the calendar page to list sessions for a selected day on a corkboard.
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Users, UserPlus, XCircle, LogOut } from 'lucide-react';
 import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import { getSafeDate } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -35,6 +37,7 @@ export default function SessionNoteCard({
   index,
 }: SessionNoteCardProps) {
   const { user: currentUser } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   
   if (!currentUser) {
@@ -58,28 +61,28 @@ export default function SessionNoteCard({
   const handleBook = async () => {
     const success = await onBook(session.id);
     if (success) {
-      toast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
+      toast({ title: t('toasts.bookingConfirmedTitle'), description: t('toasts.bookingConfirmedDescription', { level: t(`skillLevels.${session.level}`) }), variant: 'success' });
     }
   };
 
   const handleCancel = async () => {
     const success = await onCancel(session.id);
     if (success) {
-      toast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+      toast({ title: t('toasts.bookingCanceledTitle'), description: t('toasts.bookingCanceledDescription'), variant: 'success' });
     }
   };
 
   const handleJoinWaitlist = async () => {
     const success = await onWaitlist(session.id);
     if (success) {
-      toast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+      toast({ title: t('toasts.waitlistJoinedTitle'), description: t('toasts.waitlistJoinedDescription'), variant: 'success' });
     }
   };
 
   const handleLeaveWaitlist = async () => {
     const success = await onLeaveWaitlist(session.id);
     if (success) {
-      toast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
+      toast({ title: t('toasts.waitlistLeftTitle'), description: t('toasts.waitlistLeftDescription'), variant: 'success' });
     }
   };
 
@@ -92,9 +95,9 @@ export default function SessionNoteCard({
         <div className="space-y-3">
             <div className="flex justify-between items-start">
                 <div>
-                    <h3 className="handwriting text-2xl font-bold text-brown mb-1">{session.level} Level</h3>
+                    <h3 className="handwriting text-2xl font-bold text-brown mb-1">{t(`skillLevels.${session.level}`)} Level</h3>
                     <Badge variant={isFull ? 'destructive' : 'secondary'} className="text-xs">
-                        {isFull ? 'Full' : `${session.maxPlayers - players.length} spots left`}
+                        {isFull ? t('components.sessionListItem.full') : t('components.sessionNoteCard.spotsLeft', { count: session.maxPlayers - players.length })}
                     </Badge>
                 </div>
                 <div className="flex -space-x-2 overflow-hidden pr-2">
@@ -129,22 +132,22 @@ export default function SessionNoteCard({
                     variant="outline"
                     onClick={handleCancel}
                     disabled={!canCancel}
-                    title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
+                    title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
                     >
                     <XCircle className="mr-2 h-4 w-4" />
-                    Cancel My Spot
+                    {t('modals.sessionDetails.cancelSpot')}
                     </Button>
                 ) : (
                     <>
                     {!isFull && (
                         <Button size="sm" onClick={handleBook} className="bg-brown text-cream button-hover">
-                            Book My Spot
+                            {t('modals.sessionDetails.bookSpot')}
                         </Button>
                     )}
                     {isOnWaitlist ? (
                         <Button size="sm" variant="secondary" onClick={handleLeaveWaitlist}>
                             <LogOut className="mr-2 h-4 w-4" />
-                            Leave Waitlist
+                            {t('modals.sessionDetails.leaveWaitlist')}
                         </Button>
                     ) : (
                         isFull && <Button
@@ -153,7 +156,7 @@ export default function SessionNoteCard({
                             onClick={handleJoinWaitlist}
                         >
                             <UserPlus className="mr-2 h-4 w-4" />
-                            Join Waitlist
+                            {t('modals.sessionDetails.joinWaitlist')}
                         </Button>
                     )}
                     </>

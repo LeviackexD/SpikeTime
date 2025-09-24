@@ -31,6 +31,7 @@ import SessionListItem from '@/components/sessions/session-list-item';
 // Context and Hooks
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import { useUpcomingSessions, useAvailableSessions } from '@/hooks/use-session-filters';
 
 // Types
@@ -46,6 +47,7 @@ const DashboardPage: NextPage = () => {
   // --- HOOKS ---
   const { sessions, announcements, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
   const { user: currentUser } = useAuth();
+  const { t } = useLanguage();
   
   // --- DERIVED STATE FROM CUSTOM HOOKS ---
   const upcomingSessions = useUpcomingSessions(currentUser, sessions);
@@ -70,7 +72,7 @@ const DashboardPage: NextPage = () => {
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Loading user data...</p>
+        <p className="text-muted-foreground">{t('dashboard.loading')}</p>
       </div>
     );
   }
@@ -79,15 +81,15 @@ const DashboardPage: NextPage = () => {
     <>
       <div className="flex flex-col gap-8 animate-fade-in">
         <div className="text-center">
-          <h1 className="text-3xl font-bold font-headline">Welcome back, {currentUser.name}!</h1>
-          <p className="text-muted-foreground">Here's what's happening in your volleyball world.</p>
+          <h1 className="text-3xl font-bold font-headline">{t('dashboard.welcome').replace('{name}', currentUser.name)}</h1>
+          <p className="text-muted-foreground">{t('dashboard.welcomeSubtitle')}</p>
         </div>
         
         <Accordion type="multiple" defaultValue={['my-sessions', 'next-sessions']} className="w-full space-y-8">
           {/* My Upcoming Sessions Section */}
           <AccordionItem value="my-sessions" className="border-b-0">
             <div className="flex items-center">
-              <SectionHeader icon={Volleyball} title="My Upcoming Sessions" />
+              <SectionHeader icon={Volleyball} title={t('dashboard.mySessions')} />
               <AccordionTrigger className="ml-auto" />
             </div>
             <AccordionContent className="pt-4">
@@ -109,9 +111,9 @@ const DashboardPage: NextPage = () => {
                 </div>
               ) : (
                 <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed animate-fade-in">
-                  <p className="text-muted-foreground mb-4">You have no upcoming sessions booked.</p>
+                  <p className="text-muted-foreground mb-4">{t('dashboard.noUpcomingSessions')}</p>
                   <Button asChild>
-                    <Link href="/calendar">Browse Sessions</Link>
+                    <Link href="/calendar">{t('dashboard.browseSessions')}</Link>
                   </Button>
                 </div>
               )}
@@ -121,7 +123,7 @@ const DashboardPage: NextPage = () => {
           {/* Next Available Sessions Section */}
           <AccordionItem value="next-sessions" className="border-b-0">
             <div className="flex items-center">
-              <SectionHeader icon={Volleyball} title="Next Sessions" />
+              <SectionHeader icon={Volleyball} title={t('dashboard.nextSessions')} />
               <AccordionTrigger className="ml-auto" />
             </div>
             <AccordionContent className="pt-4">
@@ -143,7 +145,7 @@ const DashboardPage: NextPage = () => {
                 </div>
               ) : (
                 <div className="text-center py-16 rounded-lg bg-muted/50 border border-dashed animate-fade-in">
-                  <p className="text-muted-foreground">No other sessions available at the moment.</p>
+                  <p className="text-muted-foreground">{t('dashboard.noAvailableSessions')}</p>
                 </div>
               )}
             </AccordionContent>
@@ -152,9 +154,9 @@ const DashboardPage: NextPage = () => {
 
         {/* Recent Announcements Section */}
         <div className="space-y-4">
-          <SectionHeader icon={Megaphone} title="Recent Announcements">
+          <SectionHeader icon={Megaphone} title={t('dashboard.recentAnnouncements')}>
             <Button variant="link" asChild>
-              <Link href="/announcements">View all</Link>
+              <Link href="/announcements">{t('dashboard.viewAll')}</Link>
             </Button>
           </SectionHeader>
           <Card>

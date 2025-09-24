@@ -1,0 +1,304 @@
+
+{
+    "nav": {
+        "dashboard": "Panel",
+        "calendar": "Calendario",
+        "announcements": "Anuncios",
+        "chat": "Chat",
+        "profile": "Perfil",
+        "adminPanel": "Panel Admin",
+        "settings": "Ajustes",
+        "logout": "Cerrar Sesión"
+    },
+    "dashboard": {
+        "welcome": "¡Bienvenido de nuevo, {name}!",
+        "welcomeSubtitle": "Esto es lo que está pasando en tu mundo de voleibol.",
+        "mySessions": "Mis Próximas Sesiones",
+        "noUpcomingSessions": "No tienes sesiones próximas reservadas.",
+        "browseSessions": "Explorar Sesiones",
+        "nextSessions": "Próximas Sesiones",
+        "noAvailableSessions": "No hay otras sesiones disponibles por el momento.",
+        "recentAnnouncements": "Anuncios Recientes",
+        "viewAll": "Ver todos",
+        "loading": "Cargando datos de usuario..."
+    },
+    "calendarPage": {
+        "title": "Planificador de Sesiones",
+        "subtitle": "Explora el planificador para encontrar las próximas sesiones. Haz clic en un día para ver las notas.",
+        "notesFor": "Notas para el {date}",
+        "noSessionsPinned": "No hay sesiones fijadas para este día."
+    },
+    "announcementsPage": {
+        "title": "Tablón de Anuncios",
+        "subtitle": "Mantente al día con todas las noticias",
+        "newAnnouncement": "Nuevo Anuncio",
+        "filters": {
+            "all": "📌 Todos",
+            "event": "🎉 Evento",
+            "class": "🏐 Clase",
+            "tournament": "🏆 Torneo",
+            "general": "📢 General"
+        }
+    },
+    "chatPage": {
+        "title": "Chats",
+        "tabs": {
+            "sessions": "Sesiones",
+            "direct": "Directos"
+        },
+        "newChat": "Nuevo Chat",
+        "noMessages": "Aún no hay mensajes",
+        "selectChatTitle": "Selecciona un chat",
+        "selectChatSubtitle": "Elige una conversación para empezar a chatear.",
+        "selectChatButton": "Seleccionar Chat",
+        "members": "{count} miembros",
+        "messagePlaceholder": "Escribe tu mensaje...",
+        "send": "Enviar",
+        "newChatModalTitle": "Iniciar un Nuevo Chat",
+        "newChatModalDescription": "Selecciona un usuario para iniciar una conversación de mensajes directos.",
+        "searchUserPlaceholder": "Buscar un usuario..."
+    },
+    "profilePage": {
+        "editProfile": "Editar Perfil",
+        "playerDetails": "Detalles del Jugador",
+        "skillLevel": "Nivel de Habilidad",
+        "favoritePosition": "Posición Favorita",
+        "sessionsPlayed": "Sesiones Jugadas",
+        "attendanceRate": "Tasa de Asistencia",
+        "monthlyActivity": "Actividad Mensual",
+        "monthlyActivitySubtitle": "Tu recuento de sesiones de los últimos 6 meses.",
+        "loading": "Cargando perfil..."
+    },
+    "settingsPage": {
+        "title": "Ajustes",
+        "subtitle": "Gestiona tu cuenta y tus preferencias.",
+        "notifications": {
+            "title": "Notificaciones",
+            "description": "Elige cómo quieres que te notifiquemos sobre sesiones y anuncios.",
+            "email": "Notificaciones por Correo",
+            "emailSubtitle": "Recibe actualizaciones sobre sesiones y noticias por correo (próximamente).",
+            "push": "Notificaciones Push",
+            "pushSubtitle": "Recibe actualizaciones en tiempo real en tu dispositivo móvil (próximamente)."
+        },
+        "appearance": {
+            "title": "Apariencia",
+            "description": "Personaliza el aspecto de la aplicación.",
+            "darkMode": "Modo Oscuro"
+        },
+        "language": {
+            "title": "Idioma",
+            "description": "Elige el idioma de la aplicación.",
+            "select": "Seleccionar Idioma"
+        },
+        "account": {
+            "title": "Cuenta",
+            "description": "Gestiona los ajustes de tu cuenta.",
+            "changePassword": "Cambiar Contraseña"
+        }
+    },
+    "adminPage": {
+        "redirecting": "Redirigiendo...",
+        "tabs": {
+            "sessions": "Sesiones",
+            "announcements": "Anuncios"
+        },
+        "createNew": "Crear Nuevo",
+        "sessionTable": {
+            "dateAndTime": "Fecha y Hora",
+            "level": "Nivel",
+            "players": "Jugadores",
+            "status": "Estado",
+            "actions": "Acciones"
+        },
+        "announcementTable": {
+            "title": "Título",
+            "content": "Contenido",
+            "date": "Fecha",
+            "actions": "Acciones"
+        },
+        "statusValues": {
+            "full": "Completo",
+            "open": "Abierto",
+            "waitlist": "(+{count} en espera)"
+        },
+        "actions": {
+            "edit": "Editar",
+            "viewPlayers": "Ver Jugadores",
+            "delete": "Eliminar"
+        }
+    },
+    "loginPage": {
+        "welcome": "¡Bienvenido de Nuevo!",
+        "checkingAuth": "Verificando autenticación...",
+        "description": "Introduce tus credenciales para acceder a tu cuenta.",
+        "emailLabel": "Correo Electrónico",
+        "passwordLabel": "Contraseña",
+        "forgotPassword": "¿Olvidaste tu contraseña?",
+        "signIn": "Iniciar Sesión",
+        "signingIn": "Iniciando sesión...",
+        "noAccount": "¿No tienes una cuenta?",
+        "signUp": "Regístrate"
+    },
+    "registerPage": {
+        "title": "Crear una Cuenta",
+        "description": "¡Únete a la comunidad de Inverness Eagles hoy!",
+        "nameLabel": "Nombre Completo",
+        "emailLabel": "Correo Electrónico",
+        "passwordLabel": "Contraseña",
+        "skillLevelLabel": "Nivel de Habilidad",
+        "skillLevelPlaceholder": "Selecciona tu nivel de habilidad",
+        "favoritePositionLabel": "Posición Favorita",
+        "favoritePositionPlaceholder": "Selecciona tu posición favorita",
+        "createAccount": "Crear Cuenta",
+        "creatingAccount": "Creando cuenta...",
+        "haveAccount": "¿Ya tienes una cuenta?",
+        "signIn": "Iniciar Sesión"
+    },
+    "toasts": {
+        "loginSuccessTitle": "¡Inicio de Sesión Exitoso!",
+        "loginSuccessDescription": "¡Bienvenido de nuevo!",
+        "logoutTitle": "Sesión Cerrada",
+        "logoutDescription": "Has cerrado sesión correctamente.",
+        "authFailedTitle": "Fallo de Autenticación",
+        "incompleteFormTitle": "Formulario Incompleto",
+        "incompleteFormDescription": "Por favor, selecciona un nivel de habilidad y una posición favorita.",
+        "registrationFailedTitle": "Fallo en el Registro",
+        "registrationFailedDescription": "Este correo ya podría estar en uso o la contraseña es demasiado débil.",
+        "accountCreatedTitle": "¡Cuenta Creada!",
+        "accountCreatedDescription": "Ahora puedes iniciar sesión con tus credenciales.",
+        "profileUpdatedTitle": "Perfil Actualizado",
+        "profileUpdatedDescription": "Tu información de perfil ha sido guardada.",
+        "avatarUpdatedTitle": "Avatar actualizado",
+        "avatarUpdatedDescription": "Tu nuevo avatar está listo. Guarda tu perfil para mantener los cambios.",
+        "imageTooLargeTitle": "Imagen demasiado grande",
+        "imageTooLargeDescription": "Por favor, selecciona una imagen de menos de 2MB.",
+        "sessionCreatedTitle": "¡Sesión Creada!",
+        "sessionCreatedDescription": "La nueva sesión ha sido añadida correctamente.",
+        "sessionUpdatedTitle": "Sesión Actualizada",
+        "sessionUpdatedDescription": "La sesión ha sido actualizada correctamente.",
+        "sessionDeletedTitle": "Sesión Eliminada",
+        "sessionDeletedDescription": "La sesión ha sido eliminada correctamente.",
+        "bookingConfirmedTitle": "¡Reserva Confirmada!",
+        "bookingConfirmedDescription": "Estás listo para la sesión de nivel {level}.",
+        "bookingFailedTitle": "Fallo en la Reserva",
+        "bookingFailedDescription": "No se pudo reservar tu plaza. La sesión podría estar llena.",
+        "bookingCanceledTitle": "Reserva Cancelada",
+        "bookingCanceledDescription": "Tu plaza ha sido cancelada correctamente.",
+        "cancellationFailedTitle": "Fallo en la Cancelación",
+        "cancellationFailedDescription": "No se pudo cancelar tu reserva.",
+        "cancellationFailedTime": "Solo puedes cancelar con más de 12 horas de antelación.",
+        "waitlistJoinedTitle": "¡Estás en la lista de espera!",
+        "waitlistJoinedDescription": "Te notificaremos si se libera una plaza.",
+        "waitlistJoinFailedTitle": "No se pudo unir a la lista de espera",
+        "waitlistJoinFailedDescription": "Puede que ya estés en la lista.",
+        "waitlistLeftTitle": "Eliminado de la Lista de Espera",
+        "waitlistLeftDescription": "Has salido de la lista de espera correctamente.",
+        "waitlistLeaveFailedTitle": "Acción Fallida",
+        "waitlistLeaveFailedDescription": "No se pudo salir de la lista de espera.",
+        "announcementCreatedTitle": "¡Anuncio Creado!",
+        "announcementCreatedDescription": "El nuevo anuncio ya está publicado.",
+        "announcementUpdatedTitle": "Anuncio Actualizado",
+        "announcementUpdatedDescription": "El anuncio ha sido actualizado correctamente.",
+        "announcementDeletedTitle": "Anuncio Eliminado",
+        "announcementDeletedDescription": "El anuncio ha sido eliminado.",
+        "aiSuggestionError": "Lo sentimos, no pudimos generar una sugerencia en este momento."
+    },
+    "modals": {
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "saveChanges": "Guardar Cambios",
+        "continue": "Continuar",
+        "close": "Cerrar",
+        "greatThanks": "¡Genial, gracias!",
+        "gotIt": "¡Entendido!",
+        "deleteDialog": {
+            "title": "¿Estás absolutamente seguro?",
+            "sessionDescription": "Esta acción no se puede deshacer. Esto eliminará permanentemente la sesión y todos los datos asociados.",
+            "announcementDescription": "Esta acción no se puede deshacer. Esto eliminará permanentemente el anuncio."
+        },
+        "sessionForm": {
+            "createTitle": "Crear Sesión",
+            "createDescription": "Rellena el formulario para crear una nueva sesión.",
+            "editTitle": "Editar Sesión",
+            "editDescription": "Actualiza los detalles de esta sesión.",
+            "date": "Fecha",
+            "startTime": "Hora de Inicio",
+            "endTime": "Hora de Fin",
+            "location": "Ubicación",
+            "coverImageUrl": "URL de la Imagen de Portada",
+            "level": "Nivel",
+            "selectLevel": "Selecciona un nivel",
+            "maxPlayers": "Máx. Jugadores"
+        },
+        "announcementForm": {
+            "createTitle": "Crear Anuncio",
+            "createDescription": "Rellena el formulario para crear un nuevo anuncio para el tablón.",
+            "editTitle": "Editar Anuncio",
+            "editDescription": "Actualiza los detalles de este anuncio.",
+            "title": "Título",
+            "category": "Categoría",
+            "selectCategory": "Selecciona una categoría",
+            "content": "Contenido"
+        },
+        "sessionDetails": {
+            "description": "Detalles de la sesión y jugadores registrados.",
+            "spotsFilled": "Plazas Ocupadas",
+            "registeredPlayers": "Jugadores Registrados ({count})",
+            "noPlayers": "Aún no se han registrado jugadores.",
+            "waitlist": "Lista de Espera ({count})",
+            "waitlistEmpty": "La lista de espera está vacía.",
+            "bookSpot": "Reservar Mi Plaza",
+            "cancelSpot": "Cancelar Mi Plaza",
+            "joinWaitlist": "Unirme a la Lista de Espera",
+            "leaveWaitlist": "Salir de la Lista de Espera",
+            "cancellationTooltip": "Las cancelaciones deben hacerse con más de 12 horas de antelación."
+        },
+        "editProfile": {
+            "title": "Editar Perfil",
+            "description": "Actualiza tu información personal. Haz clic en guardar cuando hayas terminado.",
+            "avatar": "Avatar",
+            "changePicture": "Cambiar Foto",
+            "uploading": "Subiendo...",
+            "fullName": "Nombre Completo"
+        },
+        "aiSuggestion": {
+            "title": "Nivel de Sesión Sugerido por IA",
+            "suggestedLevel": "Nivel Sugerido:",
+            "reasoning": "Razonamiento:"
+        },
+        "aiSummary": {
+            "title": "Resumen de Anuncios"
+        }
+    },
+    "components": {
+        "sessionListItem": {
+            "spotsLeft": "{count} plazas libres",
+            "full": "Completo",
+            "viewDetails": "Ver Detalles"
+        },
+        "sessionNoteCard": {
+            "spotsLeft": "{count} plazas libres"
+        }
+    },
+    "positions": {
+        "Setter": "Colocador",
+        "Hitter": "Atacante",
+        "Libero": "Líbero",
+        "Blocker": "Bloqueador"
+    },
+    "skillLevels": {
+        "Beginner": "Principiante",
+        "Intermediate": "Intermedio",
+        "Advanced": "Avanzado"
+    },
+    "announcementCategories": {
+        "event": "Evento",
+        "class": "Clase",
+        "tournament": "Torneo",
+        "general": "General"
+    },
+    "languages": {
+        "en": "English",
+        "es": "Español"
+    }
+}

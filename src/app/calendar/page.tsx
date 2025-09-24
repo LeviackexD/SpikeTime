@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Provides a full-page calendar view of all volleyball sessions.
  * Users can browse a chalkboard-style calendar and see sessions for the
@@ -12,6 +13,7 @@ import dynamic from 'next/dynamic';
 import { ClipboardCheck, Pin } from 'lucide-react';
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import SessionNoteCard from '@/components/sessions/session-note-card';
@@ -25,6 +27,7 @@ const SessionCalendar = dynamic(() => import('@/components/dashboard/session-cal
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
   const { user: currentUser } = useAuth();
+  const { t, locale } = useLanguage();
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   
   const handleDateChange = (date: Date | undefined) => {
@@ -41,16 +44,18 @@ const CalendarPage: NextPage = () => {
     const sessionDate = getSafeDate(session.date);
     return sessionDate.toDateString() === selectedDate.toDateString();
   }).sort((a,b) => a.startTime.localeCompare(b.startTime));
+  
+  const formattedDate = selectedDate.toLocaleDateString(locale, { month: 'long', day: 'numeric' });
 
   return (
     <div className="space-y-8 animate-fade-in">
         <div className="text-center">
              <h1 className="text-4xl font-bold font-handwriting text-brown-dark flex items-center justify-center gap-3">
                 <ClipboardCheck className="h-10 w-10 text-brown" />
-                Session Planner
+                {t('calendarPage.title')}
             </h1>
             <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-                Browse the planner to find upcoming sessions. Click a day to see the notes.
+                {t('calendarPage.subtitle')}
             </p>
         </div>
 
@@ -69,7 +74,7 @@ const CalendarPage: NextPage = () => {
               <div className="cork-texture rounded-lg p-6 min-h-full border-4 border-brown-dark/50 shadow-lg">
                 <h2 className="text-3xl font-bold font-handwriting text-brown-dark mb-4 flex items-center gap-2">
                     <Pin className="h-7 w-7 -rotate-45 text-red-600" />
-                    Notes for {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                    {t('calendarPage.notesFor').replace('{date}', formattedDate)}
                 </h2>
                 <Separator className="mb-6 bg-brown-dark/20"/>
                 {filteredSessions.length > 0 ? (
@@ -88,7 +93,7 @@ const CalendarPage: NextPage = () => {
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center text-center p-12 rounded-lg bg-cream/50 border border-dashed animate-fade-in">
-                        <p className="text-brown-dark font-semibold">No sessions pinned for this day.</p>
+                        <p className="text-brown-dark font-semibold">{t('calendarPage.noSessionsPinned')}</p>
                     </div>
                 )}
               </div>

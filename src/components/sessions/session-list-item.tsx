@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A card component for displaying a summary of a single session in a list.
  * Used on the main dashboard to show upcoming and available sessions.
@@ -20,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import { getSafeDate } from '@/context/session-context';
 import PlayerAvatar from './player-avatar';
 import {
@@ -54,6 +56,7 @@ export default function SessionListItem({
   animationDelay = 0,
 }: SessionListItemProps) {
   const { user: currentUser } = useAuth();
+  const { t, locale } = useLanguage();
   const { toast } = useToast();
 
   if (!currentUser) return null;
@@ -77,46 +80,46 @@ export default function SessionListItem({
   const handleBook = async () => {
     const success = await onBook(session.id);
     if (success) {
-      toast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
+      toast({ title: t('toasts.bookingConfirmedTitle'), description: t('toasts.bookingConfirmedDescription', { level: t(`skillLevels.${session.level}`) }), variant: 'success' });
     } else {
-      toast({ title: 'Booking Failed', description: 'Could not book your spot. The session might be full.', variant: 'destructive' });
+      toast({ title: t('toasts.bookingFailedTitle'), description: t('toasts.bookingFailedDescription'), variant: 'destructive' });
     }
   };
 
   const handleCancel = async () => {
     if (!canCancel) {
-      toast({ title: 'Cancellation Failed', description: 'You can only cancel more than 12 hours in advance.', variant: 'destructive' });
+      toast({ title: t('toasts.cancellationFailedTitle'), description: t('toasts.cancellationFailedTime'), variant: 'destructive' });
       return;
     }
     const success = await onCancel(session.id);
     if (success) {
-      toast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+      toast({ title: t('toasts.bookingCanceledTitle'), description: t('toasts.bookingCanceledDescription'), variant: 'success' });
     } else {
-        toast({ title: 'Cancellation Failed', description: 'Could not cancel your booking.', variant: 'destructive' });
+        toast({ title: t('toasts.cancellationFailedTitle'), description: t('toasts.cancellationFailedDescription'), variant: 'destructive' });
     }
   };
 
   const handleJoinWaitlist = async () => {
     const success = await onWaitlist(session.id);
     if (success) {
-      toast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+      toast({ title: t('toasts.waitlistJoinedTitle'), description: t('toasts.waitlistJoinedDescription'), variant: 'success' });
     } else {
-        toast({ title: 'Could not join waitlist', description: 'You might already be on the list.', variant: 'destructive' });
+        toast({ title: t('toasts.waitlistJoinFailedTitle'), description: t('toasts.waitlistJoinFailedDescription'), variant: 'destructive' });
     }
   };
 
   const handleLeaveWaitlist = async () => {
     const success = await onLeaveWaitlist(session.id);
     if (success) {
-      toast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
+      toast({ title: t('toasts.waitlistLeftTitle'), description: t('toasts.waitlistLeftDescription'), variant: 'success' });
     } else {
-       toast({ title: 'Action Failed', description: 'Could not leave the waitlist.', variant: 'destructive' });
+       toast({ title: t('toasts.waitlistLeaveFailedTitle'), description: t('toasts.waitlistLeaveFailedDescription'), variant: 'destructive' });
     }
   };
 
   const formatDate = (date: Date) => {
-     const day = date.toLocaleDateString('en-US', { day: '2-digit', timeZone: 'UTC' });
-     const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+     const day = date.toLocaleDateString(locale, { day: '2-digit', timeZone: 'UTC' });
+     const month = date.toLocaleDateString(locale, { month: 'short', timeZone: 'UTC' });
      return { day, month };
   };
   
@@ -132,7 +135,7 @@ export default function SessionListItem({
           variant={isFull ? 'destructive' : 'secondary'}
           className="absolute top-2 right-2 z-10"
         >
-          {isFull ? 'Full' : `${spotsLeft} spots left`}
+          {isFull ? t('components.sessionListItem.full') : t('components.sessionListItem.spotsLeft', { count: spotsLeft })}
         </Badge>
         <div className="absolute top-2 left-2 z-10 bg-background/80 text-foreground rounded-md text-center p-2 flex flex-col items-center justify-center w-12 h-12 font-bold backdrop-blur-sm">
            <span className="text-lg leading-none">{day}</span>
@@ -153,7 +156,7 @@ export default function SessionListItem({
         </div>
         <div className="absolute bottom-0 p-4">
             <CardTitle className="font-headline text-lg text-white">
-                {session.level} Level
+                {t(`skillLevels.${session.level}`)} Level
             </CardTitle>
         </div>
       </CardHeader>
@@ -184,7 +187,7 @@ export default function SessionListItem({
                           </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                          <p>View Details</p>
+                          <p>{t('components.sessionListItem.viewDetails')}</p>
                       </TooltipContent>
                   </Tooltip>
                 </div>
@@ -200,28 +203,28 @@ export default function SessionListItem({
             variant="outline"
             onClick={handleCancel}
             disabled={!canCancel}
-            title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
+            title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
           >
             <XCircle className="mr-2 h-4 w-4" />
-            Cancel Spot
+            {t('modals.sessionDetails.cancelSpot')}
           </Button>
         ) : isOnWaitlist ? (
             <div className='flex gap-2 w-full'>
                 {!isFull && 
                 <Button className="w-full" onClick={handleBook}>
-                    Book My Spot
+                    {t('modals.sessionDetails.bookSpot')}
                 </Button>
                 }
                 <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
                 <LogOut className="mr-2 h-4 w-4" />
-                Leave Waitlist
+                {t('modals.sessionDetails.leaveWaitlist')}
                 </Button>
             </div>
         ) : (
           <div className="flex flex-col gap-2 w-full">
             {!isFull && (
               <Button className="w-full" onClick={handleBook}>
-                Book My Spot
+                {t('modals.sessionDetails.bookSpot')}
               </Button>
             )}
             <Button
@@ -230,7 +233,7 @@ export default function SessionListItem({
               onClick={handleJoinWaitlist}
             >
               <UserPlus className="mr-2 h-4 w-4" />
-              Join Waitlist
+              {t('modals.sessionDetails.joinWaitlist')}
             </Button>
           </div>
         )}

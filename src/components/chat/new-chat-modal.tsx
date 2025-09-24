@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A modal dialog for starting a new direct chat.
  * It displays a searchable list of users that the current user can start a conversation with.
@@ -17,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from '@/lib/types';
+import { useLanguage } from '@/context/language-context';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -32,6 +34,7 @@ export default function NewChatModal({
   onStartChat,
 }: NewChatModalProps) {
   const [searchTerm, setSearchTerm] = React.useState('');
+  const { t } = useLanguage();
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -41,14 +44,14 @@ export default function NewChatModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-headline">Start a New Chat</DialogTitle>
+          <DialogTitle className="font-headline">{t('chatPage.newChatModalTitle')}</DialogTitle>
           <DialogDescription>
-            Select a user to start a direct message conversation.
+            {t('chatPage.newChatModalDescription')}
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
           <Input
-            placeholder="Search for a user..."
+            placeholder={t('chatPage.searchUserPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

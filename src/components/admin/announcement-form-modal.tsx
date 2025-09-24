@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A modal form for creating or editing announcements.
  * It's used within the admin page and the new announcements page.
@@ -26,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Announcement, AnnouncementCategory } from '@/lib/types';
+import { useLanguage } from '@/context/language-context';
 
 interface AnnouncementFormModalProps {
   isOpen: boolean;
@@ -41,6 +43,7 @@ const emptyAnnouncement: Omit<Announcement, 'id' | 'date'> = {
 };
 
 export default function AnnouncementFormModal({ isOpen, onClose, onSave, announcement }: AnnouncementFormModalProps) {
+    const { t } = useLanguage();
     const [formData, setFormData] = React.useState<Omit<Announcement, 'id' | 'date'>>(emptyAnnouncement);
 
     React.useEffect(() => {
@@ -71,43 +74,43 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-paper">
         <DialogHeader>
-          <DialogTitle className="font-headline text-brown handwriting text-2xl">{announcement ? 'Edit Announcement' : 'Create Announcement'}</DialogTitle>
+          <DialogTitle className="font-headline text-brown handwriting text-2xl">{announcement ? t('modals.announcementForm.editTitle') : t('modals.announcementForm.createTitle')}</DialogTitle>
           <DialogDescription>
-            {announcement ? 'Update the details for this announcement.' : 'Fill out the form to create a new announcement for the corkboard.'}
+            {announcement ? t('modals.announcementForm.editDescription') : t('modals.announcementForm.createDescription')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                     <Label htmlFor="title" className="text-brown font-semibold">
-                    Title
+                    {t('modals.announcementForm.title')}
                     </Label>
                     <Input id="title" value={formData.title} onChange={handleChange} placeholder="e.g., Summer Tournament" required className="bg-cream border-brown-light focus:border-brown"/>
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="category" className="text-brown font-semibold">Category</Label>
+                    <Label htmlFor="category" className="text-brown font-semibold">{t('modals.announcementForm.category')}</Label>
                     <Select value={formData.category} onValueChange={handleSelectChange}>
                         <SelectTrigger id="category" className="bg-cream border-brown-light focus:border-brown">
-                            <SelectValue placeholder="Select a category" />
+                            <SelectValue placeholder={t('modals.announcementForm.selectCategory')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="event">🎉 Event</SelectItem>
-                            <SelectItem value="class">🏐 Class</SelectItem>
-                            <SelectItem value="tournament">🏆 Tournament</SelectItem>
-                            <SelectItem value="general">📢 General</SelectItem>
+                            <SelectItem value="event">🎉 {t('announcementCategories.event')}</SelectItem>
+                            <SelectItem value="class">🏐 {t('announcementCategories.class')}</SelectItem>
+                            <SelectItem value="tournament">🏆 {t('announcementCategories.tournament')}</SelectItem>
+                            <SelectItem value="general">📢 {t('announcementCategories.general')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="content" className="text-brown font-semibold">
-                    Content
+                    {t('modals.announcementForm.content')}
                     </Label>
                     <Textarea id="content" value={formData.content} onChange={handleChange} placeholder="Describe the announcement..." required className="bg-cream border-brown-light focus:border-brown" />
                 </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" onClick={onClose} className="button-hover">Cancel</Button>
-                <Button type="submit" className="bg-brown text-cream button-hover">Save</Button>
+                <Button type="button" variant="outline" onClick={onClose} className="button-hover">{t('modals.cancel')}</Button>
+                <Button type="submit" className="bg-brown text-cream button-hover">{t('modals.save')}</Button>
             </DialogFooter>
         </form>
       </DialogContent>
