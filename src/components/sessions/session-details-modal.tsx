@@ -1,4 +1,3 @@
-
 /**
  * @fileoverview A modal dialog that displays comprehensive details about a session.
  * It shows the list of registered players and the waitlist, and provides
@@ -25,7 +24,6 @@ import { useAuth } from '@/context/auth-context';
 import type { Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 interface SessionDetailsModalProps {
   session: Session | null;
@@ -51,22 +49,21 @@ export default function SessionDetailsModal({
   
   if (!session || !currentUser) return null;
 
-  const spotsFilled = (session.players as User[]).length;
+  const spotsFilled = session.players.length;
   const progressValue = (spotsFilled / session.maxPlayers) * 100;
   
-  const playersList = session.players as User[];
-  const waitlistList = session.waitlist as User[];
-
-  const isRegistered = playersList.some(p => p.id === currentUser.id);
-  const isOnWaitlist = waitlistList.some(p => p.id === currentUser.id);
+  const isRegistered = session.players.some(p => p.id === currentUser.id);
+  const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
   
-  const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }) => {
+  const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }, failureToast: { title: string, description: string }) => {
     if (session) {
       const success = await action(session.id);
       if (success) {
         toast({ ...successToast, variant: 'success' });
         onClose(); // Close modal on success
+      } else {
+        toast({ ...failureToast, variant: 'destructive' });
       }
     }
   }
@@ -90,8 +87,9 @@ export default function SessionDetailsModal({
   const bookAction = () => {
     handleAction(
       onBook, 
-      { title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.` }
-    ).catch(() => toast({ title: 'Booking Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
+      { title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.` },
+      { title: 'Booking Failed', description: 'The session is full or you are already registered.' }
+    );
   }
   const cancelAction = () => {
      if (!canCancel) {
@@ -100,20 +98,23 @@ export default function SessionDetailsModal({
     }
     handleAction(
       onCancel, 
-      { title: 'Booking Canceled', description: 'Your spot has been successfully canceled.' }
-    ).catch(() => toast({ title: 'Cancellation Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
+      { title: 'Booking Canceled', description: 'Your spot has been successfully canceled.' },
+      { title: 'Cancellation Failed', description: 'Could not cancel your booking.' }
+    );
   }
   const joinWaitlistAction = () => {
     handleAction(
       onWaitlist, 
-      { title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up." }
-    ).catch(() => toast({ title: 'Waitlist Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
+      { title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up." },
+      { title: 'Waitlist Failed', description: 'You might already be registered or on the waitlist.' }
+    );
   }
   const leaveWaitlistAction = () => {
     handleAction(
       onLeaveWaitlist, 
-      { title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.' }
-    ).catch(() => toast({ title: 'Action Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
+      { title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.' },
+      { title: 'Action Failed', description: 'Could not leave the waitlist.' }
+    );
   }
 
   return (
@@ -151,13 +152,12 @@ export default function SessionDetailsModal({
           <div>
             <h3 className="mb-3 font-semibold flex items-center gap-2">
               <Users className="h-5 w-5 text-muted-foreground" />
-              Registered Players ({playersList.length})
+              Registered Players ({session.players.length})
             </h3>
-            {playersList.length > 0 ? (
+            {session.players.length > 0 ? (
               <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
-                <TooltipProvider>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {playersList.map((player) => (
+                    {session.players.map((player) => (
                       <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
                         <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
                         <div className="flex-grow">
@@ -167,7 +167,6 @@ export default function SessionDetailsModal({
                       </div>
                     ))}
                   </div>
-                </TooltipProvider>
               </div>
             ) : (
               <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
@@ -179,13 +178,12 @@ export default function SessionDetailsModal({
           <div>
             <h3 className="mb-3 font-semibold flex items-center gap-2">
               <Users className="h-5 w-5 text-muted-foreground" />
-              Waitlist ({waitlistList.length})
+              Waitlist ({session.waitlist.length})
             </h3>
-            {waitlistList.length > 0 ? (
+            {session.waitlist.length > 0 ? (
               <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
-                 <TooltipProvider>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {waitlistList.map((player) => (
+                    {session.waitlist.map((player) => (
                       <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
                         <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
                         <div className="flex-grow">
@@ -195,7 +193,6 @@ export default function SessionDetailsModal({
                       </div>
                     ))}
                   </div>
-                </TooltipProvider>
               </div>
             ) : (
               <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">

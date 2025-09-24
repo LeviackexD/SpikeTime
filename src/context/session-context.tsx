@@ -8,12 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './auth-context';
 import { mockSessions, mockAnnouncements, mockDirectChats, mockUsers } from '@/lib/mock-data';
 
-type ToastInfo = {
-  title: string;
-  description: string;
-  variant: 'success' | 'destructive';
-};
-
 interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
@@ -90,16 +84,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     let success = false;
-    let toastInfo: ToastInfo | null = null;
-
+    
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
             if (session.players.length >= session.maxPlayers) {
-                toastInfo = { title: 'Session Full', description: 'This session is full. You can join the waitlist.', variant: 'destructive' };
                 return session;
             }
             if ((session.players as User[]).some(p => p.id === currentUser.id)) {
-                toastInfo = { title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' };
                 return session;
             }
             success = true;
@@ -118,7 +109,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     let success = false;
-    let toastInfo: ToastInfo | null = null;
 
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
@@ -127,7 +117,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
             if (hoursUntilSession <= 12) {
-                toastInfo = { title: 'Cancellation Period Over', description: 'You can only cancel a session more than 12 hours in advance.', variant: 'destructive' };
                 return session;
             }
 
@@ -148,10 +137,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         }
         return session;
     }));
-
-    if (toastInfo) {
-      toast(toastInfo);
-    }
     
     return success;
   };
@@ -159,12 +144,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     let success = false;
-    let toastInfo: ToastInfo | null = null;
     
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
              if ((session.waitlist as User[]).some(p => p.id === currentUser.id) || (session.players as User[]).some(p => p.id === currentUser.id)) {
-                toastInfo = { title: 'Action Not Allowed', description: 'You are already registered or on the waitlist.', variant: 'destructive' };
                 return session;
             }
             success = true;
@@ -172,10 +155,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         }
         return session;
     }));
-
-    if (toastInfo) {
-      toast(toastInfo);
-    }
 
     return success;
   };
@@ -225,14 +204,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const createDirectChat = async (otherUser: User) => {
     if (!currentUser) return '';
     
-    const existingChat = directChats.find(chat => chat.participantIds.includes(currentUser.id) && chat.participantIds.includes(otherUser.id));
+    const existingChat = directChats.find(chat => {
+        const participantIds = (chat.participants as User[]).map(p => p.id);
+        return participantIds.includes(currentUser.id) && participantIds.includes(otherUser.id);
+    });
+
     if (existingChat) {
       return existingChat.id;
     }
     
     const newChat: DirectChat = {
       id: `dc${Date.now()}`,
-      participantIds: [currentUser.id, otherUser.id],
       participants: [currentUser, otherUser],
       messages: [],
     };

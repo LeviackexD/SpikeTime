@@ -31,19 +31,19 @@ export interface Message {
   id: string;
   sender: User;
   content: string;
-  timestamp: string | Timestamp;
+  timestamp: string;
 }
 
 export interface Session {
   id: string;
-  date: string | Timestamp;
+  date: string;
   startTime: string;
   endTime: string;
   location: string;
   level: SkillLevel;
-  players: string[] | User[];
+  players: User[];
   maxPlayers: number;
-  waitlist: string[] | User[];
+  waitlist: User[];
   imageUrl?: string;
   messages: Message[];
   createdBy?: string; // Admin User ID
@@ -53,12 +53,11 @@ export interface Announcement {
   id: string;
   title: string;
   content: string;
-  date: string | Timestamp;
+  date: string;
 }
 
 export interface DirectChat {
     id: string;
-    participantIds: string[];
     participants: User[];
     messages: Message[];
 }

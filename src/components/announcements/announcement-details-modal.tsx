@@ -19,7 +19,6 @@ import { Button } from '@/components/ui/button';
 import type { Announcement } from '@/lib/types';
 import { Calendar } from 'lucide-react';
 import { getSafeDate } from '@/context/session-context';
-import { Timestamp } from 'firebase/firestore';
 
 
 interface AnnouncementDetailsModalProps {
@@ -31,7 +30,7 @@ interface AnnouncementDetailsModalProps {
 export default function AnnouncementDetailsModal({ isOpen, onClose, announcement }: AnnouncementDetailsModalProps) {
   if (!announcement) return null;
 
-  const formatDate = (date: string | Timestamp) => {
+  const formatDate = (date: string) => {
     return getSafeDate(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
