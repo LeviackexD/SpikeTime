@@ -2,25 +2,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Users can read/update their own profile, and anyone can create a user profile (for sign-up)
+    
+    // Users can read and update their own profile, and can be created.
     match /users/{userId} {
-      allow read, update: if request.auth.uid == userId;
-      allow create: if true;
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
     }
 
-    // Allow any authenticated user to read/write to sessions, announcements, and chats.
-    // This can be locked down further in the future if needed.
+    // Any authenticated user can read/write to sessions.
     match /sessions/{sessionId} {
       allow read, write: if request.auth != null;
     }
 
+    // Any authenticated user can read/write to announcements.
     match /announcements/{announcementId} {
       allow read, write: if request.auth != null;
     }
 
+    // Any authenticated user can read/write to direct chats.
+    // In a production app, you'd restrict this to participants.
     match /directChats/{chatId} {
-        allow read, write: if request.auth != null;
+      allow read, write: if request.auth != null;
     }
   }
 }
