@@ -36,7 +36,8 @@ const getSafeDate = (date: string | Timestamp): Date => {
     }
     // Add 'Z' to ensure UTC interpretation for ISO strings without it
     const dateString = typeof date === 'string' && !date.endsWith('Z') ? `${date}Z` : date;
-    return new Date(dateString);
+    const d = new Date(dateString);
+    return d;
 };
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
@@ -61,7 +62,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const newSession: Session = {
       id: `s${Date.now()}`,
       ...sessionData,
-      date: `${sessionData.date}T00:00:00`,
+      date: `${sessionData.date}T00:00:00.000Z`,
       players: [],
       waitlist: [],
       messages: [],
@@ -120,24 +121,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         if (hoursUntilSession <= 12) {
-            // Can't cancel, return original session
             return session;
         }
         
         const isUserRegistered = (session.players as User[]).some(p => p.id === currentUser.id);
 
         if (!isUserRegistered) {
-            // User not in this session, do nothing
             return session; 
         }
-
-        // User is registered, proceed with cancellation
+        
         success = true;
         let newPlayers = (session.players as User[]).filter(p => p.id !== currentUser.id);
         let newWaitlist = [...(session.waitlist as User[])];
         
-        // If there's a waitlist, promote the first person.
-        if (newWaitlist.length > 0) {
+        if (session.players.length <= session.maxPlayers && newWaitlist.length > 0) {
           const nextPlayer = newWaitlist.shift();
           if(nextPlayer) {
             newPlayers.push(nextPlayer);

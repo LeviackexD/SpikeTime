@@ -53,7 +53,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     
     React.useEffect(() => {
         if (isOpen) {
-            if(session && typeof session.date === 'string') {
+            if(session) {
                 const formattedDate = session.date.split('T')[0];
                 setFormData({
                     date: formattedDate,
@@ -85,10 +85,8 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const dateWithTime = `${formData.date}T00:00:00.000Z`;
         const dataToSave = { 
             ...formData,
-            date: dateWithTime,
         };
         
         if (session) {
