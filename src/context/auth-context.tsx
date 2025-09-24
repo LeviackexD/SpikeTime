@@ -16,6 +16,7 @@ import { auth, db, rtdb } from '@/lib/firebase';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from './language-context';
+import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 
 type AuthUser = User | null;
 
@@ -44,8 +45,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
-        // User is signed in, get their full profile.
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const adminRef = ref(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
         
@@ -67,9 +68,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             };
             setUser(profile);
           } else {
-            // This case is problematic. User exists in Auth but not Firestore.
-            // This might happen if Firestore creation fails after registration.
-            // Log them out to force a clean state.
             console.warn("User authenticated but no profile found in Firestore. Logging out.");
             await signOut(auth);
             setUser(null);
@@ -77,30 +75,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
           console.error("Error fetching user data:", error);
           setUser(null);
-        } finally {
-          setLoading(false);
         }
       } else {
-        // No user is signed in.
         setUser(null);
-        setLoading(false);
       }
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Redirect logic based on auth state
   React.useEffect(() => {
-    if (loading) return; // Don't do anything while loading
+    if (loading) return;
 
     const isAuthPage = pathname === '/login' || pathname === '/register';
 
     if (!user && !isAuthPage) {
-      // If not logged in and not on an auth page, redirect to login
       router.push('/login');
     } else if (user && isAuthPage) {
-      // If logged in and on an auth page, redirect to dashboard
       router.push('/');
     }
   }, [user, loading, pathname, router]);
@@ -115,7 +107,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will handle setting the user state and redirection
       return true;
     } catch (error) {
       console.error("Sign in failed:", error);
@@ -139,11 +130,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         avatarUrl: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
         skillLevel: additionalData.skillLevel,
         favoritePosition: additionalData.favoritePosition,
-        email: email, // Store email in Firestore profile as well
+        email: email,
         stats: { sessionsPlayed: 0, attendanceRate: 100 },
         createdAt: serverTimestamp(),
       });
-      // After sign up, log them out to force a login, ensuring a clean flow.
       await signOut(auth);
       return true;
     } catch (error) {
@@ -154,16 +144,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateUser = async (updatedData: Partial<User>): Promise<boolean> => {
     if (user) {
-      const newUser = { ...user, ...updatedData };
-      setUser(newUser);
       try {
         const userDocRef = doc(db, 'users', user.id);
         await updateDoc(userDocRef, updatedData);
+        setUser({ ...user, ...updatedData });
         return true;
       } catch (error) {
         console.error("Failed to update user profile in Firestore:", error);
-        // Revert optimistic update on failure
-        setUser(user);
         return false;
       }
     }
@@ -171,13 +158,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
   
   const isAuthPage = pathname === '/login' || pathname === '/register';
-  // Render children only when loading is complete AND auth state is resolved for the current page type
-  const shouldRenderChildren = !loading && ((user && !isAuthPage) || (!user && isAuthPage));
-
+  
+  if (loading) {
+    return (
+        <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
+            <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
+            <p className="mt-4 text-lg font-semibold">SpikeTime</p>
+        </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, logout, signInWithEmail, signUpWithEmail, updateUser }}>
-      {shouldRenderChildren ? children : null}
+      { (user && !isAuthPage) || (!user && isAuthPage) ? children : null }
     </AuthContext.Provider>
   );
 };

@@ -5,7 +5,7 @@ import * as React from 'react';
 import type { Session, Message, User, Announcement, DirectChat } from '@/lib/types';
 import { useAuth } from './auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { Timestamp, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
+import { Timestamp, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, serverTimestamp, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface SessionContextType {
@@ -53,7 +53,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const [users, setUsers] = React.useState<User[]>([]);
   const { user: currentUser } = useAuth();
 
-  // Listen for real-time updates from Firestore
   React.useEffect(() => {
     const unsubSessions = onSnapshot(collection(db, 'sessions'), (snapshot) => {
       const sessionsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Session));
@@ -69,24 +68,28 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
       setUsers(usersData);
     });
-    
-    // Note: A robust chat implementation would filter chats by the current user.
-    // For this app, we fetch all chats for simplicity.
-    const unsubDirectChats = onSnapshot(collection(db, 'directChats'), (snapshot) => {
-        const chatsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DirectChat));
-        // Filter chats that include the current user
-        if (currentUser) {
-            const userChats = chatsData.filter(chat => chat.participants.some(p => p.id === currentUser.id));
-            setDirectChats(userChats);
-        }
-    });
 
     return () => {
       unsubSessions();
       unsubAnnouncements();
       unsubUsers();
-      unsubDirectChats();
     };
+  }, []);
+
+  React.useEffect(() => {
+    if (!currentUser) {
+      setDirectChats([]);
+      return;
+    };
+
+    const q = query(collection(db, 'directChats'), where('participants', 'array-contains', currentUser));
+    
+    const unsubDirectChats = onSnapshot(q, (snapshot) => {
+        const chatsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DirectChat));
+        setDirectChats(chatsData);
+    });
+
+    return () => unsubDirectChats();
   }, [currentUser]);
 
   const createSession = async (sessionData: Omit<Session, 'id' | 'players'| 'waitlist'|'messages' | 'date' | 'createdBy'> & { date: string }) => {
@@ -104,7 +107,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const updateSession = async (sessionData: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'| 'createdBy'> & { date: string, id: string, players: User[], waitlist: User[] }) => {
     const sessionRef = doc(db, 'sessions', sessionData.id);
-    // We only update the fields from the form, preserving players, waitlist etc.
     await updateDoc(sessionRef, {
         ...sessionData,
         date: Timestamp.fromDate(getSafeDate(sessionData.date)),
@@ -122,7 +124,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       await updateDoc(sessionRef, {
         players: arrayUnion(currentUser),
-        waitlist: arrayRemove(currentUser) // Also remove from waitlist if they were on it
+        waitlist: arrayRemove(currentUser)
       });
       return true;
     } catch (error) {
@@ -135,8 +137,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (!currentUser) return false;
     const sessionRef = doc(db, 'sessions', sessionId);
     try {
-      // In a real app, you'd use a Cloud Function for this to handle promoting from waitlist atomically.
-      // For the client-side, we just remove the user.
       await updateDoc(sessionRef, {
         players: arrayRemove(currentUser)
       });
@@ -179,7 +179,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (!currentUser) return;
     const sessionRef = doc(db, 'sessions', sessionId);
     const newMessage = {
-      sender: currentUser, // Storing the full user object, simplify if needed
+      sender: currentUser,
       content: messageContent.content,
       timestamp: serverTimestamp(),
     };
@@ -200,7 +200,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const announcementRef = doc(db, 'announcements', announcementData.id);
     await updateDoc(announcementRef, {
         ...announcementData,
-        date: serverTimestamp(), // Update date on edit
+        date: serverTimestamp(),
     });
   };
 

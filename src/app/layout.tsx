@@ -7,7 +7,7 @@ import { SessionProvider } from '@/context/session-context';
 import { ThemeProvider } from '@/context/theme-provider';
 import { AuthProvider } from '@/context/auth-context';
 import { LanguageProvider } from '@/context/language-context';
-
+import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 import './globals.css';
 
 const poppins = Poppins({
