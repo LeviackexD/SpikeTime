@@ -17,14 +17,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Calendar as CalendarIcon, Filter } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import SessionDetailsCard from '@/components/sessions/session-details-card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { skillLevelColors, type SkillLevel, User } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const SessionCalendar = dynamic(() => import('@/components/dashboard/session-calendar'), {
@@ -33,13 +30,10 @@ const SessionCalendar = dynamic(() => import('@/components/dashboard/session-cal
 });
 
 
-const skillLevels: SkillLevel[] = ['Beginner', 'Intermediate', 'Advanced'];
-
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
   const { user: currentUser } = useAuth();
   const [selectedDate, setSelectedDate] = React.useState(new Date());
-  const [skillFilter, setSkillFilter] = React.useState<SkillLevel>('Beginner');
   
   const handleDateChange = (date: Date | undefined) => {
     if(date) {
@@ -53,9 +47,7 @@ const CalendarPage: NextPage = () => {
 
   const filteredSessions = sessions.filter(session => {
     const sessionDate = getSafeDate(session.date);
-    const isSameDay = sessionDate.toDateString() === selectedDate.toDateString();
-    const skillMatch = session.level === skillFilter;
-    return isSameDay && skillMatch;
+    return sessionDate.toDateString() === selectedDate.toDateString();
   }).sort((a,b) => a.startTime.localeCompare(b.startTime));
 
   return (
@@ -88,28 +80,7 @@ const CalendarPage: NextPage = () => {
                         sessions={sessions}
                         selectedDate={selectedDate}
                         onDateChange={handleDateChange}
-                        skillFilter={skillFilter}
                     />
-                     <div className="flex items-center flex-wrap gap-2 mt-4 p-2">
-                        <div className='flex items-center gap-2'>
-                            <Filter className="h-4 w-4 text-muted-foreground" />
-                            <Select value={skillFilter} onValueChange={(value) => setSkillFilter(value as SkillLevel)}>
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Filter by skill level" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {skillLevels.map(level => (
-                                        <SelectItem key={level} value={level}>
-                                            <div className="flex items-center gap-2">
-                                                <div className={cn("h-3 w-3 rounded-full", skillLevelColors[level as keyof typeof skillLevelColors])} />
-                                                {level}
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
                 </CardContent>
             </Card>
           </div>
@@ -135,7 +106,7 @@ const CalendarPage: NextPage = () => {
                   </div>
               ) : (
                   <div className="flex flex-col items-center justify-center text-center p-12 rounded-lg bg-muted/50 border border-dashed animate-fade-in">
-                      <p className="text-muted-foreground">No sessions scheduled for this day or matching your filters.</p>
+                      <p className="text-muted-foreground">No sessions scheduled for this day.</p>
                   </div>
               )}
           </div>

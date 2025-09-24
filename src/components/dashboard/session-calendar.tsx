@@ -16,10 +16,9 @@ interface SessionCalendarProps {
   sessions: Session[];
   selectedDate: Date;
   onDateChange: (date: Date | undefined) => void;
-  skillFilter: string;
 }
 
-export default function SessionCalendar({ sessions, selectedDate, onDateChange, skillFilter }: SessionCalendarProps) {
+export default function SessionCalendar({ sessions, selectedDate, onDateChange }: SessionCalendarProps) {
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
       const date = getSafeDate(session.date).toISOString().split('T')[0];
@@ -31,17 +30,6 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
     }, {} as Record<string, Session[]>);
   }, [sessions]);
   
-  const filteredSessionsByDate = React.useMemo(() => {
-    if (skillFilter === 'All') return sessionsByDate;
-    const filtered: Record<string, Session[]> = {};
-    for (const date in sessionsByDate) {
-      const dailySessions = sessionsByDate[date].filter(session => session.level === skillFilter);
-      if (dailySessions.length > 0) {
-        filtered[date] = dailySessions;
-      }
-    }
-    return filtered;
-  }, [sessionsByDate, skillFilter]);
   
   return (
       <Calendar
@@ -53,7 +41,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
         modifiers={{
             hasSessions: (day) => {
                 const dateString = day.toISOString().split('T')[0];
-                return !!filteredSessionsByDate[dateString];
+                return !!sessionsByDate[dateString];
             }
         }}
         modifiersClassNames={{
