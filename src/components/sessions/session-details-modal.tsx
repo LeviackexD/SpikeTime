@@ -60,7 +60,15 @@ const PlayerList: React.FC<PlayerListProps> = ({ title, players, emptyMessage })
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {players.map((player) => (
                   <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                      <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                           <p className='font-semibold'>{player.name}</p>
+                           <p className='text-muted-foreground'>{player.skillLevel}</p>
+                        </TooltipContent>
+                      </Tooltip>
                       <div className="flex-grow">
                           <p className="font-semibold text-sm">{player.name}</p>
                           <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
@@ -114,7 +122,7 @@ export default function SessionDetailsModal({
       if (success) {
         toast({ ...successToast, variant: 'success' });
       } else {
-        toast({ ...errorToast, variant: 'destructive' });
+        // Error toast is handled by the component now
       }
       onClose(); // Close modal after action
     }
@@ -136,26 +144,38 @@ export default function SessionDetailsModal({
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
 
-  const bookAction = () => handleAction(
+  const bookAction = () => {
+    handleAction(
       onBook, 
       { title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.` },
       { title: 'Booking Failed', description: 'Could not book your spot. The session might be full.' }
-    );
-  const cancelAction = () => handleAction(
+    ).catch(() => toast({ title: 'Booking Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
+  }
+  const cancelAction = () => {
+     if (!canCancel) {
+      toast({ title: 'Cancellation Failed', description: 'You can only cancel more than 12 hours in advance.', variant: 'destructive' });
+      return;
+    }
+    handleAction(
       onCancel, 
       { title: 'Booking Canceled', description: 'Your spot has been successfully canceled.' },
-      { title: 'Cancellation Failed', description: 'Could not cancel your booking. You can only cancel more than 12 hours in advance.' }
-    );
-  const joinWaitlistAction = () => handleAction(
+      { title: 'Cancellation Failed', description: 'Could not cancel your booking.' }
+    ).catch(() => toast({ title: 'Cancellation Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
+  }
+  const joinWaitlistAction = () => {
+    handleAction(
       onWaitlist, 
       { title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up." },
       { title: 'Could not join waitlist', description: 'You might already be on the list.' }
-    );
-  const leaveWaitlistAction = () => handleAction(
+    ).catch(() => toast({ title: 'Waitlist Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
+  }
+  const leaveWaitlistAction = () => {
+    handleAction(
       onLeaveWaitlist, 
       { title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.' },
       { title: 'Action Failed', description: 'Could not leave the waitlist.' }
-    );
+    ).catch(() => toast({ title: 'Action Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
