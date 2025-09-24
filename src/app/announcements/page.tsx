@@ -17,10 +17,10 @@ import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 
 const categoryFilters: { label: string; value: AnnouncementCategory | 'all' }[] = [
-  { label: '📌 Todos', value: 'all' },
-  { label: '🎉 Evento', value: 'event' },
-  { label: '🏐 Clase', value: 'class' },
-  { label: '🏆 Torneo', value: 'tournament' },
+  { label: '📌 All', value: 'all' },
+  { label: '🎉 Event', value: 'event' },
+  { label: '🏐 Class', value: 'class' },
+  { label: '🏆 Tournament', value: 'tournament' },
   { label: '📢 General', value: 'general' },
 ];
 
@@ -84,20 +84,20 @@ const AnnouncementsPage: NextPage = () => {
                     <Megaphone className="w-8 h-8" />
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold handwriting text-brown-dark">Tablón de Anuncios</h1>
-                    <p className="text-muted-foreground opacity-80">Mantente al día con todas las novedades</p>
+                    <h1 className="text-3xl font-bold handwriting text-brown-dark">Announcement Board</h1>
+                    <p className="text-muted-foreground opacity-80">Stay up to date with all the news</p>
                 </div>
             </div>
             {user?.role === 'admin' && (
                 <Button onClick={() => setIsModalOpen(true)} className="bg-cream text-brown px-6 py-3 rounded-lg font-semibold button-hover flex items-center space-x-2 hover:bg-cream-dark">
                     <Plus className="w-5 h-5" />
-                    <span>Nuevo Anuncio</span>
+                    <span>New Announcement</span>
                 </Button>
             )}
         </div>
 
 
-        {/* Filtros */}
+        {/* Filters */}
         <div className="flex flex-wrap gap-3">
           {categoryFilters.map(f => (
             <button
@@ -113,7 +113,7 @@ const AnnouncementsPage: NextPage = () => {
           ))}
         </div>
 
-        {/* Tablón */}
+        {/* Board */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {filteredAnnouncements.map((announcement, index) => (
             <NoteCard key={announcement.id} announcement={announcement} index={index} />
@@ -121,7 +121,7 @@ const AnnouncementsPage: NextPage = () => {
         </div>
       </div>
       
-      {/* Modal para nuevo anuncio */}
+      {/* Modal for new announcement */}
       <AnnouncementFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

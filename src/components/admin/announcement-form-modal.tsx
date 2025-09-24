@@ -91,9 +91,9 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
                             <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="event">🎉 Evento</SelectItem>
-                            <SelectItem value="class">🏐 Clase</SelectItem>
-                            <SelectItem value="tournament">🏆 Torneo</SelectItem>
+                            <SelectItem value="event">🎉 Event</SelectItem>
+                            <SelectItem value="class">🏐 Class</SelectItem>
+                            <SelectItem value="tournament">🏆 Tournament</SelectItem>
                             <SelectItem value="general">📢 General</SelectItem>
                         </SelectContent>
                     </Select>
