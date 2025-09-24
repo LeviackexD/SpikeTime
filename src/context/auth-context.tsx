@@ -45,20 +45,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const adminRef = ref(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
         
         try {
-          const [userDocSnap, adminSnap] = await Promise.all([
-            getDoc(userDocRef),
-            get(adminRef)
-          ]);
+          const userDocSnap = await getDoc(userDocRef);
 
           if (userDocSnap.exists()) {
-            const userData = userDocSnap.data() as Omit<User, 'id' | 'role'>;
-            const isAdmin = adminSnap.exists() && adminSnap.val() === true;
+             const adminSnap = await get(adminRef);
+             const userData = userDocSnap.data() as Omit<User, 'id' | 'role'>;
+             const isAdmin = adminSnap.exists() && adminSnap.val() === true;
             
             const profile: User = {
               id: firebaseUser.uid,
@@ -68,9 +65,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             };
             setUser(profile);
           } else {
-            console.warn("User authenticated but no profile found in Firestore. Logging out.");
-            await signOut(auth);
-            setUser(null);
+             console.warn("User authenticated but no profile found in Firestore. Logging out.");
+             await signOut(auth);
+             setUser(null);
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -99,9 +96,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     await signOut(auth);
-    setUser(null);
-    toast({ title: t('toasts.logoutTitle'), description: t('toasts.logoutDescription') });
-    router.push('/login');
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
@@ -119,12 +113,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     pass: string,
     additionalData: { name: string; skillLevel: SkillLevel; favoritePosition: PlayerPosition }
   ): Promise<boolean> => {
+    console.log('Paso 1: Iniciando el proceso de registro para', email);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const firebaseUser = userCredential.user;
+      console.log('Paso 2: Usuario creado en Firebase Authentication con UID:', firebaseUser.uid);
 
       const userDocRef = doc(db, 'users', firebaseUser.uid);
-      await setDoc(userDocRef, {
+      const userData = {
         name: additionalData.name,
         username: email.split('@')[0],
         avatarUrl: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
@@ -133,11 +129,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: email,
         stats: { sessionsPlayed: 0, attendanceRate: 100 },
         createdAt: serverTimestamp(),
-      });
-      await signOut(auth);
+      };
+      
+      console.log('Paso 3: Intentando escribir el siguiente documento en Firestore:', userData);
+      await setDoc(userDocRef, userData);
+      console.log('Paso 4: ¡Éxito! Documento de usuario creado en Firestore.');
+      
+      await signOut(auth); // Sign out after registration to force user to log in
       return true;
     } catch (error) {
-      console.error("Sign up failed:", error);
+      console.error("ERROR en el proceso de registro:", error);
       return false;
     }
   };
@@ -147,7 +148,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const userDocRef = doc(db, 'users', user.id);
         await updateDoc(userDocRef, updatedData);
-        setUser({ ...user, ...updatedData });
+        setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
         return true;
       } catch (error) {
         console.error("Failed to update user profile in Firestore:", error);
@@ -158,9 +159,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
   
   const isAuthPage = pathname === '/login' || pathname === '/register';
-  
+
   if (loading) {
-    return (
+     return (
         <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
             <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
             <p className="mt-4 text-lg font-semibold">SpikeTime</p>
@@ -168,9 +169,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  if (user && isAuthPage) {
+    // User is logged in but on an auth page, show loading while redirecting
+     return (
+        <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
+            <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
+        </div>
+    );
+  }
+
+  if (!user && !isAuthPage) {
+    // User is not logged in and not on an auth page, show loading while redirecting
+    return (
+        <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
+            <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
+        </div>
+    );
+  }
+
   return (
     <AuthContext.Provider value={{ user, loading, logout, signInWithEmail, signUpWithEmail, updateUser }}>
-      { (user && !isAuthPage) || (!user && isAuthPage) ? children : null }
+      {children}
     </AuthContext.Provider>
   );
 };
