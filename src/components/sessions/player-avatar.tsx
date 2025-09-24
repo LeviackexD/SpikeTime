@@ -12,7 +12,7 @@ interface PlayerAvatarProps {
 
 export default function PlayerAvatar({ player, className }: PlayerAvatarProps) {
     if (!player || !player.name) {
-        return null; // Return null or a skeleton if player data is not yet available
+        return <Avatar className={cn("bg-muted", className)}><AvatarFallback></AvatarFallback></Avatar>; 
     }
 
     return (

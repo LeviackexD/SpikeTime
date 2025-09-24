@@ -116,15 +116,13 @@ export default function SessionDetailsModal({
   const isOnWaitlist = waitlistList.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
   
-  const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }, errorToast: { title: string, description: string }) => {
+  const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }) => {
     if (session) {
       const success = await action(session.id);
       if (success) {
         toast({ ...successToast, variant: 'success' });
-      } else {
-        // Error toast is handled by the component now
+        onClose(); // Close modal on success
       }
-      onClose(); // Close modal after action
     }
   }
 
@@ -147,8 +145,7 @@ export default function SessionDetailsModal({
   const bookAction = () => {
     handleAction(
       onBook, 
-      { title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.` },
-      { title: 'Booking Failed', description: 'Could not book your spot. The session might be full.' }
+      { title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.` }
     ).catch(() => toast({ title: 'Booking Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
   }
   const cancelAction = () => {
@@ -158,22 +155,19 @@ export default function SessionDetailsModal({
     }
     handleAction(
       onCancel, 
-      { title: 'Booking Canceled', description: 'Your spot has been successfully canceled.' },
-      { title: 'Cancellation Failed', description: 'Could not cancel your booking.' }
+      { title: 'Booking Canceled', description: 'Your spot has been successfully canceled.' }
     ).catch(() => toast({ title: 'Cancellation Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
   }
   const joinWaitlistAction = () => {
     handleAction(
       onWaitlist, 
-      { title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up." },
-      { title: 'Could not join waitlist', description: 'You might already be on the list.' }
+      { title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up." }
     ).catch(() => toast({ title: 'Waitlist Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
   }
   const leaveWaitlistAction = () => {
     handleAction(
       onLeaveWaitlist, 
-      { title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.' },
-      { title: 'Action Failed', description: 'Could not leave the waitlist.' }
+      { title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.' }
     ).catch(() => toast({ title: 'Action Failed', description: 'An unexpected error occurred.', variant: 'destructive'}));
   }
 
