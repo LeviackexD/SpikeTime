@@ -3,10 +3,9 @@
 
 import * as React from 'react';
 import type { Session, Message, User, Announcement, DirectChat } from '@/lib/types';
+import { mockSessions, mockAnnouncements, mockUsers, mockDirectChats, currentUser } from '@/lib/mock-data';
 import { useAuth } from './auth-context';
-import { useToast } from '@/hooks/use-toast';
-import { Timestamp, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, serverTimestamp, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { Timestamp } from 'firebase/firestore';
 
 interface SessionContextType {
   sessions: Session[];
@@ -36,8 +35,9 @@ export const getSafeDate = (date: string | Date | Timestamp): Date => {
     }
     const d = new Date(date);
     if (isNaN(d.getTime())) {
-        const parts = String(date).split('-');
-        if (parts.length === 3) {
+        // Handle 'YYYY-MM-DD' format which Date constructor can misinterpret
+        const parts = String(date).split(/[-T:]/);
+        if (parts.length >= 3) {
             return new Date(Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])));
         }
         return new Date(); // fallback
@@ -47,189 +47,151 @@ export const getSafeDate = (date: string | Date | Timestamp): Date => {
 
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
-  const [sessions, setSessions] = React.useState<Session[]>([]);
-  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
-  const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
-  const [users, setUsers] = React.useState<User[]>([]);
+  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>(mockAnnouncements);
+  const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
+  const [users, setUsers] = React.useState<User[]>(mockUsers);
   const { user: currentUser } = useAuth();
 
-  React.useEffect(() => {
-    const unsubSessions = onSnapshot(collection(db, 'sessions'), (snapshot) => {
-      const sessionsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Session));
-      setSessions(sessionsData.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
-    });
-
-    const unsubAnnouncements = onSnapshot(collection(db, 'announcements'), (snapshot) => {
-      const announcementsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
-      setAnnouncements(announcementsData.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
-    });
-
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-      const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-      setUsers(usersData);
-    });
-
-    return () => {
-      unsubSessions();
-      unsubAnnouncements();
-      unsubUsers();
-    };
-  }, []);
-
-  React.useEffect(() => {
-    if (!currentUser) {
-      setDirectChats([]);
-      return;
-    };
-
-    const q = query(collection(db, 'directChats'), where('participants', 'array-contains', currentUser));
-    
-    const unsubDirectChats = onSnapshot(q, (snapshot) => {
-        const chatsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DirectChat));
-        setDirectChats(chatsData);
-    });
-
-    return () => unsubDirectChats();
-  }, [currentUser]);
 
   const createSession = async (sessionData: Omit<Session, 'id' | 'players'| 'waitlist'|'messages' | 'date' | 'createdBy'> & { date: string }) => {
     if (!currentUser) return;
-    const newSession = {
+    const newSession: Session = {
       ...sessionData,
+      id: `session-${Date.now()}`,
       date: Timestamp.fromDate(getSafeDate(sessionData.date)),
       createdBy: currentUser.id,
       players: [],
       waitlist: [],
       messages: [],
     };
-    await addDoc(collection(db, 'sessions'), newSession);
+    setSessions(prev => [newSession, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
   };
   
   const updateSession = async (sessionData: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'| 'createdBy'> & { date: string, id: string, players: User[], waitlist: User[] }) => {
-    const sessionRef = doc(db, 'sessions', sessionData.id);
-    await updateDoc(sessionRef, {
+     setSessions(prev => prev.map(s => s.id === sessionData.id ? {
+        ...s,
         ...sessionData,
         date: Timestamp.fromDate(getSafeDate(sessionData.date)),
-    });
+     } : s));
   };
   
   const deleteSession = async (sessionId: string) => {
-    const sessionRef = doc(db, 'sessions', sessionId);
-    await deleteDoc(sessionRef);
+    setSessions(prev => prev.filter(s => s.id !== sessionId));
   };
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const sessionRef = doc(db, 'sessions', sessionId);
-    try {
-      await updateDoc(sessionRef, {
-        players: arrayUnion(currentUser),
-        waitlist: arrayRemove(currentUser)
-      });
-      return true;
-    } catch (error) {
-      console.error("Error booking session:", error);
-      return false;
-    }
+    setSessions(prev => prev.map(s => {
+      if (s.id === sessionId && !s.players.some(p => p.id === currentUser.id) && s.players.length < s.maxPlayers) {
+        return {
+          ...s,
+          players: [...s.players, currentUser],
+          waitlist: s.waitlist.filter(p => p.id !== currentUser.id), // Also remove from waitlist if they were on it
+        };
+      }
+      return s;
+    }));
+    return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const sessionRef = doc(db, 'sessions', sessionId);
-    try {
-      await updateDoc(sessionRef, {
-        players: arrayRemove(currentUser)
-      });
-      return true;
-    } catch (error) {
-      console.error("Error canceling booking:", error);
-      return false;
-    }
+    setSessions(prev => prev.map(s => {
+      if (s.id === sessionId) {
+        const updatedPlayers = s.players.filter(p => p.id !== currentUser.id);
+        const updatedWaitlist = [...s.waitlist];
+        
+        // If there's a waitlist, move the first person from waitlist to players
+        if (s.players.length === s.maxPlayers && updatedWaitlist.length > 0) {
+            const nextPlayer = updatedWaitlist.shift();
+            if(nextPlayer) {
+                updatedPlayers.push(nextPlayer);
+            }
+        }
+        
+        return { ...s, players: updatedPlayers, waitlist: updatedWaitlist };
+      }
+      return s;
+    }));
+    return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const sessionRef = doc(db, 'sessions', sessionId);
-     try {
-      await updateDoc(sessionRef, {
-        waitlist: arrayUnion(currentUser)
-      });
-      return true;
-    } catch (error) {
-      console.error("Error joining waitlist:", error);
-      return false;
-    }
+    setSessions(prev => prev.map(s => {
+      if (s.id === sessionId && !s.waitlist.some(p => p.id === currentUser.id)) {
+        return { ...s, waitlist: [...s.waitlist, currentUser] };
+      }
+      return s;
+    }));
+    return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
-    const sessionRef = doc(db, 'sessions', sessionId);
-     try {
-      await updateDoc(sessionRef, {
-        waitlist: arrayRemove(currentUser)
-      });
-      return true;
-    } catch (error) {
-      console.error("Error leaving waitlist:", error);
-      return false;
-    }
+     setSessions(prev => prev.map(s => {
+      if (s.id === sessionId) {
+        return { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) };
+      }
+      return s;
+    }));
+    return true;
   };
 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
     if (!currentUser) return;
-    const sessionRef = doc(db, 'sessions', sessionId);
-    const newMessage = {
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
       sender: currentUser,
       content: messageContent.content,
-      timestamp: serverTimestamp(),
+      timestamp: Timestamp.now(),
     };
-    await updateDoc(sessionRef, {
-      messages: arrayUnion(newMessage)
-    });
+    setSessions(prev => prev.map(s => 
+        s.id === sessionId ? { ...s, messages: [...s.messages, newMessage] } : s
+    ));
   };
 
   const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
-    const newAnnouncement = {
+    const newAnnouncement: Announcement = {
       ...announcementData,
-      date: serverTimestamp(),
+      id: `ann-${Date.now()}`,
+      date: Timestamp.now(),
     };
-    await addDoc(collection(db, 'announcements'), newAnnouncement);
+    setAnnouncements(prev => [newAnnouncement, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
   };
 
   const updateAnnouncement = async (announcementData: Omit<Announcement, 'date'> & {id: string}) => {
-    const announcementRef = doc(db, 'announcements', announcementData.id);
-    await updateDoc(announcementRef, {
-        ...announcementData,
-        date: serverTimestamp(),
-    });
+    setAnnouncements(prev => prev.map(a => a.id === announcementData.id ? { ...a, ...announcementData, date: Timestamp.now() } : a));
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
-    const announcementRef = doc(db, 'announcements', announcementId);
-    await deleteDoc(announcementRef);
+    setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
   };
   
   const createDirectChat = async (otherUser: User): Promise<string> => {
     if(!currentUser) return '';
-    const newChat = {
+    const newChatId = `dm-${Date.now()}`;
+    const newChat: DirectChat = {
+        id: newChatId,
         participants: [currentUser, otherUser],
         messages: [],
     };
-    const docRef = await addDoc(collection(db, 'directChats'), newChat);
-    return docRef.id;
+    setDirectChats(prev => [...prev, newChat]);
+    return newChatId;
   };
 
   const addDirectMessage = async (chatId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
     if (!currentUser) return;
-    const chatRef = doc(db, 'directChats', chatId);
-    const newMessage = {
+    const newMessage: Message = {
+      id: `dm-msg-${Date.now()}`,
       sender: currentUser,
       content: messageContent.content,
-      timestamp: serverTimestamp(),
+      timestamp: Timestamp.now(),
     };
-    await updateDoc(chatRef, {
-      messages: arrayUnion(newMessage)
-    });
+    setDirectChats(prev => prev.map(c => 
+        c.id === chatId ? { ...c, messages: [...c.messages, newMessage] } : c
+    ));
   };
 
   return (

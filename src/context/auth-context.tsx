@@ -3,20 +3,10 @@
 
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import {
-  onAuthStateChanged,
-  signOut,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  type User as FirebaseUser,
-} from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { ref, get } from 'firebase/database';
-import { auth, db, rtdb } from '@/lib/firebase';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from './language-context';
+import { currentUser, mockUsers } from '@/lib/mock-data';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
+
 
 type AuthUser = User | null;
 
@@ -40,52 +30,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = React.useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const { toast } = useToast();
-  const { t } = useLanguage();
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
-      if (firebaseUser) {
-        console.log('AuthProvider: User is signed in with UID:', firebaseUser.uid);
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const adminRef = ref(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
-        
-        try {
-          const [userDocSnap, adminSnap] = await Promise.all([
-            getDoc(userDocRef),
-            get(adminRef)
-          ]);
-
-          if (userDocSnap.exists()) {
-             const userData = userDocSnap.data() as Omit<User, 'id' | 'role'>;
-             const isAdmin = adminSnap.exists() && adminSnap.val() === true;
-             console.log(`AuthProvider: User role check -> isAdmin: ${isAdmin}`);
-            
-            const profile: User = {
-              id: firebaseUser.uid,
-              ...userData,
-              email: firebaseUser.email || userData.email || '',
-              role: isAdmin ? 'admin' : 'user',
-            };
-            setUser(profile);
-          } else {
-             console.warn("AuthProvider: User authenticated but no profile found in Firestore. Logging out.");
-             await signOut(auth);
-             setUser(null);
-          }
-        } catch (error) {
-          console.error("AuthProvider: Error fetching user data:", error);
-          setUser(null);
-        }
-      } else {
-        console.log('AuthProvider: No user is signed in.');
-        setUser(null);
-      }
+    // In mock mode, we just set the currentUser after a short delay
+    // to simulate an async operation.
+    setTimeout(() => {
+      setUser(currentUser);
       setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }, 500);
   }, []);
 
   React.useEffect(() => {
@@ -101,18 +53,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user, loading, pathname, router]);
 
   const logout = async () => {
-    await signOut(auth);
-    router.push('/login');
+    setLoading(true);
+    setUser(null);
+    // No need to push, the effect above will handle it
+    setTimeout(() => setLoading(false), 300);
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-      return true;
-    } catch (error) {
-      console.error("Sign in failed:", error);
-      return false;
+    setLoading(true);
+    // In mock mode, any login is successful as long as it's not empty.
+    const success = email !== '' && pass !== '';
+    if (success) {
+      setUser(currentUser); // Log in as the default mock user
     }
+    setTimeout(() => setLoading(false), 500);
+    return success;
   };
 
   const signUpWithEmail = async (
@@ -120,46 +75,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     pass: string,
     additionalData: { name: string; skillLevel: SkillLevel; favoritePosition: PlayerPosition }
   ): Promise<boolean> => {
-    console.log('Paso 1: Iniciando el proceso de registro para', email);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      const firebaseUser = userCredential.user;
-      console.log('Paso 2: Usuario creado en Firebase Authentication con UID:', firebaseUser.uid);
-
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userData = {
-        name: additionalData.name,
-        username: email.split('@')[0],
-        avatarUrl: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
-        skillLevel: additionalData.skillLevel,
-        favoritePosition: additionalData.favoritePosition,
-        email: email,
-        stats: { sessionsPlayed: 0, attendanceRate: 100 },
-        createdAt: serverTimestamp(),
-      };
-      
-      await setDoc(userDocRef, userData);
-      console.log('Paso 3: ¡Éxito! Documento de usuario creado en Firestore.');
-      
-      await signOut(auth);
-      return true;
-    } catch (error) {
-      console.error("ERROR en el proceso de registro:", error);
-      return false;
-    }
+    console.log('Mock sign up successful for:', additionalData.name);
+    // In a real app, you'd create the user. Here, we just return true.
+    return new Promise(resolve => setTimeout(() => resolve(true), 500));
   };
 
   const updateUser = async (updatedData: Partial<User>): Promise<boolean> => {
-    if (user) {
-      try {
-        const userDocRef = doc(db, 'users', user.id);
-        await updateDoc(userDocRef, updatedData);
-        setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
-        return true;
-      } catch (error) {
-        console.error("Failed to update user profile in Firestore:", error);
-        return false;
+     if (user) {
+      setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
+      // In a real app, find the user in mockUsers and update them too if needed.
+      const userIndex = mockUsers.findIndex(u => u.id === user.id);
+      if (userIndex !== -1) {
+        mockUsers[userIndex] = { ...mockUsers[userIndex], ...updatedData };
       }
+      return true;
     }
     return false;
   };
