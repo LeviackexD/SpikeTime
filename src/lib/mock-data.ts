@@ -46,12 +46,19 @@ const mockSessionMessages: Message[] = [
 ];
 
 export const mockSessions: Session[] = [
-  { id: 's1', date: getFutureDate(1), startTime: '18:00', endTime: '20:00', location: 'Main Gym', level: 'Advanced', players: [mockUsers[0], mockUsers[1], mockUsers[2]], maxPlayers: 12, waitlist: [mockUsers[5]], imageUrl: `https://picsum.photos/seed/s1/400/300`, messages: [...mockSessionMessages] },
-  { id: 's2', date: getFutureDate(2), startTime: '19:00', endTime: '21:00', location: 'Beach Court 1', level: 'Intermediate', players: [mockUsers[3], mockUsers[4]], maxPlayers: 8, waitlist: [], imageUrl: `https://picsum.photos/seed/s2/400/300`, messages: [] },
-  { id: 's3', date: getFutureDate(3), startTime: '17:30', endTime: '19:00', location: 'South Gym', level: 'Beginner', players: [mockUsers[12], mockUsers[3]], maxPlayers: 10, waitlist: [], imageUrl: `https://picsum.photos/seed/s3/400/300`, messages: [] },
-  { id: 's4', date: getFutureDate(3), startTime: '19:00', endTime: '21:00', location: 'Main Gym', level: 'Intermediate', players: [mockUsers[0], mockUsers[4], mockUsers[5]], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s4/400/300`, messages: [] },
-  { id: 's5', date: getFutureDate(5), startTime: '20:00', endTime: '22:00', location: 'Main Gym', level: 'Advanced', players: [mockUsers[1], mockUsers[2]], maxPlayers: 12, waitlist: [], imageUrl: `https://picsum.photos/seed/s5/400/300`, messages: [] },
-  { id: 's6', date: getFutureDate(8), startTime: '18:00', endTime: '20:00', location: 'Beach Court 2', level: 'Intermediate', players: [mockUsers[0],mockUsers[1],mockUsers[2],mockUsers[3],mockUsers[4],mockUsers[5],mockUsers[6],mockUsers[7],mockUsers[8],mockUsers[9],mockUsers[10],mockUsers[11]], maxPlayers: 12, waitlist: [mockUsers[12]], imageUrl: `https://picsum.photos/seed/s6/400/300`, messages: [] },
+  { 
+    id: 's1', 
+    date: getFutureDate(1), 
+    startTime: '18:00', 
+    endTime: '20:00', 
+    location: 'Main Gym', 
+    level: 'Intermediate', 
+    players: mockUsers.slice(1, 12), 
+    maxPlayers: 12, 
+    waitlist: [], 
+    imageUrl: `https://picsum.photos/seed/s1/400/300`, 
+    messages: [] 
+  },
 ];
 
 export const mockAnnouncements: Announcement[] = [
