@@ -1,12 +1,10 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ATENCIÓN: Estas reglas son solo para desarrollo.
-    // Permiten que cualquiera pueda leer y escribir en tu base de datos.
-    // Deberás asegurarlas antes de pasar a producción.
+    // Allow read/write access to any authenticated user.
+    // This is a temporary rule for development.
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null;
     }
   }
 }
