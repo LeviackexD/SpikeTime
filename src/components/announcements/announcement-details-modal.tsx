@@ -51,9 +51,9 @@ export default function AnnouncementDetailsModal({ isOpen, onClose, announcement
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn("w-full max-w-lg mx-auto p-6 note note-1 shadow-lg", styles.bg)}>
+      <DialogContent className={cn("w-full max-w-lg mx-auto p-6 rounded-lg shadow-lg", styles.bg)}>
         <div className={cn('pushpin', styles.pin)}></div>
-        <DialogHeader className="pt-4">
+        <DialogHeader className="pt-4 text-left">
            <div className="mb-4">
             <span className={cn('px-3 py-1 rounded-full text-sm font-semibold', styles.bg.replace('bg-', 'bg-light-'), styles.text)}>
             {announcement.category.charAt(0).toUpperCase() + announcement.category.slice(1)}

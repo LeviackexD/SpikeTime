@@ -161,10 +161,10 @@ const DashboardPage: NextPage = () => {
             <CardContent className="p-0">
               <div className="divide-y">
                 {recentAnnouncements.map((announcement) => (
-                  <div
+                  <button
                     key={announcement.id}
                     onClick={() => handleOpenAnnouncementModal(announcement)}
-                    className="p-4 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
+                    className="w-full text-left p-4 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
                   >
                     <h3 className="font-semibold text-foreground">{announcement.title}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
@@ -176,7 +176,7 @@ const DashboardPage: NextPage = () => {
                         timeZone: 'UTC',
                       })}
                     </p>
-                  </div>
+                  </button>
                 ))}
               </div>
             </CardContent>
