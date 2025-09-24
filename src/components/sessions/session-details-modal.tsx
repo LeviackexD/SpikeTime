@@ -208,43 +208,41 @@ export default function SessionDetailsModal({
         <DialogFooter className='sm:justify-between items-center flex-shrink-0 pt-4'>
             <div className='flex items-center gap-2 flex-wrap'>
             {isRegistered ? (
-              <Button 
-                variant="outline" 
-                onClick={cancelAction}
-                disabled={!canCancel}
-                title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
-              >
-                <XCircle className="mr-2 h-4 w-4" /> Cancel My Spot
-              </Button>
-            ) : (
-              <>
-                {!isFull && (
-                   <Button onClick={bookAction}>
-                      Book My Spot
-                  </Button>
-                )}
-                {isOnWaitlist ? (
-                  <div className='flex gap-2'>
+                <Button 
+                    variant="outline" 
+                    onClick={cancelAction}
+                    disabled={!canCancel}
+                    title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
+                >
+                    <XCircle className="mr-2 h-4 w-4" /> Cancel My Spot
+                </Button>
+            ) : isOnWaitlist ? (
+                <div className='flex gap-2'>
                     {!isFull &&
-                      <Button onClick={bookAction}>
-                          Book My Spot
-                      </Button>
+                    <Button onClick={bookAction}>
+                        Book My Spot
+                    </Button>
                     }
                     <Button variant="secondary" onClick={leaveWaitlistAction}>
                         <LogOut className="mr-2 h-4 w-4" />
                         Leave Waitlist
                     </Button>
-                  </div>
-                ) : (
-                  isFull && <Button
-                      variant="secondary"
-                      onClick={joinWaitlistAction}
-                  >
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Join Waitlist
-                  </Button>
-                )}
-              </>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2 flex-wrap">
+                    {!isFull && (
+                    <Button onClick={bookAction}>
+                        Book My Spot
+                    </Button>
+                    )}
+                    <Button
+                        variant="secondary"
+                        onClick={joinWaitlistAction}
+                    >
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Join Waitlist
+                    </Button>
+                </div>
             )}
             </div>
            <Button variant="ghost" onClick={onClose}>
