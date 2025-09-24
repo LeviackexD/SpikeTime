@@ -245,14 +245,11 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string } | (Omit<Session, 'date' | 'players' | 'waitlist'> & { date: string, players: User[], waitlist: User[] })) => {
-    const playerIds = ('players' in sessionData && Array.isArray(sessionData.players)) ? (sessionData.players as User[]).map(p => p.id) : [];
-    const waitlistIds = ('waitlist' in sessionData && Array.isArray(sessionData.waitlist)) ? (sessionData.waitlist as User[]).map(p => p.id) : [];
-
+  const handleSaveSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string } | (Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string, id: string, players: User[], waitlist: User[] })) => {
     if ('id' in sessionData) {
-        await updateSession({ ...sessionData, players: sessionData.players as User[], waitlist: sessionData.waitlist as User[]});
+        await updateSession(sessionData);
     } else {
-        await createSession(sessionData as Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string });
+        await createSession(sessionData);
     }
     setIsSessionModalOpen(false);
     setSelectedSession(null);
@@ -480,3 +477,5 @@ export default function AdminPage() {
     </>
   );
 }
+
+    

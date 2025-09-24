@@ -12,7 +12,7 @@ interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
   createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => Promise<void>;
-  updateSession: (session: Omit<Session, 'date' | 'players' | 'waitlist'> & { date: string, players: User[], waitlist: User[] }) => Promise<void>;
+  updateSession: (session: Omit<Session, 'date'> & { date: string }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<boolean>;
   cancelBooking: (sessionId: string) => Promise<boolean>;
@@ -47,10 +47,15 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
   const [users, setUsers] = React.useState<User[]>(mockUsers);
   const { toast } = useToast();
+  
+  const sortAndSetSessions = (newSessions: Session[]) => {
+    const sorted = newSessions.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime());
+    setSessions(sorted);
+  }
 
   React.useEffect(() => {
     // Sort initial data
-    setSessions(prev => [...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+    sortAndSetSessions(mockSessions);
     setAnnouncements(prev => [...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
   }, []);
 
@@ -62,18 +67,19 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const newSession: Session = {
       id: `s${Date.now()}`,
       ...sessionData,
-      date: `${sessionData.date}T00:00:00.000Z`,
+      // ** KEY FIX **: Standardize date format to full ISO string with UTC time
+      date: `${sessionData.date}T00:00:00.000Z`, 
       players: [],
       waitlist: [],
       messages: [],
       createdBy: currentUser.id,
     };
-    setSessions(prev => [newSession, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+    sortAndSetSessions([...sessions, newSession]);
     toast({ title: 'Session Created!', description: 'The new session has been successfully added.', variant: 'success' });
   };
 
-  const updateSession = async (updatedSessionData: Omit<Session, 'date'| 'players' | 'waitlist'> & { date: string, players: User[], waitlist: User[] }) => {
-     setSessions(prev => prev.map(s => s.id === updatedSessionData.id ? { ...s, ...updatedSessionData, date: `${updatedSessionData.date}T00:00:00` } : s));
+  const updateSession = async (updatedSessionData: Omit<Session, 'date'> & { date: string }) => {
+     sortAndSetSessions(sessions.map(s => s.id === updatedSessionData.id ? { ...s, ...updatedSessionData, date: `${updatedSessionData.date}T00:00:00.000Z` } : s));
      toast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
   };
 
@@ -108,50 +114,47 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
+    if (!currentUser) return false;
+
     let success = false;
 
-    setSessions(prev => {
-        const newSessions = [...prev];
-        const sessionIndex = newSessions.findIndex(s => s.id === sessionId);
-        if (sessionIndex === -1 || !currentUser) {
-            return newSessions;
-        }
+    setSessions(prevSessions => {
+        const sessionIndex = prevSessions.findIndex(s => s.id === sessionId);
+        if (sessionIndex === -1) return prevSessions;
 
-        const session = newSessions[sessionIndex];
+        const session = { ...prevSessions[sessionIndex] };
+        const playerIndex = session.players.findIndex(p => p.id === currentUser.id);
+
+        if (playerIndex === -1) return prevSessions; // User not in session
+
         const sessionDateTime = new Date(`${getSafeDate(session.date).toISOString().split('T')[0]}T${session.startTime}`);
         const now = new Date();
         const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-        if (hoursUntilSession <= 12) {
+        if (hoursUntilSession <= 12 && currentUser.role !== 'admin') {
             toast({ title: 'Cancellation Failed', description: 'You can only cancel more than 12 hours in advance.', variant: 'destructive' });
-            return newSessions;
+            return prevSessions;
         }
-        
-        const playerIndex = session.players.findIndex(p => p.id === currentUser.id);
 
-        if (playerIndex === -1) {
-             return newSessions; // User not in session
-        }
-        
         success = true;
 
-        const newPlayers = [...session.players];
-        newPlayers.splice(playerIndex, 1);
-        
-        const newWaitlist = [...session.waitlist];
-        
-        if (newWaitlist.length > 0) {
-          const nextPlayer = newWaitlist.shift();
-          if(nextPlayer) {
-            newPlayers.push(nextPlayer);
-            console.log(`User ${nextPlayer.name} moved from waitlist to session ${sessionId}.`);
-          }
+        // Remove player
+        session.players.splice(playerIndex, 1);
+
+        // Promote from waitlist if applicable
+        if (session.waitlist.length > 0) {
+            const nextPlayer = session.waitlist.shift();
+            if (nextPlayer) {
+                session.players.push(nextPlayer);
+                console.log(`User ${nextPlayer.name} moved from waitlist to session ${sessionId}.`);
+            }
         }
         
-        newSessions[sessionIndex] = { ...session, players: newPlayers, waitlist: newWaitlist };
+        const newSessions = [...prevSessions];
+        newSessions[sessionIndex] = session;
         return newSessions;
     });
-    
+
     return success;
   };
 
@@ -283,3 +286,5 @@ export const useSessions = () => {
 };
 
 export { getSafeDate };
+
+    

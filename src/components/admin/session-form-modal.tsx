@@ -25,25 +25,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Session, SkillLevel } from '@/lib/types';
-import { getSafeDate } from '@/context/session-context';
+import type { Session, SkillLevel, User } from '@/lib/types';
 
+// The data shape for the form, using a simple string for the date.
 type SessionFormData = Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string };
-type EditableSession = Omit<Session, 'date'> & { date: string };
+
+// The shape for saving, which might include the ID for updates.
+type SaveSessionData = SessionFormData | (SessionFormData & { id: string, players: User[], waitlist: User[] });
+
 
 interface SessionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (session: SessionFormData | EditableSession) => void;
+  onSave: (session: SaveSessionData) => void;
   session: Session | null;
 }
 
+const getTodayString = () => new Date().toISOString().split('T')[0];
+
 const emptySession: SessionFormData = {
-  date: new Date().toISOString().split('T')[0],
+  date: getTodayString(),
   startTime: '',
   endTime: '',
   location: '',
-  level: 'Beginner',
+  level: 'Intermediate',
   maxPlayers: 12,
   imageUrl: '',
 };
@@ -53,7 +58,8 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     
     React.useEffect(() => {
         if (isOpen) {
-            if(session) {
+            if (session) {
+                // When editing, get the 'YYYY-MM-DD' part from the ISO string
                 const formattedDate = session.date.split('T')[0];
                 setFormData({
                     date: formattedDate,
@@ -65,18 +71,18 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     imageUrl: session.imageUrl || '',
                 });
             } else {
-                setFormData({ ...emptySession, date: new Date().toISOString().split('T')[0] });
+                // For new sessions, use today's date
+                setFormData({ ...emptySession, date: getTodayString() });
             }
         }
     }, [session, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value, type } = e.target;
-        if (type === 'number') {
-            setFormData(prev => ({ ...prev, [id]: Number(value) }));
-        } else {
-            setFormData(prev => ({...prev, [id]: value}));
-        }
+        setFormData(prev => ({ 
+            ...prev, 
+            [id]: type === 'number' ? Number(value) : value 
+        }));
     };
 
     const handleSelectChange = (value: SkillLevel) => {
@@ -85,18 +91,18 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const dataToSave = { 
-            ...formData,
-        };
+        
+        let dataToSave: SaveSessionData = { ...formData };
         
         if (session) {
-             onSave({
+            // If editing, include the original session ID and player/waitlist data
+            dataToSave = {
                 ...session,
-                ...dataToSave,
-            });
-        } else {
-            onSave(dataToSave);
+                ...formData,
+            };
         }
+        
+        onSave(dataToSave);
     }
     
   return (
@@ -124,11 +130,11 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                 </div>
                 <div className="col-span-2 space-y-2">
                     <Label htmlFor="location">Location</Label>
-                    <Input id="location" value={formData.location} onChange={handleChange} placeholder="e.g., Beach Court 1" required/>
+                    <Input id="location" value={formData.location} onChange={handleChange} placeholder="e.g., Main Gym" required/>
                 </div>
                  <div className="col-span-2 space-y-2">
                     <Label htmlFor="imageUrl">Cover Image URL</Label>
-                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://picsum.photos/400/300"/>
+                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://picsum.photos/seed/1/400/300"/>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="level">Level</Label>
@@ -157,3 +163,5 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     </Dialog>
   );
 }
+
+    
