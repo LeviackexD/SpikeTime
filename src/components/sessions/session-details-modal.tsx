@@ -17,14 +17,15 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut } from 'lucide-react';
-import { useSessions, getSafeDate } from '@/context/session-context';
+import { getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
-import { Timestamp } from 'firebase/firestore';
+import type { Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import PlayerAvatar from './player-avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 
 interface PlayerListProps {
@@ -57,16 +58,22 @@ const PlayerList: React.FC<PlayerListProps> = ({ title, players, emptyMessage })
         <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {players.map((player) => (
-                <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                <Avatar className="h-10 w-10 border-2 border-primary/50">
-                    <AvatarImage src={player.avatarUrl} alt={player.name} />
-                    <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-grow">
-                    <p className="font-semibold text-sm">{player.name}</p>
-                    <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
-                </div>
-                </div>
+                <TooltipProvider key={player.id}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                                <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                                <div className="flex-grow">
+                                    <p className="font-semibold text-sm">{player.name}</p>
+                                    <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                                </div>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{player.name}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             ))}
           </div>
         </div>
