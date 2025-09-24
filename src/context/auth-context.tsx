@@ -45,17 +45,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
+        console.log('AuthProvider: User is signed in with UID:', firebaseUser.uid);
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const adminRef = ref(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
         
         try {
-          const userDocSnap = await getDoc(userDocRef);
+          // Promise.all to fetch from Firestore and RTDB concurrently
+          const [userDocSnap, adminSnap] = await Promise.all([
+            getDoc(userDocRef),
+            get(adminRef)
+          ]);
 
           if (userDocSnap.exists()) {
-             const adminSnap = await get(adminRef);
              const userData = userDocSnap.data() as Omit<User, 'id' | 'role'>;
              const isAdmin = adminSnap.exists() && adminSnap.val() === true;
+             console.log(`AuthProvider: User role check -> isAdmin: ${isAdmin}`);
             
             const profile: User = {
               id: firebaseUser.uid,
@@ -65,15 +71,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             };
             setUser(profile);
           } else {
-             console.warn("User authenticated but no profile found in Firestore. Logging out.");
+             console.warn("AuthProvider: User authenticated but no profile found in Firestore. Logging out.");
              await signOut(auth);
              setUser(null);
           }
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.error("AuthProvider: Error fetching user data:", error);
           setUser(null);
         }
       } else {
+        console.log('AuthProvider: No user is signed in.');
         setUser(null);
       }
       setLoading(false);
@@ -131,9 +138,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         createdAt: serverTimestamp(),
       };
       
-      console.log('Paso 3: Intentando escribir el siguiente documento en Firestore:', userData);
       await setDoc(userDocRef, userData);
-      console.log('Paso 4: ¡Éxito! Documento de usuario creado en Firestore.');
+      console.log('Paso 3: ¡Éxito! Documento de usuario creado en Firestore.');
       
       await signOut(auth); // Sign out after registration to force user to log in
       return true;
@@ -158,29 +164,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return false;
   };
   
-  const isAuthPage = pathname === '/login' || pathname === '/register';
-
   if (loading) {
      return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
-            <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
-            <p className="mt-4 text-lg font-semibold">SpikeTime</p>
-        </div>
-    );
-  }
-
-  if (user && isAuthPage) {
-    // User is logged in but on an auth page, show loading while redirecting
-     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
-            <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
-        </div>
-    );
-  }
-
-  if (!user && !isAuthPage) {
-    // User is not logged in and not on an auth page, show loading while redirecting
-    return (
         <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
             <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
         </div>
