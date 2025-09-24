@@ -1,7 +1,8 @@
+
 // This file is the central point for Firebase configuration and service initialization.
 import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 
 // Your web app's Firebase configuration, read from environment variables.
@@ -19,7 +20,9 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize and export Firebase services.
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+});
 const rtdb = getDatabase(app);
 
 export { app, auth, db, rtdb };
