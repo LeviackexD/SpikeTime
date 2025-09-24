@@ -120,16 +120,22 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 return session;
             }
 
-            const newPlayers = (session.players as User[]).filter(p => p.id !== currentUser.id);
+            let newPlayers = (session.players as User[]).filter(p => p.id !== currentUser.id);
             let newWaitlist = [...session.waitlist as User[]];
             
-            // Promote from waitlist
-            if (newWaitlist.length > 0) {
-                const nextPlayer = newWaitlist.shift();
-                if(nextPlayer) {
-                  newPlayers.push(nextPlayer);
-                  console.log(`User ${nextPlayer?.name} moved from waitlist to session ${sessionId}.`);
-                }
+            // If the user cancelling was in the players list...
+            if ((session.players as User[]).some(p => p.id === currentUser.id)) {
+              // And there are people on the waitlist...
+              if (newWaitlist.length > 0) {
+                  // Get the first person from the waitlist
+                  const nextPlayer = newWaitlist.shift();
+                  if(nextPlayer) {
+                    // Add them to the players list
+                    newPlayers.push(nextPlayer);
+                    // This is a good place for a notification in a real app
+                    console.log(`User ${nextPlayer?.name} moved from waitlist to session ${sessionId}.`);
+                  }
+              }
             }
             
             success = true;

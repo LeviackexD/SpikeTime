@@ -169,7 +169,15 @@ export default function SessionListItem({
                 <div className="flex justify-between items-center">
                   <div className="flex -space-x-2 overflow-hidden">
                     {players.slice(0, 4).map(player => (
-                      <PlayerAvatar key={player.id} player={player} className="h-8 w-8 border-2 border-background" />
+                      <Tooltip key={player.id}>
+                          <TooltipTrigger asChild>
+                              <PlayerAvatar player={player} className="h-8 w-8 border-2 border-background" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                              <p className='font-semibold'>{player.name}</p>
+                              <p className='text-muted-foreground'>{player.skillLevel}</p>
+                          </TooltipContent>
+                      </Tooltip>
                     ))}
                     {players.length > 4 && (
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
@@ -213,13 +221,22 @@ export default function SessionListItem({
               </Button>
             )}
             
-            {isOnWaitlist ? (
-              <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Leave Waitlist
-              </Button>
-            ) : (
-             isFull && <Button
+            {isOnWaitlist && (
+              <div className='flex gap-2 w-full'>
+                {!isFull && 
+                  <Button className="w-full" onClick={handleBook}>
+                    Book My Spot
+                  </Button>
+                }
+                <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Leave Waitlist
+                </Button>
+              </div>
+            )}
+            
+            {isFull && !isOnWaitlist && (
+               <Button
                 className="w-full"
                 variant="secondary"
                 onClick={handleJoinWaitlist}

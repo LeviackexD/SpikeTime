@@ -224,10 +224,17 @@ export default function SessionDetailsModal({
                   </Button>
                 )}
                 {isOnWaitlist ? (
-                  <Button variant="secondary" onClick={leaveWaitlistAction}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Leave Waitlist
-                  </Button>
+                  <div className='flex gap-2'>
+                    {!isFull &&
+                      <Button onClick={bookAction}>
+                          Book My Spot
+                      </Button>
+                    }
+                    <Button variant="secondary" onClick={leaveWaitlistAction}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Leave Waitlist
+                    </Button>
+                  </div>
                 ) : (
                   isFull && <Button
                       variant="secondary"
