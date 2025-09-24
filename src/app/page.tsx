@@ -152,29 +152,35 @@ const DashboardPage: NextPage = () => {
 
         {/* Recent Announcements Section */}
         <div className="space-y-4">
-            <SectionHeader icon={Megaphone} title="Recent Announcements">
-                <Button variant="link" asChild>
-                    <Link href="/announcements">View all</Link>
-                </Button>
-            </SectionHeader>
-            <Card>
-                <CardContent className="p-0">
-                     <ul className="divide-y">
-                        {recentAnnouncements.map((announcement) => (
-                          <li key={announcement.id} className="p-4">
-                            <button
-                              onClick={() => handleOpenAnnouncementModal(announcement)}
-                              className="w-full text-left transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary rounded-md p-2 -m-2"
-                            >
-                              <h3 className="font-semibold text-foreground">{announcement.title}</h3>
-                              <p className="text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
-                              <p className="text-xs text-muted-foreground mt-1">{getSafeDate(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>
-                            </button>
-                          </li>
-                        ))}
-                    </ul>
-                </CardContent>
-            </Card>
+          <SectionHeader icon={Megaphone} title="Recent Announcements">
+            <Button variant="link" asChild>
+              <Link href="/announcements">View all</Link>
+            </Button>
+          </SectionHeader>
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {recentAnnouncements.map((announcement) => (
+                  <div
+                    key={announcement.id}
+                    onClick={() => handleOpenAnnouncementModal(announcement)}
+                    className="p-4 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
+                  >
+                    <h3 className="font-semibold text-foreground">{announcement.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {getSafeDate(announcement.date).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                        timeZone: 'UTC',
+                      })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 

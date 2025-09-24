@@ -51,7 +51,7 @@ export default function AnnouncementDetailsModal({ isOpen, onClose, announcement
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn("sm:max-w-xl shadow-lg note note-1", styles.bg)}>
+      <DialogContent className={cn("w-full max-w-lg mx-auto p-6 note note-1 shadow-lg", styles.bg)}>
         <div className={cn('pushpin', styles.pin)}></div>
         <DialogHeader className="pt-4">
            <div className="mb-4">
