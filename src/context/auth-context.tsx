@@ -3,11 +3,13 @@
 
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import type { FirebaseApp } from 'firebase/app';
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, type Auth } from 'firebase/auth';
 import { getDoc, doc, setDoc, serverTimestamp, type Firestore } from 'firebase/firestore';
 import { ref, get, type Database } from 'firebase/database';
 import { auth, firestore, db } from '@/lib/firebase';
 import type { User } from '@/lib/types';
+import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 
 interface AuthContextType {
   user: User | null;
@@ -45,16 +47,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const isAdmin = adminSnapshot.exists() && adminSnapshot.val() === true;
             console.log(`AuthProvider: User role check -> isAdmin: ${isAdmin}`);
 
-            setUser({ ...userData, role: isAdmin ? 'admin' : 'user' });
+            setUser({ ...userData, id: firebaseUser.uid, role: isAdmin ? 'admin' : 'user' });
           } else {
             console.warn("AuthProvider: User document not found in Firestore for UID:", firebaseUser.uid);
-            setUser(null);
+            // This can happen if user is created in Auth but Firestore doc creation fails.
+            // Log them out to force a clean state.
             await signOut(auth);
+            setUser(null);
           }
         } catch (error) {
           console.error("AuthProvider: Error fetching user profile:", error);
-          setUser(null);
           await signOut(auth);
+          setUser(null);
         }
       } else {
         console.log("AuthProvider: No Firebase user.");
@@ -68,13 +72,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   React.useEffect(() => {
     const isAuthPage = pathname === '/login' || pathname === '/register';
-    if (!loading && !user && !isAuthPage) {
-        console.log("AuthProvider: Redirecting to login.");
-        router.push('/login');
-    }
-     if (!loading && user && isAuthPage) {
-        console.log("AuthProvider: User is logged in, redirecting from auth page to home.");
-        router.push('/');
+    if (!loading) {
+        if (user && isAuthPage) {
+            console.log("AuthProvider: User is logged in, redirecting from auth page to home.");
+            router.push('/');
+        } else if (!user && !isAuthPage) {
+            console.log("AuthProvider: No user, redirecting to login.");
+            router.push('/login');
+        }
     }
   }, [user, loading, pathname, router]);
 
@@ -112,6 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await setDoc(doc(firestore, 'users', firebaseUser.uid), newUser);
       console.log("signUpWithEmail: User document created successfully in Firestore for UID:", firebaseUser.uid);
       
+      // After successful registration, sign the user out to force them to log in.
       await signOut(auth);
       return true;
     } catch (error) {
@@ -139,6 +145,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       return false;
   };
+  
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+  
+  if (loading && !isAuthPage) {
+     return (
+        <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
+            <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
+            <p className="mt-4 text-lg font-semibold">SpikeTime</p>
+        </div>
+    )
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, signInWithEmail, signUpWithEmail, logout, updateUser }}>
