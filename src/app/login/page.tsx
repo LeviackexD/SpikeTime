@@ -31,8 +31,8 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { signInWithEmail, user, loading } = useAuth();
   const { t } = useLanguage();
-  const [email, setEmail] = React.useState('user@test.com');
-  const [password, setPassword] = React.useState('password');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [isEmailLoading, setIsEmailLoading] = React.useState(false);
 
   React.useEffect(() => {
