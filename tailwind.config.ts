@@ -66,7 +66,7 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
-        // Corkboard theme
+        // Theme colors
         cork: 'hsl(var(--cork))',
         'cork-dark': 'hsl(var(--cork-dark))',
         cream: 'hsl(var(--cream))',
@@ -83,6 +83,8 @@ export default {
         'light-paper-blue': 'hsl(var(--light-paper-blue))',
         'light-paper-pink': 'hsl(var(--light-paper-pink))',
         'light-paper-green': 'hsl(var(--light-paper-green))',
+        chalkboard: 'hsl(var(--chalkboard))',
+        chalk: 'hsl(var(--chalk))',
       },
       borderRadius: {
         lg: 'var(--radius)',
