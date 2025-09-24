@@ -58,9 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             userProfileData = docSnap.data() as Omit<User, 'id' | 'role'>;
             updateUserState();
           } else {
-            console.error("No such user document in Firestore!");
-            setUser(null);
-            setLoading(false);
+            // This can happen briefly during user creation.
+            // We don't need to log an error. The snapshot will trigger again once the doc is created.
           }
         });
         
