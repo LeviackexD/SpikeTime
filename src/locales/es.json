@@ -212,7 +212,7 @@
         "greatThanks": "¡Genial, gracias!",
         "gotIt": "¡Entendido!",
         "deleteDialog": {
-            "title": "¿Estás absolutamente seguro?",
+            "title": "¿Estás absolutely seguro?",
             "sessionDescription": "Esta acción no se puede deshacer. Esto eliminará permanentemente la sesión y todos los datos asociados.",
             "announcementDescription": "Esta acción no se puede deshacer. Esto eliminará permanentemente el anuncio."
         },
@@ -268,6 +268,13 @@
         },
         "aiSummary": {
             "title": "Resumen de Anuncios"
+        },
+        "generateTeams": {
+            "button": "Generar Equipos Equilibrados",
+            "title": "Equipos Generados por IA",
+            "description": "Aquí están los equipos equilibrados para la sesión.",
+            "teamA": "Equipo A",
+            "teamB": "Equipo B"
         }
     },
     "components": {

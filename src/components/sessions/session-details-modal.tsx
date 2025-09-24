@@ -27,6 +27,7 @@ import type { Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import GenerateTeamsButton from '../ai/generate-teams-button';
 
 interface SessionDetailsModalProps {
   session: Session | null;
@@ -155,10 +156,15 @@ export default function SessionDetailsModal({
 
           <TooltipProvider>
             <div>
-              <h3 className="mb-3 font-semibold flex items-center gap-2">
-                <Users className="h-5 w-5 text-muted-foreground" />
-                {t('modals.sessionDetails.registeredPlayers', { count: session.players.length })}
-              </h3>
+              <div className="mb-3 flex justify-between items-center">
+                <h3 className="font-semibold flex items-center gap-2">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    {t('modals.sessionDetails.registeredPlayers', { count: session.players.length })}
+                </h3>
+                { currentUser.role === 'admin' && session.players.length === 12 && (
+                    <GenerateTeamsButton players={session.players as User[]} />
+                )}
+              </div>
               {session.players.length > 0 ? (
                 <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">

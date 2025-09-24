@@ -268,6 +268,13 @@
         },
         "aiSummary": {
             "title": "Announcements Summary"
+        },
+        "generateTeams": {
+            "button": "Generate Balanced Teams",
+            "title": "AI-Generated Teams",
+            "description": "Here are the balanced teams for the session.",
+            "teamA": "Team A",
+            "teamB": "Team B"
         }
     },
     "components": {
