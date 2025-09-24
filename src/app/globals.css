@@ -16,7 +16,6 @@ body {
         radial-gradient(circle at 80% 50%, rgba(139, 69, 19, 0.1) 1px, transparent 1px),
         radial-gradient(circle at 40% 20%, rgba(160, 82, 45, 0.1) 1px, transparent 1px),
         radial-gradient(circle at 60% 80%, rgba(139, 69, 19, 0.1) 2px, transparent 2px);
-    background-size: 50px 50px, 30px 30px, 40px 40px, 60px 60px;
     background-color: hsl(var(--cork));
 }
 
@@ -108,14 +107,14 @@ body {
     --brown-light: 30 50% 90%;
     --brown-dark: 30 50% 70%;
     --paper: 220 14% 10%;
-    --paper-yellow: 45 20% 12%;
-    --paper-blue: 210 20% 12%;
-    --paper-pink: 350 20% 12%;
-    --paper-green: 120 20% 12%;
-    --light-paper-yellow: 45 20% 15%;
-    --light-paper-blue: 210 20% 15%;
-    --light-paper-pink: 350 20% 15%;
-    --light-paper-green: 120 20% 15%;
+    --paper-yellow: 45 30% 18%;
+    --paper-blue: 210 30% 18%;
+    --paper-pink: 350 30% 18%;
+    --paper-green: 120 30% 18%;
+    --light-paper-yellow: 45 30% 22%;
+    --light-paper-blue: 210 30% 22%;
+    --light-paper-pink: 350 30% 22%;
+    --light-paper-green: 120 30% 22%;
     --chalkboard: 220 14% 15%;
     --chalk: 210 40% 98%;
   }
