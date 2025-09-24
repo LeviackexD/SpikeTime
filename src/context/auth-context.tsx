@@ -30,14 +30,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   
   // Simulate initial auth check
   React.useEffect(() => {
-    setTimeout(() => {
-      setUser(initialUser);
-      setLoading(false);
-    }, 500);
+    setLoading(true);
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (storedUser) {
+        setUser(JSON.parse(storedUser));
+    } else {
+        setUser(initialUser);
+    }
+    setLoading(false);
   }, []);
+
+  const storeUser = (userToStore: AuthUser) => {
+    if (userToStore) {
+        sessionStorage.setItem('currentUser', JSON.stringify(userToStore));
+    } else {
+        sessionStorage.removeItem('currentUser');
+    }
+  }
 
   const logout = () => {
     setUser(null);
+    storeUser(null);
     toast({ title: t('toasts.logoutTitle'), description: t('toasts.logoutDescription') });
     router.push('/login');
   };
@@ -49,16 +62,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     if (foundUser) {
         setUser(foundUser);
+        storeUser(foundUser);
         setLoading(false);
         return true;
     }
     
     setLoading(false);
-    toast({
-        title: t('toasts.authFailedTitle'),
-        description: 'Invalid email or password provided.',
-        variant: 'destructive'
-    });
     return false;
   };
 
@@ -72,7 +81,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateUser = (updatedData: Partial<User>) => {
     if (user) {
-      setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
+      const newUser = { ...user, ...updatedData };
+      setUser(newUser);
+      storeUser(newUser);
     }
   };
 

@@ -1,10 +1,6 @@
-// Import the functions you need from the SDKs you need
+// This file is a placeholder for Firebase configuration.
+// In the reverted state, it is not actively used, but kept for future integration.
 import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator, enableMultiTabIndexedDbPersistence, Timestamp } from "firebase/firestore";
-import { getStorage, connectStorageEmulator } from "firebase/storage";
-import { getDatabase, connectDatabaseEmulator } from "firebase/database";
-
 
 // Your web app's Firebase configuration
 const firebaseConfig: FirebaseOptions = {
@@ -14,40 +10,9 @@ const firebaseConfig: FirebaseOptions = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  databaseURL: `https://spiketime-8retn-default-rtdb.firebaseio.com`
 };
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const rtdb = getDatabase(app);
 
-
-// Connect to emulators if in development AND not in a test environment
-if (typeof window !== 'undefined' && window.location.hostname === 'localhost' && typeof process.env.JEST_WORKER_ID === 'undefined') {
-  console.log('Connecting to Firebase Emulators');
-  try {
-    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-    connectFirestoreEmulator(db, '127.0.0.1', 8080);
-    connectStorageEmulator(storage, "127.0.0.1", 9199);
-    connectDatabaseEmulator(rtdb, "127.0.0.1", 9000);
-
-
-    // This enables offline persistence and multi-tab support
-    enableMultiTabIndexedDbPersistence(db)
-      .catch((err) => {
-        if (err.code === 'failed-precondition') {
-          console.warn('Firestore multi-tab persistence failed: multiple tabs open. Some features may not work.');
-        } else if (err.code === 'unimplemented') {
-          console.warn('Firestore persistence not available in this browser.');
-        }
-      });
-  } catch(e) {
-    console.warn("Could not connect to emulators, this is expected if they are not running", e)
-  }
-}
-
-
-export { app, auth, db, rtdb, storage, Timestamp };
+export { app };

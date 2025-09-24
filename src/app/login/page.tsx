@@ -53,8 +53,6 @@ export default function LoginPage() {
       });
       router.push('/');
     }
-    // Error toast is handled by the context in the real version,
-    // but here we might need one if the mock function returns false
     else {
          toast({
             title: t('toasts.authFailedTitle'),

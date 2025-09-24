@@ -53,12 +53,19 @@ export const getSafeDate = (date: string | Date | Timestamp): Date => {
 
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
-  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
-  const [announcements, setAnnouncements] = React.useState<Announcement[]>(mockAnnouncements);
-  const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
-  const [users, setUsers] = React.useState<User[]>(mockUsers);
+  const [sessions, setSessions] = React.useState<Session[]>([]);
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
+  const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
+  const [users, setUsers] = React.useState<User[]>([]);
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    setSessions(mockSessions);
+    setAnnouncements(mockAnnouncements);
+    setDirectChats(mockDirectChats);
+    setUsers(mockUsers);
+  }, []);
 
   const createSession = async (sessionData: Omit<Session, 'id' | 'players'| 'waitlist'|'messages' | 'date'> & { date: string }) => {
     const newSession: Session = {
@@ -87,26 +94,30 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+    let success = false;
     setSessions(prev =>
       prev.map(s => {
-        if (s.id === sessionId && s.players.length < s.maxPlayers) {
+        if (s.id === sessionId && s.players.length < s.maxPlayers && !s.players.some(p => p.id === currentUser.id)) {
           // Add user to players list and remove from waitlist
-          const newPlayers = s.players.some(p => p.id === currentUser.id) ? s.players : [...s.players, currentUser];
+          const newPlayers = [...s.players, currentUser];
           const newWaitlist = s.waitlist.filter(u => u.id !== currentUser.id);
+          success = true;
           return { ...s, players: newPlayers, waitlist: newWaitlist };
         }
         return s;
       })
     );
-    return true;
+    return success;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+    let success = false;
     setSessions(prev =>
       prev.map(s => {
-        if (s.id === sessionId) {
+        if (s.id === sessionId && s.players.some(p => p.id === currentUser.id)) {
           const newPlayers = s.players.filter(p => p.id !== currentUser.id);
+          success = true;
           // If there's a waitlist, move the first person to the players list
           if (s.waitlist.length > 0 && newPlayers.length < s.maxPlayers) {
             const nextPlayer = s.waitlist[0];
@@ -119,33 +130,37 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         return s;
       })
     );
-    return true;
+    return success;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+    let success = false;
     setSessions(prev =>
       prev.map(s => {
         if (s.id === sessionId && !s.waitlist.some(w => w.id === currentUser.id)) {
+          success = true;
           return { ...s, waitlist: [...s.waitlist, currentUser] };
         }
         return s;
       })
     );
-    return true;
+    return success;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+    let success = false;
     setSessions(prev =>
       prev.map(s => {
-        if (s.id === sessionId) {
+        if (s.id === sessionId && s.waitlist.some(w => w.id === currentUser.id)) {
+          success = true;
           return { ...s, waitlist: s.waitlist.filter(w => w.id !== currentUser.id) };
         }
         return s;
       })
     );
-    return true;
+    return success;
   };
 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
@@ -188,7 +203,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if(!currentUser) return '';
 
     // Check if a chat already exists
-    const existingChat = directChats.find(chat => chat.participants.some(p => p.id === otherUser.id));
+    const existingChat = directChats.find(chat => chat.participants.some(p => p.id === otherUser.id) && chat.participants.some(p => p.id === currentUser.id));
     if(existingChat) {
         return existingChat.id;
     }
