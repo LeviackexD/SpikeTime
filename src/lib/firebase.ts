@@ -1,8 +1,9 @@
+
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, initializeFirestore, memoryLocalCache } from 'firebase/firestore';
-import { getDatabase as getRTDB } from 'firebase/database';
+import { getFirestore } from 'firebase/firestore';
+import { getDatabase } from 'firebase/database';
 
 const firebaseConfig: FirebaseOptions = {
   "projectId": "spiketime-8retn",
@@ -17,12 +18,7 @@ const firebaseConfig: FirebaseOptions = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-
-// Initialize Firestore with in-memory cache to bypass corrupted IndexedDB
-const firestore = initializeFirestore(app, {
-  localCache: memoryLocalCache(),
-});
-
-const db = getRTDB(app);
+const firestore = getFirestore(app);
+const db = getDatabase(app);
 
 export { app, auth, firestore, db };
