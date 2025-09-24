@@ -15,6 +15,7 @@ export const mockUsers: User[] = [
   { id: 'u11', name: 'User 11', username: 'user11', email: 'user11@example.com', avatarUrl: 'https://picsum.photos/seed/u11/100/100', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Hitter', stats: { sessionsPlayed: 18 } },
   { id: 'u12', name: 'User 12', username: 'user12', email: 'user12@example.com', avatarUrl: 'https://picsum.photos/seed/u12/100/100', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Hitter', stats: { sessionsPlayed: 18 } },
   { id: 'u13', name: 'User 13', username: 'user13', email: 'user13@example.com', avatarUrl: 'https://picsum.photos/seed/u13/100/100', role: 'user', skillLevel: 'Beginner', favoritePosition: 'Hitter', stats: { sessionsPlayed: 18 } },
+  { id: 'u14', name: 'Alex Ray', username: 'alexray', email: 'alex@example.com', avatarUrl: 'https://picsum.photos/seed/u14/100/100', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Setter', stats: { sessionsPlayed: 25 } },
 ];
 
 function getFutureDate(days: number): string {
