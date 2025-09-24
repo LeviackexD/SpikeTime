@@ -24,6 +24,7 @@ import { useAuth } from '@/context/auth-context';
 import type { Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface SessionDetailsModalProps {
   session: Session | null;
@@ -149,57 +150,59 @@ export default function SessionDetailsModal({
             <Progress value={progressValue} className="h-2" />
           </div>
 
-          <div>
-            <h3 className="mb-3 font-semibold flex items-center gap-2">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              Registered Players ({session.players.length})
-            </h3>
-            {session.players.length > 0 ? (
-              <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {session.players.map((player) => (
-                      <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                        <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
-                        <div className="flex-grow">
-                            <p className="font-semibold text-sm">{player.name}</p>
-                            <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+          <TooltipProvider>
+            <div>
+              <h3 className="mb-3 font-semibold flex items-center gap-2">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                Registered Players ({session.players.length})
+              </h3>
+              {session.players.length > 0 ? (
+                <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {session.players.map((player) => (
+                        <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                          <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                          <div className="flex-grow">
+                              <p className="font-semibold text-sm">{player.name}</p>
+                              <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
-                <p className="text-muted-foreground text-center text-sm">No players have registered yet.</p>
-              </div>
-            )}
-          </div>
+                      ))}
+                    </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
+                  <p className="text-muted-foreground text-center text-sm">No players have registered yet.</p>
+                </div>
+              )}
+            </div>
 
-          <div>
-            <h3 className="mb-3 font-semibold flex items-center gap-2">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              Waitlist ({session.waitlist.length})
-            </h3>
-            {session.waitlist.length > 0 ? (
-              <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {session.waitlist.map((player) => (
-                      <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                        <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
-                        <div className="flex-grow">
-                            <p className="font-semibold text-sm">{player.name}</p>
-                            <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+            <div>
+              <h3 className="mb-3 font-semibold flex items-center gap-2">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                Waitlist ({session.waitlist.length})
+              </h3>
+              {session.waitlist.length > 0 ? (
+                <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {session.waitlist.map((player) => (
+                        <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                          <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                          <div className="flex-grow">
+                              <p className="font-semibold text-sm">{player.name}</p>
+                              <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
-                <p className="text-muted-foreground text-center text-sm">The waitlist is empty.</p>
-              </div>
-            )}
-          </div>
+                      ))}
+                    </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center p-8 rounded-lg border border-dashed">
+                  <p className="text-muted-foreground text-center text-sm">The waitlist is empty.</p>
+                </div>
+              )}
+            </div>
+          </TooltipProvider>
 
         </div>
         <DialogFooter className='sm:justify-between items-center flex-shrink-0 pt-4'>
