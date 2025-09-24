@@ -270,11 +270,14 @@
             "title": "Resumen de Anuncios"
         },
         "generateTeams": {
-            "button": "Generar Equipos Equilibrados",
-            "title": "Equipos Generados por IA",
-            "description": "Aquí están los equipos equilibrados para la sesión.",
+            "button": "Generar Equipos",
+            "title": "Generar Equipos",
+            "description": "Elige cómo quieres generar los equipos para esta sesión.",
+            "balanced": "Equilibrado por Nivel",
+            "random": "Totalmente Aleatorio",
             "teamA": "Equipo A",
-            "teamB": "Equipo B"
+            "teamB": "Equipo B",
+            "regenerate": "Volver a generar"
         }
     },
     "components": {

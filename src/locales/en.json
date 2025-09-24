@@ -270,11 +270,14 @@
             "title": "Announcements Summary"
         },
         "generateTeams": {
-            "button": "Generate Balanced Teams",
-            "title": "AI-Generated Teams",
-            "description": "Here are the balanced teams for the session.",
+            "button": "Generate Teams",
+            "title": "Generate Teams",
+            "description": "Choose how you want to generate the teams for this session.",
+            "balanced": "Balanced by Level",
+            "random": "Completely Random",
             "teamA": "Team A",
-            "teamB": "Team B"
+            "teamB": "Team B",
+            "regenerate": "Regenerate"
         }
     },
     "components": {

@@ -21,6 +21,8 @@ import type { Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import GenerateTeamsButton from './generate-teams-button';
+
 
 interface SessionDetailsModalProps {
   session: Session | null;
@@ -53,6 +55,7 @@ export default function SessionDetailsModal({
   const isRegistered = session.players.some(p => p.id === currentUser.id);
   const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
+  const canGenerateTeams = spotsFilled === 12;
   
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }, failureToast: { title: string, description: string }) => {
     if (session) {
@@ -154,6 +157,7 @@ export default function SessionDetailsModal({
                     <Users className="h-5 w-5 text-muted-foreground" />
                     {t('modals.sessionDetails.registeredPlayers', { count: session.players.length })}
                 </h3>
+                 {canGenerateTeams && <GenerateTeamsButton players={session.players as User[]} />}
               </div>
               {session.players.length > 0 ? (
                 <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
