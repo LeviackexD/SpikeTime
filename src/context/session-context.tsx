@@ -171,6 +171,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const createDirectChat = async (otherUser: User): Promise<string> => {
     if(!currentUser) return '';
+    // Check if a chat already exists
+    const existingChat = directChats.find(c => c.participants.some(p => p.id === otherUser.id));
+    if (existingChat) {
+      return existingChat.id;
+    }
+
     const newChatId = `dm-${Date.now()}`;
     const newChat: DirectChat = {
         id: newChatId,

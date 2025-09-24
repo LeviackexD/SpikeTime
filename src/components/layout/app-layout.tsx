@@ -10,7 +10,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Calendar,
   Settings,
@@ -46,6 +46,7 @@ import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 import { VolleyballIcon } from '../icons/volleyball-icon';
+import { useToast } from '@/hooks/use-toast';
 
 // --- NAVIGATION ---
 const getNavItems = (t: (key: string) => string) => [
@@ -63,9 +64,21 @@ const getNavItems = (t: (key: string) => string) => [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
-  const isAnnouncementsPage = pathname === '/announcements';
+  const router = useRouter();
+
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+
+  React.useEffect(() => {
+    if (!loading && !user && !isAuthPage) {
+      router.push('/login');
+    }
+  }, [user, loading, isAuthPage, router]);
+
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
   
-  if (loading && !user) {
+  if (loading) {
     return (
         <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
             <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
@@ -73,6 +86,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
     )
   }
+
+  if (!user) return null; // Or a dedicated loading/redirect screen
+
+  const isAnnouncementsPage = pathname === '/announcements';
 
   return (
     <div className={cn("min-h-screen w-full flex flex-col", isAnnouncementsPage ? 'announcements-cork-bg' : 'bg-app-background')}>
@@ -214,9 +231,21 @@ function MobileNav() {
  * User navigation dropdown menu.
  */
 function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user']> }) {
+  const { logout } = useAuth();
+  const { toast } = useToast();
   const { t } = useLanguage();
+  const router = useRouter();
   const pathname = usePathname();
   const isAnnouncementsPage = pathname === '/announcements';
+
+  const handleLogout = async () => {
+    await logout();
+    toast({
+      title: t('toasts.logoutTitle'),
+      description: t('toasts.logoutDescription'),
+    });
+    router.push('/login');
+  };
 
   return (
     <DropdownMenu>
@@ -255,6 +284,11 @@ function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user'
             <Settings className="mr-2 h-4 w-4" />
             <span>{t('nav.settings')}</span>
           </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>{t('nav.logout')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
