@@ -22,7 +22,7 @@ import {
   UserPlus,
   LogOut,
 } from 'lucide-react';
-import type { Session } from '@/lib/types';
+import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { getSafeDate } from '@/context/session-context';
 
@@ -48,9 +48,12 @@ export default function SessionDetailsCard({
   if (!currentUser) {
     return null; // Or a loading skeleton
   }
-  const isFull = session.players.length >= session.maxPlayers;
-  const isRegistered = session.players.includes(currentUser.id);
-  const isOnWaitlist = session.waitlist.includes(currentUser.id);
+  const players = session.players as User[];
+  const waitlist = session.waitlist as User[];
+
+  const isFull = players.length >= session.maxPlayers;
+  const isRegistered = players.some(p => p.id === currentUser.id);
+  const isOnWaitlist = waitlist.some(p => p.id === currentUser.id);
 
   const sessionDate = getSafeDate(session.date);
   const sessionDateTime = new Date(`${sessionDate.toISOString().split('T')[0]}T${session.startTime}`);
@@ -77,7 +80,7 @@ export default function SessionDetailsCard({
             <div className="flex justify-between items-start">
                 <div>
                     <Badge variant={isFull ? 'destructive' : 'secondary'}>
-                        {isFull ? 'Full' : `${session.maxPlayers - session.players.length} players left`}
+                        {isFull ? 'Full' : `${session.maxPlayers - players.length} players left`}
                     </Badge>
                     <h3 className="font-headline text-xl font-bold mt-2">
                         {session.level} Level
@@ -109,7 +112,7 @@ export default function SessionDetailsCard({
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
                     <span className="font-semibold">
-                        {session.players.length} / {session.maxPlayers} players
+                        {players.length} / {session.maxPlayers} players
                     </span>
                 </div>
             </div>

@@ -24,7 +24,7 @@ import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { skillLevelColors, type SkillLevel } from '@/lib/types';
+import { skillLevelColors, type SkillLevel, User } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const SessionCalendar = dynamic(() => import('@/components/dashboard/session-calendar'), {

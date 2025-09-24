@@ -23,7 +23,6 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewChatModal from '@/components/chat/new-chat-modal';
 import { useAuth } from '@/context/auth-context';
-import { Timestamp } from 'firebase/firestore';
 
 const ChatPage: NextPage = () => {
   const { 
@@ -72,13 +71,8 @@ const ChatPage: NextPage = () => {
   }
 
   const handleStartNewChat = async (user: User) => {
-    const existingChat = directChats.find(chat => chat.participantIds.includes(user.id));
-    if (existingChat) {
-      setSelectedChatId(existingChat.id);
-    } else {
-      const newChatId = await createDirectChat(user);
-      setSelectedChatId(newChatId);
-    }
+    const newChatId = await createDirectChat(user);
+    setSelectedChatId(newChatId);
     setActiveTab('direct');
     setIsNewChatModalOpen(false);
   };
@@ -292,7 +286,7 @@ const ChatWindow = ({ session, directChat, onAddSessionMessage, onAddDirectMessa
   
   const getParticipants = () => {
       if (activeTab === 'sessions' && session) {
-          return session.players.length;
+          return (session.players as User[]).length;
       }
       if (activeTab === 'direct' && directChat) {
           return directChat.participants.length;

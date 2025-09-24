@@ -100,15 +100,15 @@ const SessionCards = ({
         <CardContent className="space-y-2 text-sm">
           <div>
             <span className="font-semibold">Players: </span>
-            {session.players.length} / {session.maxPlayers}
-            {session.waitlist.length > 0 && ` (+${session.waitlist.length} waitlist)`}
+            {(session.players as User[]).length} / {session.maxPlayers}
+            {(session.waitlist as User[]).length > 0 && ` (+${(session.waitlist as User[]).length} waitlist)`}
           </div>
           <div>
             <span className="font-semibold">Status: </span>
             <Badge
-              variant={session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'}
+              variant={(session.players as User[]).length >= session.maxPlayers ? 'destructive' : 'secondary'}
             >
-              {session.players.length >= session.maxPlayers ? 'Full' : 'Open'}
+              {(session.players as User[]).length >= session.maxPlayers ? 'Full' : 'Open'}
             </Badge>
           </div>
         </CardContent>
@@ -250,7 +250,7 @@ export default function AdminPage() {
     const waitlistIds = ('waitlist' in sessionData && Array.isArray(sessionData.waitlist)) ? (sessionData.waitlist as User[]).map(p => p.id) : [];
 
     if ('id' in sessionData) {
-        await updateSession({ ...sessionData, players: playerIds, waitlist: waitlistIds });
+        await updateSession({ ...sessionData, players: sessionData.players as User[], waitlist: sessionData.waitlist as User[]});
     } else {
         await createSession(sessionData as Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string });
     }
@@ -312,16 +312,16 @@ export default function AdminPage() {
               </TableCell>
               <TableCell>{session.level}</TableCell>
               <TableCell>
-                {session.players.length} / {session.maxPlayers}
-                {session.waitlist.length > 0 && ` (+${session.waitlist.length} waitlist)`}
+                {(session.players as User[]).length} / {session.maxPlayers}
+                {(session.waitlist as User[]).length > 0 && ` (+${(session.waitlist as User[]).length} waitlist)`}
               </TableCell>
               <TableCell>
                 <Badge
                   variant={
-                    session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'
+                    (session.players as User[]).length >= session.maxPlayers ? 'destructive' : 'secondary'
                   }
                 >
-                  {session.players.length >= session.maxPlayers ? 'Full' : 'Open'}
+                  {(session.players as User[]).length >= session.maxPlayers ? 'Full' : 'Open'}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">

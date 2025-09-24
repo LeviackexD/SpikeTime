@@ -24,7 +24,7 @@ export const currentUser: User = mockUsers[0];
 function getFutureDate(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() + days);
-  return date.toISOString().split('T')[0];
+  return date.toISOString();
 }
 
 const mockSessionMessages: Message[] = [

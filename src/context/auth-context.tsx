@@ -6,19 +6,10 @@
 'use client';
 
 import * as React from 'react';
-import { 
-  getAuth, 
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  type User as FirebaseUser
-} from 'firebase/auth';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { mockUsers } from '@/lib/mock-data';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { auth } from '@/lib/firebase';
 
 // Define a type for the user that can be null
 type AuthUser = User | null;
@@ -43,32 +34,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        const profile = mockUsers.find(u => u.email === firebaseUser.email);
-        if (profile) {
-          setUser(profile);
-        } else {
-          // Create a default profile if not found in mock data
-          setUser({
-            id: firebaseUser.uid,
-            name: firebaseUser.displayName || 'New User',
-            email: firebaseUser.email!,
-            avatarUrl: firebaseUser.photoURL || `https://picsum.photos/seed/${firebaseUser.uid}/100/100`,
-            role: 'user',
-            skillLevel: 'Beginner',
-            favoritePosition: 'Hitter',
-            username: firebaseUser.email!.split('@')[0],
-            stats: { sessionsPlayed: 0 },
-          });
-        }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    // Simulate checking auth state
+    const loggedInUser = mockUsers.find(u => u.email === 'admin@invernesseagles.com');
+    if (loggedInUser) {
+        setUser(loggedInUser);
+    }
+    setLoading(false);
   }, []);
 
   React.useEffect(() => {
@@ -77,27 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, loading, router, pathname]);
 
-  const handleAuthError = (error: any) => {
-     let description = 'An unexpected error occurred. Please try again.';
-      switch (error.code) {
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-          description = 'Invalid email or password.';
-          break;
-        case 'auth/email-already-in-use':
-          description = 'This email address is already in use.';
-          break;
-        case 'auth/weak-password':
-          description = 'The password is too weak. It must be at least 6 characters long.';
-          break;
-        case 'auth/network-request-failed':
-          description = 'Network error. Please check your internet connection and emulator status.';
-          break;
-        default:
-          console.error('Firebase Auth Error:', error);
-          break;
-      }
+  const handleAuthError = (description: string) => {
        toast({
         title: 'Authentication Failed',
         description: description,
@@ -106,35 +57,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const logout = async () => {
-    try {
-        await signOut(auth);
-        setUser(null);
-        toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-        router.push('/login');
-    } catch (error) {
-        handleAuthError(error);
-    }
+    setUser(null);
+    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+    router.push('/login');
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    try {
-        await signInWithEmailAndPassword(auth, email, pass);
+    const foundUser = mockUsers.find(u => u.email === email);
+    if(foundUser) {
+        setUser(foundUser);
         return true;
-    } catch (error) {
-        handleAuthError(error);
-        return false;
     }
+    handleAuthError('Invalid email or password.');
+    return false;
   };
 
   const signUpWithEmail = async (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
-    try {
-        await createUserWithEmailAndPassword(auth, email, pass);
-        console.log('User created. In a real app, save this to Firestore:', { email, ...additionalData });
-        return true;
-    } catch (error) {
-        handleAuthError(error);
-        return false;
-    }
+    console.log('Simulating user sign up:', {email, ...additionalData});
+    // In a mock environment, we don't persist the new user.
+    // We just pretend it worked and redirect to login.
+    return true;
   };
   
   if (loading && !user && !publicRoutes.includes(pathname)) {
