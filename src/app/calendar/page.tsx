@@ -70,73 +70,77 @@ const CalendarPage: NextPage = () => {
             </p>
         </div>
 
-        <Card>
-            <CardHeader className="flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <CardTitle className="font-headline">
-                        Session Calendar
-                    </CardTitle>
-                    <CardDescription>
-                        Click on a day to view available sessions. Colors indicate session levels.
-                    </CardDescription>
-                </div>
-                <div className="flex items-center flex-wrap gap-2">
-                     <div className='flex items-center gap-2'>
-                        <Filter className="h-4 w-4 text-muted-foreground" />
-                        <Select value={skillFilter} onValueChange={(value) => setSkillFilter(value as SkillLevel | 'All')}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Filter by skill level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {skillLevels.map(level => (
-                                    <SelectItem key={level} value={level}>
-                                        <div className="flex items-center gap-2">
-                                            {level !== 'All' && (
-                                                <div className={cn("h-3 w-3 rounded-full", skillLevelColors[level as keyof typeof skillLevelColors])} />
-                                            )}
-                                            {level === 'All' ? 'All Levels' : level}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                     </div>
-                </div>
-            </CardHeader>
-            <CardContent className="p-2 sm:p-4">
-                 <SessionCalendar 
-                    sessions={sessions}
-                    selectedDate={selectedDate}
-                    onDateChange={handleDateChange}
-                    skillFilter={skillFilter}
-                />
-            </CardContent>
-        </Card>
-        
-        <div>
-            <h2 className="text-xl font-bold font-headline mb-4">
-                Available Sessions for {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-            </h2>
-             <Separator className="mb-6"/>
-            {filteredSessions.length > 0 ? (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {filteredSessions.map((session, index) => (
-                         <SessionDetailsCard
-                            key={session.id}
-                            session={session}
-                            onBook={bookSession}
-                            onCancel={cancelBooking}
-                            onWaitlist={joinWaitlist}
-                            onLeaveWaitlist={leaveWaitlist}
-                            priority={index < 2}
-                        />
-                    ))}
-                </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center text-center p-12 rounded-lg bg-muted/50 border border-dashed animate-fade-in">
-                    <p className="text-muted-foreground">No sessions scheduled for this day or matching your filters.</p>
-                </div>
-            )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+             <Card>
+                <CardHeader className="flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <CardTitle className="font-headline">
+                            Session Calendar
+                        </CardTitle>
+                        <CardDescription>
+                            Click on a day to view sessions.
+                        </CardDescription>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4">
+                    <SessionCalendar 
+                        sessions={sessions}
+                        selectedDate={selectedDate}
+                        onDateChange={handleDateChange}
+                        skillFilter={skillFilter}
+                    />
+                     <div className="flex items-center flex-wrap gap-2 mt-4 p-2">
+                        <div className='flex items-center gap-2'>
+                            <Filter className="h-4 w-4 text-muted-foreground" />
+                            <Select value={skillFilter} onValueChange={(value) => setSkillFilter(value as SkillLevel | 'All')}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Filter by skill level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {skillLevels.map(level => (
+                                        <SelectItem key={level} value={level}>
+                                            <div className="flex items-center gap-2">
+                                                {level !== 'All' && (
+                                                    <div className={cn("h-3 w-3 rounded-full", skillLevelColors[level as keyof typeof skillLevelColors])} />
+                                                )}
+                                                {level === 'All' ? 'All Levels' : level}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+          </div>
+          
+          <div className="lg:col-span-2">
+              <h2 className="text-xl font-bold font-headline mb-4">
+                  Available Sessions for {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </h2>
+              <Separator className="mb-6"/>
+              {filteredSessions.length > 0 ? (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                      {filteredSessions.map((session, index) => (
+                          <SessionDetailsCard
+                              key={session.id}
+                              session={session}
+                              onBook={bookSession}
+                              onCancel={cancelBooking}
+                              onWaitlist={joinWaitlist}
+                              onLeaveWaitlist={leaveWaitlist}
+                              priority={index < 2}
+                          />
+                      ))}
+                  </div>
+              ) : (
+                  <div className="flex flex-col items-center justify-center text-center p-12 rounded-lg bg-muted/50 border border-dashed animate-fade-in">
+                      <p className="text-muted-foreground">No sessions scheduled for this day or matching your filters.</p>
+                  </div>
+              )}
+          </div>
         </div>
     </div>
   );
