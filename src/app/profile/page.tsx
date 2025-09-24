@@ -22,16 +22,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BarChart, Edit, Medal, Star, Target, CheckCircle } from 'lucide-react';
+import { BarChart, Edit, Medal, Star, Target, CheckCircle, LineChart } from 'lucide-react';
 import EditProfileModal from '@/components/profile/edit-profile-modal';
 import type { User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
-
-const achievements = [
-  { icon: Medal, label: '50+ Sessions', color: 'text-yellow-500' },
-  { icon: Star, label: 'Top Player', color: 'text-blue-500' },
-  { icon: Target, label: 'Perfect Attendance', color: 'text-green-500' },
-];
+import MonthlyActivityChart from '@/components/profile/monthly-activity-chart';
 
 const StatCard = ({ icon: Icon, label, value, badge }: { icon: React.ElementType, label: string, value: string | React.ReactNode, badge?: boolean }) => (
     <Card className="flex flex-col items-center justify-center p-4 text-center">
@@ -100,19 +95,15 @@ export default function ProfilePage() {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2">
-              <Medal className="h-6 w-6 text-primary" />
-              Achievements
+              <LineChart className="h-6 w-6 text-primary" />
+              Monthly Activity
             </CardTitle>
+            <CardDescription>
+                Your session count for the last 6 months.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
-              {achievements.map((ach, index) => (
-                <div key={`${ach.label}-${index}`} className="flex flex-col items-center gap-2 rounded-lg border p-4 w-32">
-                   <ach.icon className={`h-8 w-8 ${ach.color}`} />
-                   <span className="text-xs font-medium text-center">{ach.label}</span>
-                </div>
-              ))}
-            </div>
+            <MonthlyActivityChart />
           </CardContent>
         </Card>
       </div>
