@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
       if (firebaseUser) {
         // User is signed in, get their profile from Firestore and check admin status.
         const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -72,22 +71,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if(pathname === '/login' || pathname === '/register') {
                 router.replace('/');
             }
-
           } else {
-             console.warn("User document not found in Firestore, logging out.");
-             await signOut(auth);
+             // This can happen briefly during registration.
+             // We don't log an error, but we also don't set a user until the doc exists.
              setUser(null);
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
           setUser(null);
+        } finally {
+            setLoading(false);
         }
 
       } else {
         // User is signed out.
         setUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -147,6 +147,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // await updateDoc(userDocRef, updatedData);
     }
   };
+
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+  if (loading && !isAuthPage) {
+    return (
+        <div className="flex items-center justify-center h-screen w-full">
+            <p className="text-muted-foreground">{t('dashboard.loading')}</p>
+        </div>
+    )
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, logout, signInWithEmail, signUpWithEmail, updateUser }}>
