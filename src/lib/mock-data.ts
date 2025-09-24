@@ -62,9 +62,12 @@ export const mockSessions: Session[] = [
 ];
 
 export const mockAnnouncements: Announcement[] = [
-  { id: 'a1', title: 'Summer Tournament', content: 'Sign-ups for the annual summer tournament are now open! Find a partner and register by the end of the month.', date: getFutureDate(-1) },
-  { id: 'a2', title: 'New Sunday Sessions', content: 'We are adding new beginner-friendly sessions every Sunday morning at 10 AM.', date: getFutureDate(-5) },
-  { id: 'a3', title: 'Maintenance Notice', content: 'The west court will be closed for floor maintenance on the 15th. All sessions will be moved to the east court.', date: getFutureDate(-10) },
+  { id: 'a1', title: 'Summer Tournament', content: 'Sign-ups for the annual summer tournament are now open! Find a partner and register by the end of the month.', date: getFutureDate(-1), category: 'tournament' },
+  { id: 'a2', title: 'New Sunday Sessions', content: 'We are adding new beginner-friendly sessions every Sunday morning at 10 AM.', date: getFutureDate(-5), category: 'class' },
+  { id: 'a3', title: 'Maintenance Notice', content: 'The west court will be closed for floor maintenance on the 15th. All sessions will be moved to the east court.', date: getFutureDate(-10), category: 'general' },
+  { id: 'a4', title: 'Beach Volleyball Day', content: 'Join us for a fun day of volleyball at the beach this Saturday! All levels welcome.', date: getFutureDate(-2), category: 'event' },
+  { id: 'a5', title: 'Advanced Serving Clinic', content: 'Improve your jump serve with our special clinic this Friday.', date: getFutureDate(-4), category: 'class' },
+  { id: 'a6', title: 'Team-Up for Autumn League', content: 'Looking for a team for the upcoming autumn league? Post here to find teammates!', date: getFutureDate(-8), category: 'general' },
 ];
 
 export const mockDirectChats: DirectChat[] = [

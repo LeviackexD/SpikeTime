@@ -5,6 +5,8 @@ import { Timestamp } from 'firebase/firestore';
 export type UserRole = 'user' | 'admin';
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced';
 export type PlayerPosition = 'Setter' | 'Hitter' | 'Libero' | 'Blocker';
+export type AnnouncementCategory = 'event' | 'class' | 'tournament' | 'general';
+
 
 export const skillLevelColors = {
   'Beginner': 'bg-green-500',
@@ -55,6 +57,7 @@ export interface Announcement {
   title: string;
   content: string;
   date: string;
+  category: AnnouncementCategory;
 }
 
 export interface DirectChat {

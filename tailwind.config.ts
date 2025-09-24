@@ -12,6 +12,7 @@ export default {
       fontFamily: {
         body: ['"Poppins"', 'sans-serif'],
         headline: ['"Poppins"', 'sans-serif'],
+        handwriting: ['"Caveat"', 'cursive'],
         code: ['monospace'],
       },
       colors: {
@@ -65,6 +66,23 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        // Corkboard theme
+        cork: 'hsl(var(--cork))',
+        'cork-dark': 'hsl(var(--cork-dark))',
+        cream: 'hsl(var(--cream))',
+        'cream-dark': 'hsl(var(--cream-dark))',
+        brown: 'hsl(var(--brown))',
+        'brown-light': 'hsl(var(--brown-light))',
+        'brown-dark': 'hsl(var(--brown-dark))',
+        paper: 'hsl(var(--paper))',
+        'paper-yellow': 'hsl(var(--paper-yellow))',
+        'paper-blue': 'hsl(var(--paper-blue))',
+        'paper-pink': 'hsl(var(--paper-pink))',
+        'paper-green': 'hsl(var(--paper-green))',
+        'light-paper-yellow': 'hsl(var(--light-paper-yellow))',
+        'light-paper-blue': 'hsl(var(--light-paper-blue))',
+        'light-paper-pink': 'hsl(var(--light-paper-pink))',
+        'light-paper-green': 'hsl(var(--light-paper-green))',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -89,8 +107,8 @@ export default {
           },
         },
         'fade-in': {
-          'from': { opacity: '0' },
-          'to': { opacity: '1' },
+          'from': { opacity: '0', transform: 'translateY(20px)' },
+          'to': { opacity: '1', transform: 'translateY(0)' },
         },
         'slide-up-and-fade': {
           'from': { opacity: '0', transform: 'translateY(1rem)' },
@@ -99,7 +117,15 @@ export default {
         'scale-in': {
           'from': { opacity: '0', transform: 'scale(0.95)' },
           'to': { opacity: '1', transform: 'scale(1)' },
-        }
+        },
+        sway1: {
+            '0%, 100%': { transform: 'rotate(-2deg)' },
+            '50%': { transform: 'rotate(2deg)' },
+        },
+        sway2: {
+            '0%, 100%': { transform: 'rotate(1deg)' },
+            '50%': { transform: 'rotate(-1deg)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',

@@ -1,7 +1,6 @@
-
 /**
  * @fileoverview A modal form for creating or editing announcements.
- * It's used within the admin page.
+ * It's used within the admin page and the new announcements page.
  */
 
 'use client';
@@ -19,7 +18,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { Announcement } from '@/lib/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import type { Announcement, AnnouncementCategory } from '@/lib/types';
 
 interface AnnouncementFormModalProps {
   isOpen: boolean;
@@ -31,6 +37,7 @@ interface AnnouncementFormModalProps {
 const emptyAnnouncement: Omit<Announcement, 'id' | 'date'> = {
   title: '',
   content: '',
+  category: 'general',
 };
 
 export default function AnnouncementFormModal({ isOpen, onClose, onSave, announcement }: AnnouncementFormModalProps) {
@@ -39,7 +46,7 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
     React.useEffect(() => {
         if(isOpen) {
             if(announcement) {
-                setFormData({ title: announcement.title, content: announcement.content });
+                setFormData({ title: announcement.title, content: announcement.content, category: announcement.category });
             } else {
                 setFormData(emptyAnnouncement);
             }
@@ -51,6 +58,10 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
         setFormData(prev => ({...prev, [id]: value}));
     };
 
+    const handleSelectChange = (value: AnnouncementCategory) => {
+        setFormData(prev => ({ ...prev, category: value }));
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave(formData);
@@ -58,31 +69,45 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md bg-paper">
         <DialogHeader>
-          <DialogTitle className="font-headline">{announcement ? 'Edit Announcement' : 'Create Announcement'}</DialogTitle>
+          <DialogTitle className="font-headline text-brown handwriting text-2xl">{announcement ? 'Edit Announcement' : 'Create Announcement'}</DialogTitle>
           <DialogDescription>
-            {announcement ? 'Update the details for this announcement.' : 'Fill out the form to create a new announcement.'}
+            {announcement ? 'Update the details for this announcement.' : 'Fill out the form to create a new announcement for the corkboard.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
                 <div className="space-y-2">
-                    <Label htmlFor="title">
+                    <Label htmlFor="title" className="text-brown font-semibold">
                     Title
                     </Label>
-                    <Input id="title" value={formData.title} onChange={handleChange} placeholder="e.g., Summer Tournament" required />
+                    <Input id="title" value={formData.title} onChange={handleChange} placeholder="e.g., Summer Tournament" required className="bg-cream border-brown-light focus:border-brown"/>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="category" className="text-brown font-semibold">Category</Label>
+                    <Select value={formData.category} onValueChange={handleSelectChange}>
+                        <SelectTrigger id="category" className="bg-cream border-brown-light focus:border-brown">
+                            <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="event">🎉 Evento</SelectItem>
+                            <SelectItem value="class">🏐 Clase</SelectItem>
+                            <SelectItem value="tournament">🏆 Torneo</SelectItem>
+                            <SelectItem value="general">📢 General</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="content">
+                    <Label htmlFor="content" className="text-brown font-semibold">
                     Content
                     </Label>
-                    <Textarea id="content" value={formData.content} onChange={handleChange} placeholder="Describe the announcement..." required/>
+                    <Textarea id="content" value={formData.content} onChange={handleChange} placeholder="Describe the announcement..." required className="bg-cream border-brown-light focus:border-brown" />
                 </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                <Button type="submit">Save</Button>
+                <Button type="button" variant="outline" onClick={onClose} className="button-hover">Cancel</Button>
+                <Button type="submit" className="bg-brown text-cream button-hover">Save</Button>
             </DialogFooter>
         </form>
       </DialogContent>

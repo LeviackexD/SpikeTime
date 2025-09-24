@@ -61,13 +61,14 @@ const navItems = [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAnnouncementsPage = pathname === '/announcements';
 
   if (isAuthPage) {
     return <main className="min-h-screen bg-background">{children}</main>;
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-app-background">
+    <div className={cn("min-h-screen w-full flex flex-col", isAnnouncementsPage ? 'announcements-cork-bg' : 'bg-app-background')}>
       <AppHeader />
       <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       <Footer />
@@ -81,9 +82,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 function AppHeader() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const pathname = usePathname();
+  const isAnnouncementsPage = pathname === '/announcements';
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
+    <header className={cn(
+      "sticky top-0 z-30 flex h-16 items-center justify-between gap-4 px-4 backdrop-blur-sm sm:px-6 lg:px-8",
+      isAnnouncementsPage ? 'bg-brown/80 text-cream border-b border-brown-dark' : 'border-b bg-background/80'
+      )}>
       <div className="flex items-center gap-4">
         {isMobile ? <MobileNav /> : <InvernessEaglesLogo className="h-8 w-auto" />}
       </div>
@@ -103,6 +109,8 @@ function AppHeader() {
 function DesktopNav() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const isAnnouncementsPage = pathname === '/announcements';
+
 
   return (
     <nav className="hidden md:flex flex-1 justify-center md:items-center md:gap-5 lg:gap-6 text-sm lg:text-base font-medium">
@@ -115,8 +123,13 @@ function DesktopNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              'transition-colors hover:text-foreground',
-              pathname === item.href ? 'text-foreground' : 'text-muted-foreground'
+              'transition-colors',
+              isAnnouncementsPage 
+                ? 'hover:text-white'
+                : 'hover:text-foreground',
+              pathname === item.href 
+                ? (isAnnouncementsPage ? 'text-white' : 'text-foreground') 
+                : (isAnnouncementsPage ? 'text-cream/70' : 'text-muted-foreground')
             )}
           >
             {item.label}
@@ -135,12 +148,13 @@ function MobileNav() {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const pathname = usePathname();
   const { user } = useAuth();
+  const isAnnouncementsPage = pathname === '/announcements';
 
   return (
     <div className="flex items-center gap-2">
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="shrink-0">
+          <Button variant="outline" size="icon" className={cn("shrink-0", isAnnouncementsPage && "bg-cream/20 border-cream/50 hover:bg-cream/30")}>
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
@@ -175,7 +189,7 @@ function MobileNav() {
       </Sheet>
       
       <Link href="/">
-        <Button variant="outline" size="icon" className="shrink-0">
+        <Button variant="outline" size="icon" className={cn("shrink-0", isAnnouncementsPage && "bg-cream/20 border-cream/50 hover:bg-cream/30")}>
           <Home className="h-5 w-5" />
           <span className="sr-only">Go to Home</span>
         </Button>
@@ -189,11 +203,13 @@ function MobileNav() {
  */
 function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user']> }) {
   const { logout } = useAuth();
+  const pathname = usePathname();
+  const isAnnouncementsPage = pathname === '/announcements';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button variant="ghost" className={cn("relative h-10 w-10 rounded-full", isAnnouncementsPage && "hover:bg-white/10")}>
           <Avatar className="h-10 w-10">
             <AvatarImage src={user.avatarUrl} alt={user.name} />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
