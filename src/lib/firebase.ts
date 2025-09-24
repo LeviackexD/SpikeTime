@@ -1,9 +1,9 @@
-
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator, enableMultiTabIndexedDbPersistence, Timestamp } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { getDatabase, connectDatabaseEmulator } from "firebase/database";
 
 
 // Your web app's Firebase configuration
@@ -13,7 +13,8 @@ const firebaseConfig: FirebaseOptions = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  databaseURL: `https://spiketime-8retn-default-rtdb.firebaseio.com`
 };
 
 // Initialize Firebase
@@ -21,6 +22,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const rtdb = getDatabase(app);
 
 
 // Connect to emulators if in development AND not in a test environment
@@ -30,6 +32,7 @@ if (typeof window !== 'undefined' && window.location.hostname === 'localhost' &&
     connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
     connectFirestoreEmulator(db, '127.0.0.1', 8080);
     connectStorageEmulator(storage, "127.0.0.1", 9199);
+    connectDatabaseEmulator(rtdb, "127.0.0.1", 9000);
 
 
     // This enables offline persistence and multi-tab support
@@ -47,4 +50,4 @@ if (typeof window !== 'undefined' && window.location.hostname === 'localhost' &&
 }
 
 
-export { app, auth, db, storage, Timestamp };
+export { app, auth, db, rtdb, storage, Timestamp };

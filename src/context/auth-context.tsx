@@ -3,9 +3,10 @@
 
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc, setDoc, onSnapshot as onFirestoreSnapshot } from 'firebase/firestore';
+import { ref as dbRef, onValue as onRealtimeDBValue } from 'firebase/database';
+import { auth, db, rtdb } from '@/lib/firebase';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,25 +33,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in, now get their profile from Firestore
+        // User is signed in, now fetch profile and admin status
         const userDocRef = doc(db, 'users', firebaseUser.uid);
-        
-        // Use onSnapshot to listen for real-time updates to the user profile
-        const unsubFromDoc = onSnapshot(userDocRef, (docSnap) => {
+        const adminRef = dbRef(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
+
+        let userProfileData: Omit<User, 'id' | 'role'> | null = null;
+        let isAdmin: boolean | null = null;
+
+        const updateUserState = () => {
+          if (userProfileData && isAdmin !== null) {
+            setUser({ 
+              id: firebaseUser.uid,
+              ...userProfileData,
+              role: isAdmin ? 'admin' : 'user'
+            } as User);
+            setLoading(false);
+          }
+        };
+
+        const unsubFromFirestore = onFirestoreSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
-            setUser({ id: docSnap.id, ...docSnap.data() } as User);
+            userProfileData = docSnap.data() as Omit<User, 'id' | 'role'>;
+            updateUserState();
           } else {
-            // This case might happen if a user is created in Auth but not in Firestore.
             console.error("No such user document in Firestore!");
             setUser(null);
+            setLoading(false);
           }
-          setLoading(false);
         });
-
-        // Return a cleanup function for the document snapshot listener
-        return () => unsubFromDoc();
+        
+        const unsubFromRealtimeDB = onRealtimeDBValue(adminRef, (snapshot) => {
+            isAdmin = snapshot.val() === true;
+            updateUserState();
+        });
+        
+        // Return a cleanup function for all listeners
+        return () => {
+          unsubFromFirestore();
+          unsubFromRealtimeDB();
+        };
 
       } else {
         // User is signed out
@@ -60,7 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     // Cleanup subscription on unmount
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
 
@@ -116,7 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             email: email,
             username: email.split('@')[0],
             avatarUrl: `https://picsum.photos/seed/${firebaseUser.uid}/100/100`,
-            role: 'user', // All new sign-ups are users
+            role: 'user', // Default role is 'user'. Admin is managed in RTDB.
             skillLevel: additionalData.skillLevel,
             favoritePosition: additionalData.favoritePosition,
             stats: {
