@@ -53,9 +53,8 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     
     React.useEffect(() => {
         if (isOpen) {
-            if(session) {
-                const sessionDate = getSafeDate(session.date);
-                const formattedDate = sessionDate.toISOString().split('T')[0];
+            if(session && typeof session.date === 'string') {
+                const formattedDate = session.date.split('T')[0];
                 setFormData({
                     date: formattedDate,
                     startTime: session.startTime,
