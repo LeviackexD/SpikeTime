@@ -1,4 +1,3 @@
-
 import { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'user' | 'admin';
@@ -38,12 +37,12 @@ export interface Message {
   id: string;
   sender: User;
   content: string;
-  timestamp: string;
+  timestamp: Timestamp;
 }
 
 export interface Session {
   id: string;
-  date: string;
+  date: Timestamp;
   startTime: string;
   endTime: string;
   location: string;
@@ -60,7 +59,7 @@ export interface Announcement {
   id: string;
   title: LocalizedString;
   content: LocalizedString;
-  date: string;
+  date: Timestamp;
   category: AnnouncementCategory;
 }
 

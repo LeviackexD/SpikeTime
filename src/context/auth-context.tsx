@@ -2,10 +2,12 @@
 'use client';
 
 import * as React from 'react';
-import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useRouter, usePathname } from 'next/navigation';
+import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { mockUsers } from '@/lib/mock-data';
 
 type AuthUser = User | null;
 
@@ -22,9 +24,6 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 const publicRoutes = ['/login', '/register'];
 
-// Change this to test different users. 0 is admin, 1+ are regular users.
-const currentUser: User = mockUsers[0]; 
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<AuthUser>(null);
   const [loading, setLoading] = React.useState(true);
@@ -33,11 +32,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   React.useEffect(() => {
-    // Simulate auth check
-    setTimeout(() => {
-      setUser(currentUser);
-      setLoading(false);
-    }, 500);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in, now get their profile from Firestore
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        
+        // Use onSnapshot to listen for real-time updates to the user profile
+        const unsubFromDoc = onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setUser({ id: docSnap.id, ...docSnap.data() } as User);
+          } else {
+            // This case might happen if a user is created in Auth but not in Firestore.
+            console.error("No such user document in Firestore!");
+            setUser(null);
+          }
+          setLoading(false);
+        });
+
+        // Return a cleanup function for the document snapshot listener
+        return () => unsubFromDoc();
+
+      } else {
+        // User is signed out
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
 
@@ -47,7 +70,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, loading, router, pathname]);
 
-  const handleAuthError = (description: string) => {
+  const handleAuthError = (error: any, defaultMessage: string) => {
+       const errorCode = error.code || 'unknown';
+       let description = defaultMessage;
+       if(errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-credential') {
+           description = 'Invalid email or password.';
+       } else if (errorCode === 'auth/email-already-in-use') {
+           description = 'This email address is already in use.';
+       }
        toast({
         title: 'Authentication Failed',
         description: description,
@@ -56,61 +86,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const logout = async () => {
-    setUser(null);
-    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-    router.push('/login');
+    try {
+        await signOut(auth);
+        toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+        router.push('/login');
+    } catch (error) {
+        console.error('Error signing out: ', error);
+    }
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    // Mock implementation
-    if (email === 'admin@invernesseagles.com' && pass === 'password') {
-      setUser(mockUsers[0]);
-      return true;
-    }
-    const foundUser = mockUsers.find(u => u.email === email);
-    if(foundUser) {
-        setUser(foundUser);
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
         return true;
+    } catch (error: any) {
+        handleAuthError(error, 'Could not sign you in.');
+        return false;
     }
-    handleAuthError('Invalid email or password.');
-    return false;
   };
 
   const signUpWithEmail = async (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
-    // Mock implementation
-    const newUser: User = {
-        id: `u${mockUsers.length + 1}`,
-        name: additionalData.name,
-        email: email,
-        username: email.split('@')[0],
-        avatarUrl: `https://picsum.photos/seed/u${mockUsers.length + 1}/100/100`,
-        role: 'user',
-        skillLevel: additionalData.skillLevel,
-        favoritePosition: additionalData.favoritePosition,
-        stats: {
-            sessionsPlayed: 0,
-            attendanceRate: 100,
-        },
-    };
-    mockUsers.push(newUser);
-    return true;
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        const firebaseUser = userCredential.user;
+
+        // Create user document in Firestore
+        const newUser: Omit<User, 'id'> = {
+            name: additionalData.name,
+            email: email,
+            username: email.split('@')[0],
+            avatarUrl: `https://picsum.photos/seed/${firebaseUser.uid}/100/100`,
+            role: 'user', // All new sign-ups are users
+            skillLevel: additionalData.skillLevel,
+            favoritePosition: additionalData.favoritePosition,
+            stats: {
+                sessionsPlayed: 0,
+                attendanceRate: 100,
+            },
+        };
+        
+        await setDoc(doc(db, "users", firebaseUser.uid), newUser);
+        return true;
+
+    } catch (error: any) {
+        handleAuthError(error, 'Could not create your account.');
+        return false;
+    }
   };
 
   const updateUser = async (updatedData: Partial<User>) => {
     if (!user) return;
-    setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
-    
-    // In a real app, you would update this in your database
-    const userIndex = mockUsers.findIndex(u => u.id === user.id);
-    if (userIndex !== -1) {
-        mockUsers[userIndex] = { ...mockUsers[userIndex], ...updatedData };
+    const userDocRef = doc(db, 'users', user.id);
+    try {
+        await setDoc(userDocRef, updatedData, { merge: true });
+        toast({
+            title: "Profile Updated",
+            description: "Your profile information has been saved.",
+            variant: "success"
+        });
+    } catch (error) {
+        console.error("Error updating user profile:", error);
+        toast({
+            title: "Update Failed",
+            description: "Could not save your profile changes.",
+            variant: "destructive"
+        });
     }
-
-    toast({
-        title: "Profile Updated",
-        description: "Your profile information has been saved.",
-        variant: "success"
-    });
   }
   
   if (loading && !publicRoutes.includes(pathname)) {
