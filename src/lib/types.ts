@@ -24,6 +24,7 @@ export interface User {
   favoritePosition: PlayerPosition;
   stats: {
     sessionsPlayed: number;
+    attendanceRate: number;
   };
 }
 

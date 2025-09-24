@@ -22,10 +22,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BarChart, Edit, Medal, Star, Target } from 'lucide-react';
+import { BarChart, Edit, Medal, Star, Target, CheckCircle } from 'lucide-react';
 import EditProfileModal from '@/components/profile/edit-profile-modal';
 import type { User } from '@/lib/types';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/auth-context';
 
 const achievements = [
@@ -33,6 +32,19 @@ const achievements = [
   { icon: Star, label: 'Top Player', color: 'text-blue-500' },
   { icon: Target, label: 'Perfect Attendance', color: 'text-green-500' },
 ];
+
+const StatCard = ({ icon: Icon, label, value, badge }: { icon: React.ElementType, label: string, value: string | React.ReactNode, badge?: boolean }) => (
+    <Card className="flex flex-col items-center justify-center p-4 text-center">
+        <Icon className="h-8 w-8 text-primary mb-2" />
+        <p className="text-sm text-muted-foreground mb-1">{label}</p>
+        {badge ? (
+             <Badge variant="secondary" className="text-lg">{value}</Badge>
+        ) : (
+            <p className="font-semibold text-2xl">{value}</p>
+        )}
+    </Card>
+)
+
 
 export default function ProfilePage() {
   const { user: currentUser } = useAuth();
@@ -79,22 +91,11 @@ export default function ProfilePage() {
               Player Details
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-2 gap-6 text-sm">
-              <div>
-                <p className="text-muted-foreground">Skill Level</p>
-                <p className="font-semibold text-lg">{currentUser.skillLevel}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Favorite Position</p>
-                <p className="font-semibold text-lg">{currentUser.favoritePosition}</p>
-              </div>
-            </div>
-            <Separator />
-            <div className="text-center">
-                <p className="text-muted-foreground">Sessions Played</p>
-                <p className="font-semibold text-2xl">{currentUser.stats.sessionsPlayed}</p>
-            </div>
+          <CardContent className="grid grid-cols-2 gap-4">
+              <StatCard icon={Star} label="Skill Level" value={currentUser.skillLevel} badge />
+              <StatCard icon={Target} label="Favorite Position" value={currentUser.favoritePosition} badge />
+              <StatCard icon={BarChart} label="Sessions Played" value={currentUser.stats.sessionsPlayed} />
+              <StatCard icon={CheckCircle} label="Attendance Rate" value={`${currentUser.stats.attendanceRate}%`} />
           </CardContent>
         </Card>
         
