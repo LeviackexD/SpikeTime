@@ -86,7 +86,7 @@ To experience the app as a regular user, you can easily change the `currentUser`
 
 ## Next Steps for Production
 
-To deploy this application to a hosting service like **Vercel** or **Netlify** with a real, persistent database, you need to connect it to a live Firebase project.
+To deploy this application to a hosting service like **Vercel** or **Netlify** with a real, persistent database, you need to connect it to a live Firebase project. This is the recommended path as the application is already architected for it.
 
 ### 1. Set Up Your Firebase Project
 
@@ -135,3 +135,32 @@ Once your environment variables are set and your app is connected to the real Fi
 3.  The hosting provider will automatically detect that it's a Next.js app and deploy it for you.
 
 Your application will now be live with a real-time database and authentication!
+
+---
+
+## Free Alternatives for Production
+
+If you want to explore other free options besides the recommended Firebase stack, here are some excellent alternatives. Note that using these will require more significant code changes to adapt the application.
+
+### Hosting / Deployment Platforms
+
+-   **Vercel / Netlify**: These are the top recommendations. They are specifically optimized for Next.js, offer very generous free tiers, and are incredibly easy to use.
+-   **Firebase App Hosting**: A natural choice if you're using other Firebase services. It integrates seamlessly with the entire Firebase ecosystem.
+-   **Render**: A flexible platform with a free tier that supports Node.js services. A good alternative if you want more control over your environment.
+
+### Database & Authentication Services
+
+-   **Supabase**:
+    -   **Description**: The most popular open-source alternative to Firebase. It provides a PostgreSQL database, real-time subscriptions, authentication, and storage.
+    -   **Free Tier**: Offers a generous free plan that is more than enough for most personal projects.
+    -   **Impact**: Requires refactoring `src/context/auth-context.tsx` and `src/context/session-context.tsx` to use the Supabase client library instead of Firebase's.
+
+-   **Appwrite**:
+    -   **Description**: Another powerful open-source backend server that provides authentication, databases, storage, and serverless functions.
+    -   **Free Tier**: Offers a free tier on its cloud platform and is fully open-source if you choose to self-host.
+    -   **Impact**: Similar to Supabase, you would need to replace the Firebase SDK logic with the Appwrite SDK in the context files.
+
+-   **PocketBase**:
+    -   **Description**: An extremely lightweight, all-in-one backend in a single file. It offers a database, authentication, and real-time API.
+    -   **Free Tier**: It's completely free. You only pay for the server where you host it (which can also be free on platforms like Render).
+    -   **Impact**: Best for smaller projects or rapid prototyping. It would require adapting the app's data-fetching logic to its simple REST-like API.
