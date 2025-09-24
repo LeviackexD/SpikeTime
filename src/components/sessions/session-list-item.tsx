@@ -154,11 +154,11 @@ export default function SessionListItem({
           </div>
         
         <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <div className="flex -space-x-2 overflow-hidden">
-                {players.slice(0, 4).map(player => (
-                  <TooltipProvider key={player.id}>
-                    <Tooltip>
+            <TooltipProvider>
+              <div className="flex justify-between items-center">
+                <div className="flex -space-x-2 overflow-hidden">
+                  {players.slice(0, 4).map(player => (
+                    <Tooltip key={player.id}>
                       <TooltipTrigger asChild>
                         <PlayerAvatar player={player} className="h-8 w-8 border-2 border-background" />
                       </TooltipTrigger>
@@ -166,15 +166,13 @@ export default function SessionListItem({
                         <p>{player.name}</p>
                       </TooltipContent>
                     </Tooltip>
-                  </TooltipProvider>
-                ))}
-                {players.length > 4 && (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
-                        +{players.length - 4}
-                    </div>
-                )}
-              </div>
-              <TooltipProvider>
+                  ))}
+                  {players.length > 4 && (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
+                          +{players.length - 4}
+                      </div>
+                  )}
+                </div>
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onViewPlayers(session)}>
@@ -185,8 +183,8 @@ export default function SessionListItem({
                         <p>View Details</p>
                     </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-            </div>
+              </div>
+            </TooltipProvider>
             <Progress value={progressValue} className="h-1" />
         </div>
       </CardContent>
