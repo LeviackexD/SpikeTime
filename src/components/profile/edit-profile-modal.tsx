@@ -25,6 +25,7 @@ import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import { useAuth } from '@/context/auth-context';
 
 
 interface EditProfileModalProps {
@@ -34,10 +35,12 @@ interface EditProfileModalProps {
   user: User | null;
 }
 
-export default function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileModalProps) {
+export default function EditProfileModal({ isOpen, onClose, user }: EditProfileModalProps) {
     const { t } = useLanguage();
+    const { updateUser } = useAuth();
     const [formData, setFormData] = React.useState<User | null>(user);
     const [isUploading, setIsUploading] = React.useState(false);
+    const [isSaving, setIsSaving] = React.useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
@@ -69,15 +72,11 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
             }
             setIsUploading(true);
             // This is a mock upload. In a real app, you'd upload to a service like Firebase Storage.
+            // For now, we'll use FileReader to get a data URL.
             setTimeout(() => {
               const reader = new FileReader();
               reader.onloadend = () => {
                   setFormData(prev => prev ? { ...prev, avatarUrl: reader.result as string } : null);
-                  toast({
-                      title: t('toasts.avatarUpdatedTitle'),
-                      description: t('toasts.avatarUpdatedDescription'),
-                      variant: "success",
-                  });
                   setIsUploading(false);
               };
               reader.readAsDataURL(file);
@@ -85,10 +84,26 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (formData) {
-            onSave(formData);
+            setIsSaving(true);
+            const success = await updateUser(formData);
+            if(success) {
+                toast({
+                    title: t('toasts.profileUpdatedTitle'),
+                    description: t('toasts.profileUpdatedDescription'),
+                    variant: "success",
+                });
+                onClose();
+            } else {
+                toast({
+                    title: "Update Failed",
+                    description: "Could not save your profile changes.",
+                    variant: "destructive",
+                });
+            }
+            setIsSaving(false);
         }
     }
 
@@ -158,8 +173,11 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                 </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" onClick={onClose}>{t('modals.cancel')}</Button>
-                <Button type="submit">{t('modals.saveChanges')}</Button>
+                <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>{t('modals.cancel')}</Button>
+                <Button type="submit" disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {t('modals.saveChanges')}
+                </Button>
             </DialogFooter>
         </form>
       </DialogContent>

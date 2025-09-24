@@ -45,6 +45,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
+import { VolleyballIcon } from '../icons/volleyball-icon';
 
 // --- NAVIGATION ---
 const getNavItems = (t: (key: string) => string) => [
@@ -61,12 +62,27 @@ const getNavItems = (t: (key: string) => string) => [
  * Conditionally renders auth pages or the full app layout.
  */
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
   const pathname = usePathname();
   const isAuthPage = pathname === '/login' || pathname === '/register';
   const isAnnouncementsPage = pathname === '/announcements';
+  
+  if (loading) {
+    return (
+        <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
+            <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
+            <p className="mt-4 text-lg font-semibold">SpikeTime</p>
+        </div>
+    )
+  }
 
   if (isAuthPage) {
     return <main className="min-h-screen bg-background">{children}</main>;
+  }
+  
+  // This should only render if user is authenticated, handled by AuthContext redirects
+  if (!user) {
+    return null;
   }
 
   return (

@@ -20,7 +20,7 @@
         "noAvailableSessions": "No other sessions available at the moment.",
         "recentAnnouncements": "Recent Announcements",
         "viewAll": "View all",
-        "loading": "Loading user data..."
+        "loading": "Loading..."
     },
     "calendarPage": {
         "title": "Session Planner",
@@ -129,13 +129,11 @@
     },
     "loginPage": {
         "welcome": "Welcome Back!",
-        "checkingAuth": "Checking authentication...",
         "description": "Enter your credentials to access your account.",
         "emailLabel": "Email",
         "passwordLabel": "Password",
         "forgotPassword": "Forgot your password?",
         "signIn": "Sign in",
-        "signingIn": "Signing in...",
         "noAccount": "Don't have an account?",
         "signUp": "Sign up"
     },
@@ -150,7 +148,6 @@
         "favoritePositionLabel": "Favorite Position",
         "favoritePositionPlaceholder": "Select your favorite position",
         "createAccount": "Create Account",
-        "creatingAccount": "Creating Account...",
         "haveAccount": "Already have an account?",
         "signIn": "Sign in"
     },
@@ -160,12 +157,13 @@
         "logoutTitle": "Logged Out",
         "logoutDescription": "You have been successfully logged out.",
         "authFailedTitle": "Authentication Failed",
+        "authFailedDescription": "Please check your email and password.",
         "incompleteFormTitle": "Incomplete Form",
         "incompleteFormDescription": "Please select a skill level and favorite position.",
         "registrationFailedTitle": "Registration Failed",
         "registrationFailedDescription": "This email might already be in use or the password is too weak.",
         "accountCreatedTitle": "Account Created!",
-        "accountCreatedDescription": "You can now log in with your credentials.",
+        "accountCreatedDescription": "Please sign in with your new credentials.",
         "profileUpdatedTitle": "Profile Updated",
         "profileUpdatedDescription": "Your profile information has been saved.",
         "avatarUpdatedTitle": "Avatar updated",

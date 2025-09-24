@@ -25,45 +25,41 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { signInWithEmail, user, loading } = useAuth();
+  const { signInWithEmail, loading } = useAuth();
   const { t } = useLanguage();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [isEmailLoading, setIsEmailLoading] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  React.useEffect(() => {
-    if (user) {
-      router.push('/');
-    }
-  }, [user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsEmailLoading(true);
+    setIsSubmitting(true);
     const success = await signInWithEmail(email, password);
+    
     if (success) {
       toast({
         title: t('toasts.loginSuccessTitle'),
         description: t('toasts.loginSuccessDescription'),
         variant: 'success',
       });
-      router.push('/');
-    }
-    else {
+      // Redirection is handled by the AuthProvider
+    } else {
          toast({
             title: t('toasts.authFailedTitle'),
-            description: t('toasts.authFailedTitle'), // Generic message for security
+            description: t('toasts.authFailedDescription'),
             variant: 'destructive',
         });
     }
-    setIsEmailLoading(false);
+    setIsSubmitting(false);
   };
 
-  const isFormDisabled = isEmailLoading || loading;
+  const isFormDisabled = isSubmitting || loading;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -74,7 +70,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-headline">{t('loginPage.welcome')}</CardTitle>
           <CardDescription>
-            {loading ? t('loginPage.checkingAuth') : t('loginPage.description')}
+            {t('loginPage.description')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
@@ -112,7 +108,7 @@ export default function LoginPage() {
                 />
             </div>
             <Button type="submit" className="w-full" disabled={isFormDisabled}>
-              {isEmailLoading ? t('loginPage.signingIn') : t('loginPage.signIn')}
+              {isSubmitting ? <Loader2 className="animate-spin" /> : t('loginPage.signIn')}
             </Button>
           </CardContent>
           <CardFooter className="flex justify-center">

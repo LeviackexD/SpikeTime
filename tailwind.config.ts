@@ -128,6 +128,10 @@ export default {
             '0%, 100%': { transform: 'rotate(1deg)' },
             '50%': { transform: 'rotate(-1deg)' },
         },
+        'spin-slow': {
+          'from': { transform: 'rotate(0deg)' },
+          'to': { transform: 'rotate(360deg)' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -135,6 +139,7 @@ export default {
         'fade-in': 'fade-in 0.5s ease-out forwards',
         'slide-up-and-fade': 'slide-up-and-fade 0.5s ease-out forwards',
         'scale-in': 'scale-in 0.3s ease-out forwards',
+        'spin-slow': 'spin-slow 3s linear infinite',
       },
     },
   },

@@ -20,7 +20,7 @@
         "noAvailableSessions": "No hay otras sesiones disponibles por el momento.",
         "recentAnnouncements": "Anuncios Recientes",
         "viewAll": "Ver todos",
-        "loading": "Cargando datos de usuario..."
+        "loading": "Cargando..."
     },
     "calendarPage": {
         "title": "Planificador de Sesiones",
@@ -129,13 +129,11 @@
     },
     "loginPage": {
         "welcome": "¡Bienvenido de Nuevo!",
-        "checkingAuth": "Verificando autenticación...",
         "description": "Introduce tus credenciales para acceder a tu cuenta.",
         "emailLabel": "Correo Electrónico",
         "passwordLabel": "Contraseña",
         "forgotPassword": "¿Olvidaste tu contraseña?",
         "signIn": "Iniciar Sesión",
-        "signingIn": "Iniciando sesión...",
         "noAccount": "¿No tienes una cuenta?",
         "signUp": "Regístrate"
     },
@@ -150,7 +148,6 @@
         "favoritePositionLabel": "Posición Favorita",
         "favoritePositionPlaceholder": "Selecciona tu posición favorita",
         "createAccount": "Crear Cuenta",
-        "creatingAccount": "Creando cuenta...",
         "haveAccount": "¿Ya tienes una cuenta?",
         "signIn": "Iniciar Sesión"
     },
@@ -160,12 +157,13 @@
         "logoutTitle": "Sesión Cerrada",
         "logoutDescription": "Has cerrado sesión correctamente.",
         "authFailedTitle": "Fallo de Autenticación",
+        "authFailedDescription": "Por favor, comprueba tu correo y contraseña.",
         "incompleteFormTitle": "Formulario Incompleto",
         "incompleteFormDescription": "Por favor, selecciona un nivel de habilidad y una posición favorita.",
         "registrationFailedTitle": "Fallo en el Registro",
         "registrationFailedDescription": "Este correo ya podría estar en uso o la contraseña es demasiado débil.",
         "accountCreatedTitle": "¡Cuenta Creada!",
-        "accountCreatedDescription": "Ahora puedes iniciar sesión con tus credenciales.",
+        "accountCreatedDescription": "Por favor, inicia sesión con tus nuevas credenciales.",
         "profileUpdatedTitle": "Perfil Actualizado",
         "profileUpdatedDescription": "Tu información de perfil ha sido guardada.",
         "avatarUpdatedTitle": "Avatar actualizado",

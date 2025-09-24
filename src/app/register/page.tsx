@@ -33,13 +33,14 @@ import { useToast } from '@/hooks/use-toast';
 import type { SkillLevel, PlayerPosition } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
+import { Loader2 } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { signUpWithEmail } = useAuth();
+  const { signUpWithEmail, loading } = useAuth();
   const { t } = useLanguage();
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formData, setFormData] = React.useState({
     name: '',
     email: '',
@@ -67,7 +68,7 @@ export default function RegisterPage() {
         });
         return;
     }
-    setIsLoading(true);
+    setIsSubmitting(true);
     
     const success = await signUpWithEmail(formData.email, formData.password, {
       name: formData.name,
@@ -90,8 +91,10 @@ export default function RegisterPage() {
       });
     }
 
-    setIsLoading(false);
+    setIsSubmitting(false);
   };
+  
+  const isFormDisabled = isSubmitting || loading;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -109,7 +112,7 @@ export default function RegisterPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">{t('registerPage.nameLabel')}</Label>
-              <Input id="name" placeholder="Alex Johnson" value={formData.name} onChange={handleInputChange} required disabled={isLoading} />
+              <Input id="name" placeholder="Alex Johnson" value={formData.name} onChange={handleInputChange} required disabled={isFormDisabled} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">{t('registerPage.emailLabel')}</Label>
@@ -120,16 +123,16 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                disabled={isLoading}
+                disabled={isFormDisabled}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">{t('registerPage.passwordLabel')}</Label>
-              <Input id="password" type="password" value={formData.password} onChange={handleInputChange} required disabled={isLoading} />
+              <Input id="password" type="password" value={formData.password} onChange={handleInputChange} required disabled={isFormDisabled} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="skillLevel">{t('registerPage.skillLevelLabel')}</Label>
-              <Select required onValueChange={handleSelectChange('skillLevel')} disabled={isLoading} value={formData.skillLevel}>
+              <Select required onValueChange={handleSelectChange('skillLevel')} disabled={isFormDisabled} value={formData.skillLevel}>
                 <SelectTrigger id="skillLevel">
                   <SelectValue placeholder={t('registerPage.skillLevelPlaceholder')} />
                 </SelectTrigger>
@@ -142,7 +145,7 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="favoritePosition">{t('registerPage.favoritePositionLabel')}</Label>
-              <Select required onValueChange={handleSelectChange('favoritePosition')} disabled={isLoading} value={formData.favoritePosition}>
+              <Select required onValueChange={handleSelectChange('favoritePosition')} disabled={isFormDisabled} value={formData.favoritePosition}>
                 <SelectTrigger id="favoritePosition">
                   <SelectValue placeholder={t('registerPage.favoritePositionPlaceholder')} />
                 </SelectTrigger>
@@ -154,8 +157,8 @@ export default function RegisterPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? t('registerPage.creatingAccount') : t('registerPage.createAccount')}
+            <Button type="submit" className="w-full" disabled={isFormDisabled}>
+              {isSubmitting ? <Loader2 className="animate-spin"/> : t('registerPage.createAccount')}
             </Button>
           </CardContent>
           <CardFooter className="flex justify-center">

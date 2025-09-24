@@ -34,25 +34,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isAuthPage = false; 
-
-  if (isAuthPage) {
-    return (
-      <html lang="en" suppressHydrationWarning>
-        <body className={`${poppins.variable} ${caveat.variable} font-body antialiased`}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <LanguageProvider>
-                <AuthProvider>
-                    <main className="min-h-screen bg-background">{children}</main>
-                    <Toaster />
-                </AuthProvider>
-            </LanguageProvider>
-          </ThemeProvider>
-        </body>
-      </html>
-    );
-  }
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${poppins.variable} ${caveat.variable} font-body antialiased`}>
@@ -61,9 +42,9 @@ export default function RootLayout({
             <AuthProvider>
               <SessionProvider>
                 <AppLayout>{children}</AppLayout>
-                <Toaster />
               </SessionProvider>
             </AuthProvider>
+            <Toaster />
           </LanguageProvider>
         </ThemeProvider>
       </body>
