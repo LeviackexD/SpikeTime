@@ -9,7 +9,7 @@
 import * as React from 'react';
 import type { NextPage } from 'next';
 import dynamic from 'next/dynamic';
-import { Chalkboard, Pin } from 'lucide-react';
+import { ClipboardCheck, Pin } from 'lucide-react';
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { Separator } from '@/components/ui/separator';
@@ -46,7 +46,7 @@ const CalendarPage: NextPage = () => {
     <div className="space-y-8 animate-fade-in">
         <div className="text-center">
              <h1 className="text-4xl font-bold font-handwriting text-brown-dark flex items-center justify-center gap-3">
-                <Chalkboard className="h-10 w-10 text-brown" />
+                <ClipboardCheck className="h-10 w-10 text-brown" />
                 Session Planner
             </h1>
             <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
