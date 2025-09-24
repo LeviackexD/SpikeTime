@@ -43,7 +43,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         let isAdmin: boolean | null = null;
 
         const updateUserState = () => {
-          if (userProfileData && isAdmin !== null) {
+          // This function is now responsible for setting the final state
+          if (userProfileData !== null && isAdmin !== null) {
             setUser({ 
               id: firebaseUser.uid,
               ...userProfileData,
@@ -66,6 +67,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const unsubFromRealtimeDB = onRealtimeDBValue(adminRef, (snapshot) => {
             isAdmin = snapshot.val() === true;
             updateUserState();
+        }, () => {
+            // If there's an error reading from RTDB (e.g., permissions), assume not admin
+            isAdmin = false;
+            updateUserState();
         });
         
         // Return a cleanup function for all listeners
@@ -75,7 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
 
       } else {
-        // User is signed out
+        // User is signed out, no need to fetch anything else.
         setUser(null);
         setLoading(false);
       }
@@ -133,12 +138,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const firebaseUser = userCredential.user;
 
         // Create user document in Firestore
-        const newUser: Omit<User, 'id'> = {
+        const newUser: Omit<User, 'id' | 'role'> = {
             name: additionalData.name,
             email: email,
             username: email.split('@')[0],
             avatarUrl: `https://picsum.photos/seed/${firebaseUser.uid}/100/100`,
-            role: 'user', // Default role is 'user'. Admin is managed in RTDB.
+            // Role will be determined dynamically by the onAuthStateChanged listener
             skillLevel: additionalData.skillLevel,
             favoritePosition: additionalData.favoritePosition,
             stats: {
