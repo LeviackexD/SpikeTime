@@ -1,10 +1,26 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access to all documents for development
-    match /{document=**} {
-      allow read, write: if true;
+    
+    // Users can read their own profile, and any authenticated user can create a profile.
+    match /users/{userId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
+    }
+
+    // Authenticated users can read and write to sessions.
+    match /sessions/{sessionId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Authenticated users can read and write to announcements.
+    match /announcements/{announcementId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Authenticated users can read and write to direct chats they are a part of.
+    match /directChats/{chatId} {
+       allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
     }
   }
 }
