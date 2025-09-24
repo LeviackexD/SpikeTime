@@ -59,30 +59,19 @@ const getNavItems = (t: (key: string) => string) => [
 
 /**
  * Main application layout.
- * Conditionally renders auth pages or the full app layout.
  */
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/register';
   const isAnnouncementsPage = pathname === '/announcements';
   
-  if (loading) {
+  if (loading && !user) {
     return (
         <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
             <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
             <p className="mt-4 text-lg font-semibold">SpikeTime</p>
         </div>
     )
-  }
-
-  if (isAuthPage) {
-    return <main className="min-h-screen bg-background">{children}</main>;
-  }
-  
-  // This should only render if user is authenticated, handled by AuthContext redirects
-  if (!user) {
-    return null;
   }
 
   return (
@@ -225,7 +214,6 @@ function MobileNav() {
  * User navigation dropdown menu.
  */
 function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user']> }) {
-  const { logout } = useAuth();
   const { t } = useLanguage();
   const pathname = usePathname();
   const isAnnouncementsPage = pathname === '/announcements';
@@ -267,11 +255,6 @@ function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user'
             <Settings className="mr-2 h-4 w-4" />
             <span>{t('nav.settings')}</span>
           </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>{t('nav.logout')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

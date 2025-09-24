@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import type { Session, Message, User, Announcement, DirectChat } from '@/lib/types';
-import { mockSessions, mockAnnouncements, mockUsers, mockDirectChats, currentUser } from '@/lib/mock-data';
+import { mockSessions, mockAnnouncements, mockUsers, mockDirectChats } from '@/lib/mock-data';
 import { useAuth } from './auth-context';
 import { Timestamp } from 'firebase/firestore';
 
