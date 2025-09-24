@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
       if (firebaseUser) {
         console.log("AuthProvider: Firebase user found (onAuthStateChanged), fetching profile...", firebaseUser.uid);
         try {
@@ -49,23 +48,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser({ ...userData, id: firebaseUser.uid, role: isAdmin ? 'admin' : 'user' });
           } else {
             console.warn("AuthProvider: User document not found in Firestore for UID:", firebaseUser.uid);
-            // This is a fallback. If the user doc doesn't exist, create a temporary user object
-            // to prevent the redirect loop. The app might not function fully.
             setUser({
               id: firebaseUser.uid,
               email: firebaseUser.email || 'unknown',
-              name: firebaseUser.displayName || 'New User',
+              name: firebaseUser.displayName || 'Fallback User',
               role: 'user',
               skillLevel: 'Beginner',
               favoritePosition: 'Hitter',
-              username: firebaseUser.email?.split('@')[0] || 'newuser',
+              username: firebaseUser.email?.split('@')[0] || 'fallbackuser',
               avatarUrl: '',
               stats: { sessionsPlayed: 0, attendanceRate: 0 },
             });
           }
         } catch (error) {
           console.error("AuthProvider: CRITICAL_ERROR fetching user profile:", error);
-          // Don't sign out. Create a fallback user to prevent the redirect loop.
           setUser({
             id: firebaseUser.uid,
             email: firebaseUser.email || 'unknown',
@@ -144,7 +140,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async (): Promise<void> => {
-    setUser(null);
     await signOut(auth);
   };
   
