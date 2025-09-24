@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         // User is signed out.
         setUser(null);
-        setLoading(false); // THIS IS THE KEY FIX.
+        setLoading(false);
       }
     });
 
