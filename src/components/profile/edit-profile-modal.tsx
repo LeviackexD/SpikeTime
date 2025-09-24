@@ -24,7 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -35,6 +37,8 @@ interface EditProfileModalProps {
 
 export default function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileModalProps) {
     const [formData, setFormData] = React.useState<User | null>(user);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const { toast } = useToast();
 
     React.useEffect(() => {
         setFormData(user);
@@ -49,6 +53,25 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
 
     const handleSelectChange = (field: 'skillLevel' | 'favoritePosition') => (value: string) => {
         setFormData(prev => prev ? ({ ...prev, [field]: value }) : null);
+    };
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                toast({
+                    title: "Image too large",
+                    description: "Please select an image smaller than 2MB.",
+                    variant: "destructive"
+                });
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => prev ? { ...prev, avatarUrl: reader.result as string } : null);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -70,12 +93,28 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
         <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
                 <div className="space-y-2">
+                  <Label>Avatar</Label>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={formData.avatarUrl} alt={formData.name} />
+                      <AvatarFallback>{formData.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                      Change Picture
+                    </Button>
+                    <Input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/png, image/jpeg, image/gif"
+                      onChange={handleAvatarChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
                     <Input id="name" value={formData.name} onChange={handleChange} required />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="avatarUrl">Avatar URL</Label>
-                    <Input id="avatarUrl" value={formData.avatarUrl} onChange={handleChange} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="skillLevel">Skill Level</Label>
