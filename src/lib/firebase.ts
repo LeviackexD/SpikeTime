@@ -1,7 +1,7 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, getDatabase } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, memoryLocalCache } from 'firebase/firestore';
 import { getDatabase as getRTDB } from 'firebase/database';
 
 const firebaseConfig: FirebaseOptions = {
@@ -18,10 +18,9 @@ const firebaseConfig: FirebaseOptions = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 
-// Initialize Firestore with long polling to prevent connection issues
+// Initialize Firestore with in-memory cache to bypass corrupted IndexedDB
 const firestore = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-  useFetchStreams: false,
+  localCache: memoryLocalCache(),
 });
 
 const db = getRTDB(app);
