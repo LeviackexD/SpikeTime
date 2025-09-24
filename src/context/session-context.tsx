@@ -2,17 +2,18 @@
 'use client';
 
 import * as React from 'react';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove, writeBatch, getDoc, query, orderBy } from 'firebase/firestore';
 import type { Session, Message, User, DirectChat, Announcement } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './auth-context';
-import { mockSessions, mockAnnouncements, mockDirectChats, mockUsers } from '@/lib/mock-data';
+import { db } from '@/lib/firebase';
+import { mockUsers } from '@/lib/mock-data'; // Only for seeding chats
 
 interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
   createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => Promise<void>;
-  updateSession: (session: Omit<Session, 'date'> & { date: string }) => Promise<void>;
+  updateSession: (session: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string, id: string }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<boolean>;
   cancelBooking: (sessionId: string) => Promise<boolean>;
@@ -20,7 +21,7 @@ interface SessionContextType {
   leaveWaitlist: (sessionId: string) => Promise<boolean>;
   addMessage: (sessionId: string, message: Omit<Message, 'id' | 'sender' | 'timestamp'>) => Promise<void>;
   createAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
-  updateAnnouncement: (announcement: Omit<Announcement, 'date'>) => Promise<void>;
+  updateAnnouncement: (announcement: Omit<Announcement, 'date'> & { id: string }) => Promise<void>;
   deleteAnnouncement: (announcementId: string) => Promise<void>;
   directChats: DirectChat[];
   createDirectChat: (otherUser: User) => Promise<string>;
@@ -34,7 +35,6 @@ const getSafeDate = (date: string | Timestamp): Date => {
     if (date instanceof Timestamp) {
       return date.toDate();
     }
-    // Add 'Z' to ensure UTC interpretation for ISO strings without it
     const dateString = typeof date === 'string' && !date.endsWith('Z') ? `${date}Z` : date;
     const d = new Date(dateString);
     return d;
@@ -42,212 +42,220 @@ const getSafeDate = (date: string | Timestamp): Date => {
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const { user: currentUser } = useAuth();
-  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
-  const [announcements, setAnnouncements] = React.useState<Announcement[]>(mockAnnouncements);
-  const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
-  const [users, setUsers] = React.useState<User[]>(mockUsers);
+  const [sessions, setSessions] = React.useState<Session[]>([]);
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
+  const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
+  const [users, setUsers] = React.useState<User[]>([]);
   const { toast } = useToast();
-  
-  const sortAndSetSessions = (newSessions: Session[]) => {
-    const sorted = newSessions.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime());
-    setSessions(sorted);
-  }
 
   React.useEffect(() => {
-    // Sort initial data
-    sortAndSetSessions(mockSessions);
-    setAnnouncements(prev => [...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+    const q = query(collection(db, "sessions"), orderBy("date", "desc"));
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+      const sessionsData: Session[] = [];
+      for (const doc of querySnapshot.docs) {
+        const data = doc.data();
+        const players = await Promise.all((data.players || []).map(async (playerRef: any) => (await getDoc(playerRef)).data()));
+        const waitlist = await Promise.all((data.waitlist || []).map(async (playerRef: any) => (await getDoc(playerRef)).data()));
+        sessionsData.push({ ...data, id: doc.id, players, waitlist } as Session);
+      }
+      setSessions(sessionsData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+    const q = query(collection(db, "announcements"), orderBy("date", "desc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const announcementsData: Announcement[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
+        setAnnouncements(announcementsData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+      const q = query(collection(db, "users"));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const usersData: User[] = querySnapshot.docs.map(d => ({id: d.id, ...d.data()}) as User);
+        setUsers(usersData);
+      });
+      return () => unsubscribe();
   }, []);
 
 
-  // --- In-memory State Operations ---
-
   const createSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => {
     if (!currentUser) return;
-    const newSession: Session = {
-      id: `s${Date.now()}`,
-      ...sessionData,
-      // ** KEY FIX **: Standardize date format to full ISO string with UTC time
-      date: `${sessionData.date}T00:00:00.000Z`, 
-      players: [],
-      waitlist: [],
-      messages: [],
-      createdBy: currentUser.id,
-    };
-    sortAndSetSessions([...sessions, newSession]);
-    toast({ title: 'Session Created!', description: 'The new session has been successfully added.', variant: 'success' });
+    try {
+        const newSession = {
+            ...sessionData,
+            date: Timestamp.fromDate(new Date(sessionData.date)),
+            players: [],
+            waitlist: [],
+            messages: [],
+            createdBy: doc(db, 'users', currentUser.id),
+        };
+        await addDoc(collection(db, 'sessions'), newSession);
+        toast({ title: 'Session Created!', description: 'The new session has been successfully added.', variant: 'success' });
+    } catch (error) {
+        console.error("Error creating session: ", error);
+        toast({ title: 'Error', description: 'Could not create the session.', variant: 'destructive' });
+    }
   };
 
-  const updateSession = async (updatedSessionData: Omit<Session, 'date'> & { date: string }) => {
-     sortAndSetSessions(sessions.map(s => s.id === updatedSessionData.id ? { ...s, ...updatedSessionData, date: `${updatedSessionData.date}T00:00:00.000Z` } : s));
-     toast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
+  const updateSession = async (updatedSessionData: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string; id: string }) => {
+     try {
+        const sessionRef = doc(db, 'sessions', updatedSessionData.id);
+        const { id, ...dataToUpdate } = updatedSessionData;
+        await updateDoc(sessionRef, { ...dataToUpdate, date: Timestamp.fromDate(new Date(dataToUpdate.date)) });
+        toast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
+     } catch (error) {
+        console.error("Error updating session: ", error);
+        toast({ title: 'Error', description: 'Could not update the session.', variant: 'destructive' });
+     }
   };
 
   const deleteSession = async (sessionId: string) => {
-    setSessions(prev => prev.filter(s => s.id !== sessionId));
-    toast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
+    try {
+        await deleteDoc(doc(db, 'sessions', sessionId));
+        toast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
+    } catch (error) {
+        console.error("Error deleting session: ", error);
+        toast({ title: 'Error', description: 'Could not delete the session.', variant: 'destructive' });
+    }
   };
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    let success = false;
-    
-    setSessions(prev => prev.map(session => {
-        if (session.id === sessionId) {
-            if (session.players.length >= session.maxPlayers) {
-                return session;
-            }
-            if ((session.players as User[]).some(p => p.id === currentUser.id)) {
-                return session;
-            }
-            success = true;
-            return {
-                ...session,
-                players: [...session.players, currentUser],
-                waitlist: (session.waitlist as User[]).filter(p => p.id !== currentUser.id)
-            };
-        }
-        return session;
-    }));
-
-    return success;
+    try {
+        const sessionRef = doc(db, 'sessions', sessionId);
+        const userRef = doc(db, 'users', currentUser.id);
+        await updateDoc(sessionRef, {
+            players: arrayUnion(userRef),
+            waitlist: arrayRemove(userRef)
+        });
+        return true;
+    } catch (error) {
+        console.error("Error booking session: ", error);
+        return false;
+    }
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+    try {
+        const sessionRef = doc(db, 'sessions', sessionId);
+        const userRef = doc(db, 'users', currentUser.id);
+        
+        const sessionSnap = await getDoc(sessionRef);
+        if (!sessionSnap.exists()) return false;
+        
+        const sessionData = sessionSnap.data();
+        const waitlist = sessionData.waitlist || [];
 
-    let success = false;
+        const batch = writeBatch(db);
 
-    setSessions(prevSessions => {
-        const sessionIndex = prevSessions.findIndex(s => s.id === sessionId);
-        if (sessionIndex === -1) return prevSessions;
+        // Remove current user
+        batch.update(sessionRef, { players: arrayRemove(userRef) });
 
-        const session = { ...prevSessions[sessionIndex] };
-        const playerIndex = session.players.findIndex(p => p.id === currentUser.id);
-
-        if (playerIndex === -1) return prevSessions; // User not in session
-
-        const sessionDateTime = new Date(`${getSafeDate(session.date).toISOString().split('T')[0]}T${session.startTime}`);
-        const now = new Date();
-        const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-        if (hoursUntilSession <= 12 && currentUser.role !== 'admin') {
-            toast({ title: 'Cancellation Failed', description: 'You can only cancel more than 12 hours in advance.', variant: 'destructive' });
-            return prevSessions;
-        }
-
-        success = true;
-
-        // Remove player
-        session.players.splice(playerIndex, 1);
-
-        // Promote from waitlist if applicable
-        if (session.waitlist.length > 0) {
-            const nextPlayer = session.waitlist.shift();
-            if (nextPlayer) {
-                session.players.push(nextPlayer);
-                console.log(`User ${nextPlayer.name} moved from waitlist to session ${sessionId}.`);
-            }
+        // Promote first person from waitlist if exists
+        if (waitlist.length > 0) {
+            const nextPlayerRef = waitlist[0];
+            batch.update(sessionRef, {
+                players: arrayUnion(nextPlayerRef),
+                waitlist: arrayRemove(nextPlayerRef)
+            });
         }
         
-        const newSessions = [...prevSessions];
-        newSessions[sessionIndex] = session;
-        return newSessions;
-    });
-
-    return success;
+        await batch.commit();
+        return true;
+    } catch (error) {
+        console.error("Error canceling booking: ", error);
+        return false;
+    }
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    let success = false;
-    
-    setSessions(prev => prev.map(session => {
-        if (session.id === sessionId) {
-             if ((session.waitlist as User[]).some(p => p.id === currentUser.id) || (session.players as User[]).some(p => p.id === currentUser.id)) {
-                return session;
-            }
-            success = true;
-            return { ...session, waitlist: [...session.waitlist, currentUser] };
-        }
-        return session;
-    }));
-
-    return success;
+    try {
+        const sessionRef = doc(db, 'sessions', sessionId);
+        const userRef = doc(db, 'users', currentUser.id);
+        await updateDoc(sessionRef, { waitlist: arrayUnion(userRef) });
+        return true;
+    } catch (error) {
+        console.error("Error joining waitlist: ", error);
+        return false;
+    }
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    setSessions(prev => prev.map(session => {
-        if (session.id === sessionId) {
-            return { ...session, waitlist: (session.waitlist as User[]).filter(p => p.id !== currentUser.id) };
-        }
-        return session;
-    }));
-    return true;
+    try {
+        const sessionRef = doc(db, 'sessions', sessionId);
+        const userRef = doc(db, 'users', currentUser.id);
+        await updateDoc(sessionRef, { waitlist: arrayRemove(userRef) });
+        return true;
+    } catch (error) {
+        console.error("Error leaving waitlist: ", error);
+        return false;
+    }
   };
 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
     if (!currentUser) return;
-    const newMessage: Message = {
-      id: `m${Date.now()}`,
-      sender: currentUser, 
+    const newMessage = {
+      sender: doc(db, 'users', currentUser.id),
       content: messageContent.content,
-      timestamp: new Date().toISOString(),
+      timestamp: Timestamp.now(),
     };
-    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, messages: [...s.messages, newMessage] } : s));
+    const messagesColRef = collection(db, 'sessions', sessionId, 'messages');
+    await addDoc(messagesColRef, newMessage);
   };
 
    const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
-    const newAnnouncement: Announcement = {
-      id: `a${Date.now()}`,
-      ...announcementData,
-      date: new Date().toISOString(),
-    };
-    setAnnouncements(prev => [newAnnouncement, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
-    toast({ title: 'Announcement Created!', description: 'The new announcement is now live.', variant: 'success' });
+     try {
+        const newAnnouncement = {
+            ...announcementData,
+            date: Timestamp.now(),
+        };
+        await addDoc(collection(db, 'announcements'), newAnnouncement);
+        toast({ title: 'Announcement Created!', description: 'The new announcement is now live.', variant: 'success' });
+     } catch (error) {
+        console.error("Error creating announcement: ", error);
+        toast({ title: 'Error', description: 'Could not create announcement.', variant: 'destructive' });
+     }
   };
 
-  const updateAnnouncement = async (announcement: Omit<Announcement, 'date'>) => {
-    setAnnouncements(prev => prev.map(a => a.id === announcement.id ? { ...a, ...announcement, date: a.date } : a));
-    toast({ title: 'Announcement Updated', description: 'The announcement has been successfully updated.', variant: 'success' });
+  const updateAnnouncement = async (announcement: Omit<Announcement, 'date'> & {id: string}) => {
+    try {
+        const {id, ...dataToUpdate} = announcement;
+        await updateDoc(doc(db, 'announcements', id), dataToUpdate);
+        toast({ title: 'Announcement Updated', description: 'The announcement has been successfully updated.', variant: 'success' });
+    } catch(error) {
+        console.error("Error updating announcement: ", error);
+        toast({ title: 'Error', description: 'Could not update announcement.', variant: 'destructive' });
+    }
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
-    setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
-    toast({ title: 'Announcement Deleted', description: 'The announcement has been removed.', variant: 'success' });
+    try {
+        await deleteDoc(doc(db, 'announcements', announcementId));
+        toast({ title: 'Announcement Deleted', description: 'The announcement has been removed.', variant: 'success' });
+    } catch(error) {
+        console.error("Error deleting announcement: ", error);
+        toast({ title: 'Error', description: 'Could not delete announcement.', variant: 'destructive' });
+    }
   };
 
   const createDirectChat = async (otherUser: User) => {
     if (!currentUser) return '';
-    
-    const existingChat = directChats.find(chat => {
-        const participantIds = (chat.participants as User[]).map(p => p.id);
-        return participantIds.includes(currentUser.id) && participantIds.includes(otherUser.id);
-    });
-
-    if (existingChat) {
-      return existingChat.id;
-    }
-    
-    const newChat: DirectChat = {
-      id: `dc${Date.now()}`,
-      participants: [currentUser, otherUser],
-      messages: [],
-    };
-    setDirectChats(prev => [newChat, ...prev]);
-    return newChat.id;
+    // This is a simplified mock implementation. A real implementation would query for existing chats.
+    const newChatId = `dc_${Date.now()}`;
+     toast({title: "Chat creation not implemented in mock.", description: "This is a placeholder.", variant: "destructive"});
+    return newChatId;
   }
 
   const addDirectMessage = async (chatId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
      if (!currentUser) return;
-    const newMessage: Message = {
-      id: `m${Date.now()}`,
-      sender: currentUser,
-      content: messageContent.content,
-      timestamp: new Date().toISOString(),
-    };
-    setDirectChats(prev => prev.map(chat => chat.id === chatId ? { ...chat, messages: [...chat.messages, newMessage] } : chat));
+     toast({title: "DM not implemented in mock.", description: "This is a placeholder.", variant: "destructive"});
   }
 
   return (
@@ -286,5 +294,3 @@ export const useSessions = () => {
 };
 
 export { getSafeDate };
-
-    

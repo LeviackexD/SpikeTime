@@ -1,7 +1,3 @@
-/**
- * @fileoverview A modal dialog for editing the current user's profile information.
- * Allows changing name, avatar, skill level, and favorite position.
- */
 
 'use client';
 
@@ -27,16 +23,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Loader2 } from 'lucide-react';
+
 
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (user: User) => void;
+  onSave: (user: Partial<User>) => void;
   user: User | null;
 }
 
 export default function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileModalProps) {
     const [formData, setFormData] = React.useState<User | null>(user);
+    const [isUploading, setIsUploading] = React.useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
@@ -52,11 +53,11 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
     };
 
     const handleSelectChange = (field: 'skillLevel' | 'favoritePosition') => (value: string) => {
-        setFormData(prev => prev ? ({ ...prev, [field]: value }) : null);
+        setFormData(prev => prev ? ({ ...prev, [field]: value as any }) : null);
     };
 
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0] && user) {
             const file = e.target.files[0];
             if (file.size > 2 * 1024 * 1024) { // 2MB limit
                 toast({
@@ -66,11 +67,27 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                 });
                 return;
             }
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData(prev => prev ? { ...prev, avatarUrl: reader.result as string } : null);
-            };
-            reader.readAsDataURL(file);
+            setIsUploading(true);
+            try {
+                const storageRef = ref(storage, `avatars/${user.id}/${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(snapshot.ref);
+
+                setFormData(prev => prev ? { ...prev, avatarUrl: downloadURL } : null);
+                 toast({
+                    title: "Avatar updated",
+                    description: "Your new avatar is ready. Save your profile to keep the changes.",
+                    variant: "success",
+                });
+            } catch (error) {
+                 toast({
+                    title: "Upload Failed",
+                    description: "Could not upload the new avatar. Please try again.",
+                    variant: "destructive"
+                });
+            } finally {
+                setIsUploading(false);
+            }
         }
     };
 
@@ -99,8 +116,9 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                       <AvatarImage src={formData.avatarUrl} alt={formData.name} />
                       <AvatarFallback>{formData.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                      Change Picture
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                      {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      {isUploading ? 'Uploading...' : 'Change Picture'}
                     </Button>
                     <Input 
                       type="file" 
@@ -108,6 +126,7 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                       className="hidden" 
                       accept="image/png, image/jpeg, image/gif"
                       onChange={handleAvatarChange}
+                      disabled={isUploading}
                     />
                   </div>
                 </div>
