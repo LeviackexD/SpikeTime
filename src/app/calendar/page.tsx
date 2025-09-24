@@ -74,7 +74,7 @@ const CalendarPage: NextPage = () => {
               <div className="cork-texture rounded-lg p-6 min-h-full border-4 border-brown-dark/50 shadow-lg">
                 <h2 className="text-3xl font-bold font-handwriting text-brown-dark mb-4 flex items-center gap-2">
                     <Pin className="h-7 w-7 -rotate-45 text-red-600" />
-                    {t('calendarPage.notesFor').replace('{date}', formattedDate)}
+                    {t('calendarPage.notesFor', {date: formattedDate})}
                 </h2>
                 <Separator className="mb-6 bg-brown-dark/20"/>
                 {filteredSessions.length > 0 ? (

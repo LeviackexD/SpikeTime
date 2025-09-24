@@ -13,7 +13,7 @@ const translations = { en, es };
 interface LanguageContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = React.createContext<LanguageContextType | undefined>(undefined);
@@ -42,7 +42,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     }
   }, []);
 
-  const t = (key: string): string => {
+  const t = (key: string, values?: Record<string, string | number>): string => {
     const keys = key.split('.');
     let result: any = translations[locale];
     for (const k of keys) {
@@ -54,10 +54,23 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
                 fallbackResult = fallbackResult?.[fk];
                 if(fallbackResult === undefined) return key;
             }
-            return fallbackResult;
+            result = fallbackResult;
+            break;
         }
     }
-    return result || key;
+
+    if (typeof result !== 'string') {
+        return key;
+    }
+    
+    if (values) {
+        Object.keys(values).forEach(valueKey => {
+            const regex = new RegExp(`\\{${valueKey}\\}`, 'g');
+            result = result.replace(regex, String(values[valueKey]));
+        });
+    }
+
+    return result;
   };
 
   return (

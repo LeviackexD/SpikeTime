@@ -132,7 +132,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                 </div>
                 <div className="col-span-2 space-y-2">
                     <Label htmlFor="location">{t('modals.sessionForm.location')}</Label>
-                    <Input id="location" value={formData.location} onChange={handleChange} placeholder="e.g., Main Gym" required/>
+                    <Input id="location" value={formData.location} onChange={handleChange} placeholder={t('modals.sessionForm.location')} required/>
                 </div>
                  <div className="col-span-2 space-y-2">
                     <Label htmlFor="imageUrl">{t('modals.sessionForm.coverImageUrl')}</Label>

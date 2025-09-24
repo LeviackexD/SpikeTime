@@ -81,7 +81,7 @@ const DashboardPage: NextPage = () => {
     <>
       <div className="flex flex-col gap-8 animate-fade-in">
         <div className="text-center">
-          <h1 className="text-3xl font-bold font-headline">{t('dashboard.welcome').replace('{name}', currentUser.name)}</h1>
+          <h1 className="text-3xl font-bold font-headline">{t('dashboard.welcome', { name: currentUser.name })}</h1>
           <p className="text-muted-foreground">{t('dashboard.welcomeSubtitle')}</p>
         </div>
         
