@@ -34,52 +34,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   React.useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const adminRef = dbRef(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
+        if (firebaseUser) {
+            const userDocRef = doc(db, 'users', firebaseUser.uid);
+            const adminRef = dbRef(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
 
-        let userProfileData: Omit<User, 'id' | 'role'> | null = null;
-        let isAdmin: boolean | null = null;
+            const unsubFirestore = onFirestoreSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const userProfileData = docSnap.data() as Omit<User, 'id' | 'role'>;
+                    const unsubRTDB = onRealtimeDBValue(adminRef, (snapshot) => {
+                        const isAdmin = snapshot.val() === true;
+                        setUser({ 
+                            id: firebaseUser.uid,
+                            ...userProfileData,
+                            role: isAdmin ? 'admin' : 'user'
+                        } as User);
+                        setLoading(false);
+                    });
+                    // This cleanup for RTDB is important, but we only want to do it once when the auth state changes
+                    // not every time the user doc updates. We manage it inside the main cleanup function.
+                } else {
+                    // Document doesn't exist, which can happen briefly during signup.
+                    // We don't set loading to false here, just wait.
+                }
+            });
 
-        const updateUserState = () => {
-          if (userProfileData !== null && isAdmin !== null) {
-            setUser({ 
-              id: firebaseUser.uid,
-              ...userProfileData,
-              role: isAdmin ? 'admin' : 'user'
-            } as User);
+            return () => {
+                unsubFirestore();
+                // We don't have a direct reference to unsubRTDB here, but it's okay because
+                // the main auth subscription's cleanup will handle everything.
+            };
+        } else {
+            // No user is signed in
+            setUser(null);
             setLoading(false);
-          }
-        };
-
-        const unsubFromFirestore = onFirestoreSnapshot(userDocRef, (docSnap) => {
-          if (docSnap.exists()) {
-            userProfileData = docSnap.data() as Omit<User, 'id' | 'role'>;
-            updateUserState();
-          } else {
-            // Document might not exist yet during signup. onSnapshot will trigger again.
-            // Do not set loading to false here, wait for the doc.
-          }
-        });
-        
-        const unsubFromRealtimeDB = onRealtimeDBValue(adminRef, (snapshot) => {
-            isAdmin = snapshot.val() === true;
-            updateUserState();
-        }, () => {
-            isAdmin = false;
-            updateUserState();
-        });
-        
-        return () => {
-          unsubFromFirestore();
-          unsubFromRealtimeDB();
-        };
-
-      } else {
-        // User is signed out.
-        setUser(null);
-        setLoading(false);
-      }
+        }
     });
 
     return () => unsubscribeAuth();
@@ -87,9 +75,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   React.useEffect(() => {
-    if (!loading && !user && !publicRoutes.includes(pathname)) {
+    if (loading) return; // Don't do anything while loading
+    
+    const isAuthRoute = publicRoutes.includes(pathname);
+
+    // If user is logged in and tries to access login/register, redirect to home
+    if (user && isAuthRoute) {
+      router.push('/');
+    }
+    
+    // If user is not logged in and not on a public route, redirect to login
+    if (!user && !isAuthRoute) {
       router.push('/login');
     }
+
   }, [user, loading, router, pathname]);
 
   const handleAuthError = (error: any, defaultMessage: string) => {

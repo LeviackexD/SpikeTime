@@ -62,8 +62,7 @@ const getNavItems = (t: (key: string) => string) => [
  */
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { t } = useLanguage();
-  const isAuthPage = pathname === `/${t('nav.login')}` || pathname === `/${t('nav.register')}`;
+  const isAuthPage = pathname === '/login' || pathname === '/register';
   const isAnnouncementsPage = pathname === '/announcements';
 
   if (isAuthPage) {
