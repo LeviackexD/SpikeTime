@@ -47,7 +47,7 @@ const DashboardPage: NextPage = () => {
   // --- HOOKS ---
   const { sessions, announcements, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
   const { user: currentUser } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   
   // --- DERIVED STATE FROM CUSTOM HOOKS ---
   const upcomingSessions = useUpcomingSessions(currentUser, sessions);
@@ -168,10 +168,10 @@ const DashboardPage: NextPage = () => {
                     onClick={() => handleOpenAnnouncementModal(announcement)}
                     className="w-full text-left p-4 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
                   >
-                    <h3 className="font-semibold text-foreground">{announcement.title}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
+                    <h3 className="font-semibold text-foreground">{announcement.title[locale]}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{announcement.content[locale]}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {getSafeDate(announcement.date).toLocaleDateString('en-US', {
+                      {getSafeDate(announcement.date).toLocaleDateString(locale, {
                         month: 'long',
                         day: 'numeric',
                         year: 'numeric',

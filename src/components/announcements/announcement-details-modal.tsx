@@ -61,7 +61,7 @@ export default function AnnouncementDetailsModal({ isOpen, onClose, announcement
               {t(`announcementCategories.${announcement.category}`)}
             </span>
           </div>
-          <DialogTitle className="handwriting text-3xl font-bold text-brown text-left">{announcement.title}</DialogTitle>
+          <DialogTitle className="handwriting text-3xl font-bold text-brown text-left">{announcement.title[locale]}</DialogTitle>
           <DialogDescription asChild>
             <div className="flex items-center gap-2 pt-2 text-sm text-brown-light">
                 <Calendar className="h-4 w-4" />
@@ -70,7 +70,7 @@ export default function AnnouncementDetailsModal({ isOpen, onClose, announcement
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 whitespace-pre-wrap text-brown-dark">
-          {announcement.content}
+          {announcement.content[locale]}
         </div>
         <DialogFooter>
           <Button onClick={onClose} className="bg-brown text-cream button-hover">{t('modals.close')}</Button>

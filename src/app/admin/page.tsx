@@ -141,7 +141,7 @@ const AnnouncementCards = ({
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle>{ann.title}</CardTitle>
+              <CardTitle>{ann.title[locale]}</CardTitle>
               <div className="text-sm text-muted-foreground">{formatDate(ann.date, locale)}</div>
             </div>
             <DropdownMenu>
@@ -163,7 +163,7 @@ const AnnouncementCards = ({
           </div>
         </CardHeader>
         <CardContent>
-          <div>{ann.content}</div>
+          <div>{ann.content[locale]}</div>
         </CardContent>
       </Card>
     ))}
@@ -375,8 +375,8 @@ export default function AdminPage() {
         <TableBody>
           {announcements.map((ann) => (
             <TableRow key={ann.id}>
-              <TableCell className="font-medium">{ann.title}</TableCell>
-              <TableCell className="max-w-xs md:max-w-sm truncate">{ann.content}</TableCell>
+              <TableCell className="font-medium">{ann.title[locale]}</TableCell>
+              <TableCell className="max-w-xs md:max-w-sm truncate">{ann.content[locale]}</TableCell>
               <TableCell>{formatDate(ann.date, locale)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>

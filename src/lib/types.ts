@@ -1,11 +1,15 @@
 
-
 import { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'user' | 'admin';
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced';
 export type PlayerPosition = 'Setter' | 'Hitter' | 'Libero' | 'Blocker';
 export type AnnouncementCategory = 'event' | 'class' | 'tournament' | 'general';
+
+export type LocalizedString = {
+  en: string;
+  es: string;
+};
 
 
 export const skillLevelColors = {
@@ -54,8 +58,8 @@ export interface Session {
 
 export interface Announcement {
   id: string;
-  title: string;
-  content: string;
+  title: LocalizedString;
+  content: LocalizedString;
   date: string;
   category: AnnouncementCategory;
 }

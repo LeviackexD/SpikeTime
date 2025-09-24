@@ -33,7 +33,7 @@ const categoryStyles: Record<AnnouncementCategory, { bg: string; text: string; p
   general: { bg: 'bg-paper-green', text: 'text-green-800', pin: 'bg-green-500' },
 };
 
-const NoteCard = ({ announcement, index, t, locale }: { announcement: Announcement; index: number, t: (key: string) => string; locale: string; }) => {
+const NoteCard = ({ announcement, index, t, locale }: { announcement: Announcement; index: number, t: (key: string) => string; locale: 'en' | 'es'; }) => {
   const styles = categoryStyles[announcement.category] || categoryStyles.general;
   const rotationClass = `note-${(index % 6) + 1}`;
 
@@ -48,8 +48,8 @@ const NoteCard = ({ announcement, index, t, locale }: { announcement: Announceme
           {t(`announcementCategories.${announcement.category}`)}
         </span>
       </div>
-      <h3 className="handwriting text-2xl font-bold text-brown mb-3">{announcement.title}</h3>
-      <p className="text-brown-dark">{announcement.content}</p>
+      <h3 className="handwriting text-2xl font-bold text-brown mb-3">{announcement.title[locale]}</h3>
+      <p className="text-brown-dark">{announcement.content[locale]}</p>
        <p className="text-xs text-brown-light mt-4 text-right">{getSafeDate(announcement.date).toLocaleDateString(locale, {
           month: 'long', day: 'numeric'
       })}</p>
@@ -107,7 +107,7 @@ const AnnouncementsPage: NextPage = () => {
           {categoryFilters.map(f => (
             <button
               key={f.value}
-              onClick={() => setFilter(f.value)}
+              onClick={() => setFilter(f.value as AnnouncementCategory | 'all')}
               className={cn(
                 'filter-btn px-4 py-2 rounded-full font-semibold button-hover',
                 filter === f.value ? 'filter-active' : 'bg-cream text-brown'

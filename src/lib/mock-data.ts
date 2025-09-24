@@ -62,12 +62,48 @@ export const mockSessions: Session[] = [
 ];
 
 export const mockAnnouncements: Announcement[] = [
-  { id: 'a1', title: 'Summer Tournament', content: 'Sign-ups for the annual summer tournament are now open! Find a partner and register by the end of the month.', date: getFutureDate(-1), category: 'tournament' },
-  { id: 'a2', title: 'New Sunday Sessions', content: 'We are adding new beginner-friendly sessions every Sunday morning at 10 AM.', date: getFutureDate(-5), category: 'class' },
-  { id: 'a3', title: 'Maintenance Notice', content: 'The west court will be closed for floor maintenance on the 15th. All sessions will be moved to the east court.', date: getFutureDate(-10), category: 'general' },
-  { id: 'a4', title: 'Beach Volleyball Day', content: 'Join us for a fun day of volleyball at the beach this Saturday! All levels welcome.', date: getFutureDate(-2), category: 'event' },
-  { id: 'a5', title: 'Advanced Serving Clinic', content: 'Improve your jump serve with our special clinic this Friday.', date: getFutureDate(-4), category: 'class' },
-  { id: 'a6', title: 'Team-Up for Autumn League', content: 'Looking for a team for the upcoming autumn league? Post here to find teammates!', date: getFutureDate(-8), category: 'general' },
+  { 
+    id: 'a1', 
+    title: { en: 'Summer Tournament', es: 'Torneo de Verano' }, 
+    content: { en: 'Sign-ups for the annual summer tournament are now open! Find a partner and register by the end of the month.', es: '¡Las inscripciones para el torneo anual de verano ya están abiertas! Busca un compañero y regístrate antes de fin de mes.'}, 
+    date: getFutureDate(-1), 
+    category: 'tournament' 
+  },
+  { 
+    id: 'a2', 
+    title: { en: 'New Sunday Sessions', es: 'Nuevas Sesiones Dominicales' }, 
+    content: { en: 'We are adding new beginner-friendly sessions every Sunday morning at 10 AM.', es: 'Estamos añadiendo nuevas sesiones para principiantes todos los domingos por la mañana a las 10 AM.'}, 
+    date: getFutureDate(-5), 
+    category: 'class' 
+  },
+  { 
+    id: 'a3', 
+    title: { en: 'Maintenance Notice', es: 'Aviso de Mantenimiento' }, 
+    content: { en: 'The west court will be closed for floor maintenance on the 15th. All sessions will be moved to the east court.', es: 'La cancha oeste estará cerrada por mantenimiento del suelo el día 15. Todas las sesiones se trasladarán a la cancha este.'}, 
+    date: getFutureDate(-10), 
+    category: 'general' 
+  },
+  { 
+    id: 'a4', 
+    title: { en: 'Beach Volleyball Day', es: 'Día de Voleibol de Playa' }, 
+    content: { en: 'Join us for a fun day of volleyball at the beach this Saturday! All levels welcome.', es: '¡Únete a nosotros para un día divertido de voleibol en la playa este sábado! Todos los niveles son bienvenidos.'}, 
+    date: getFutureDate(-2), 
+    category: 'event' 
+  },
+  { 
+    id: 'a5', 
+    title: { en: 'Advanced Serving Clinic', es: 'Clínica de Saque Avanzado' }, 
+    content: { en: 'Improve your jump serve with our special clinic this Friday.', es: 'Mejora tu saque en suspensión con nuestra clínica especial este viernes.'}, 
+    date: getFutureDate(-4), 
+    category: 'class' 
+  },
+  { 
+    id: 'a6', 
+    title: { en: 'Team-Up for Autumn League', es: 'Forma Equipo para la Liga de Otoño' }, 
+    content: { en: 'Looking for a team for the upcoming autumn league? Post here to find teammates!', es: '¿Buscas equipo para la próxima liga de otoño? ¡Publica aquí para encontrar compañeros!' }, 
+    date: getFutureDate(-8), 
+    category: 'general' 
+  },
 ];
 
 export const mockDirectChats: DirectChat[] = [

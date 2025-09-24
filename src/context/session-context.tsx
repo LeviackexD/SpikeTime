@@ -7,6 +7,7 @@ import type { Session, Message, User, DirectChat, Announcement } from '@/lib/typ
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './auth-context';
 import { mockUsers, mockSessions, mockAnnouncements, mockDirectChats } from '@/lib/mock-data';
+import { useLanguage } from './language-context';
 
 interface SessionContextType {
   sessions: Session[];
@@ -46,6 +47,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
   const [users, setUsers] = React.useState<User[]>(mockUsers);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const createSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => {
     if (!currentUser) return;
@@ -59,17 +61,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       createdBy: currentUser.id,
     };
     setSessions(prev => [...prev, newSession].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
-    toast({ title: 'Session Created!', description: 'The new session has been successfully added.', variant: 'success' });
+    toast({ title: t('toasts.sessionCreatedTitle'), description: t('toasts.sessionCreatedDescription'), variant: 'success' });
   };
 
   const updateSession = async (updatedSessionData: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string; id: string }) => {
      setSessions(prev => prev.map(s => s.id === updatedSessionData.id ? { ...s, ...updatedSessionData, date: new Date(updatedSessionData.date).toISOString() } : s));
-     toast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
+     toast({ title: t('toasts.sessionUpdatedTitle'), description: t('toasts.sessionUpdatedDescription'), variant: 'success' });
   };
 
   const deleteSession = async (sessionId: string) => {
     setSessions(prev => prev.filter(s => s.id !== sessionId));
-    toast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
+    toast({ title: t('toasts.sessionDeletedTitle'), description: t('toasts.sessionDeletedDescription'), variant: 'success' });
   };
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
@@ -143,17 +145,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
        date: new Date().toISOString(),
      };
      setAnnouncements(prev => [newAnnouncement, ...prev]);
-     toast({ title: 'Announcement Created!', description: 'The new announcement is now live.', variant: 'success' });
+     toast({ title: t('toasts.announcementCreatedTitle'), description: t('toasts.announcementCreatedDescription'), variant: 'success' });
   };
 
   const updateAnnouncement = async (announcement: Omit<Announcement, 'date'> & {id: string}) => {
     setAnnouncements(prev => prev.map(a => a.id === announcement.id ? { ...a, ...announcement, date: a.date } : a));
-    toast({ title: 'Announcement Updated', description: 'The announcement has been successfully updated.', variant: 'success' });
+    toast({ title: t('toasts.announcementUpdatedTitle'), description: t('toasts.announcementUpdatedDescription'), variant: 'success' });
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
     setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
-    toast({ title: 'Announcement Deleted', description: 'The announcement has been removed.', variant: 'success' });
+    toast({ title: t('toasts.announcementDeletedTitle'), description: t('toasts.announcementDeletedDescription'), variant: 'success' });
   };
 
   const createDirectChat = async (otherUser: User) => {

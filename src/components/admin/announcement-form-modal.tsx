@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Announcement, AnnouncementCategory } from '@/lib/types';
+import type { Announcement, AnnouncementCategory, LocalizedString } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
 
 interface AnnouncementFormModalProps {
@@ -36,25 +36,35 @@ interface AnnouncementFormModalProps {
   announcement: Announcement | null;
 }
 
-const emptyAnnouncement: Omit<Announcement, 'id' | 'date'> = {
+type FormData = {
+    title: string;
+    content: string;
+    category: AnnouncementCategory;
+}
+
+const emptyAnnouncement: FormData = {
   title: '',
   content: '',
   category: 'general',
 };
 
 export default function AnnouncementFormModal({ isOpen, onClose, onSave, announcement }: AnnouncementFormModalProps) {
-    const { t } = useLanguage();
-    const [formData, setFormData] = React.useState<Omit<Announcement, 'id' | 'date'>>(emptyAnnouncement);
+    const { t, locale } = useLanguage();
+    const [formData, setFormData] = React.useState<FormData>(emptyAnnouncement);
 
     React.useEffect(() => {
         if(isOpen) {
             if(announcement) {
-                setFormData({ title: announcement.title, content: announcement.content, category: announcement.category });
+                setFormData({ 
+                    title: announcement.title[locale] || announcement.title.en, 
+                    content: announcement.content[locale] || announcement.content.en, 
+                    category: announcement.category 
+                });
             } else {
                 setFormData(emptyAnnouncement);
             }
         }
-    }, [announcement, isOpen]);
+    }, [announcement, isOpen, locale]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { id, value } = e.target;
@@ -67,7 +77,17 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData);
+        
+        // When saving, we create a structure that includes both languages,
+        // using the form's current text for both as a default.
+        // A more complex app might have separate form fields for each language.
+        const localizedData: Omit<Announcement, 'id' | 'date'> = {
+            title: { en: formData.title, es: formData.title },
+            content: { en: formData.content, es: formData.content },
+            category: formData.category,
+        };
+        
+        onSave(localizedData);
     }
 
   return (
