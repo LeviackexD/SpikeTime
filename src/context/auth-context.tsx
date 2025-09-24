@@ -52,7 +52,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const adminRef = ref(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
         
         try {
-          // Promise.all to fetch from Firestore and RTDB concurrently
           const [userDocSnap, adminSnap] = await Promise.all([
             getDoc(userDocRef),
             get(adminRef)
@@ -103,6 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     await signOut(auth);
+    router.push('/login');
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await setDoc(userDocRef, userData);
       console.log('Paso 3: ¡Éxito! Documento de usuario creado en Firestore.');
       
-      await signOut(auth); // Sign out after registration to force user to log in
+      await signOut(auth);
       return true;
     } catch (error) {
       console.error("ERROR en el proceso de registro:", error);
