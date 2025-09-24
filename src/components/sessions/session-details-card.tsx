@@ -25,13 +25,14 @@ import {
 import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { getSafeDate } from '@/context/session-context';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionDetailsCardProps {
   session: Session;
-  onBook: (sessionId: string) => void;
-  onCancel: (sessionId: string) => void;
-  onWaitlist: (sessionId: string) => void;
-  onLeaveWaitlist: (sessionId: string) => void;
+  onBook: (sessionId: string) => Promise<boolean>;
+  onCancel: (sessionId: string) => Promise<boolean>;
+  onWaitlist: (sessionId: string) => Promise<boolean>;
+  onLeaveWaitlist: (sessionId: string) => Promise<boolean>;
   priority?: boolean;
 }
 
@@ -44,6 +45,7 @@ export default function SessionDetailsCard({
   priority = false,
 }: SessionDetailsCardProps) {
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
   
   if (!currentUser) {
     return null; // Or a loading skeleton
@@ -60,6 +62,35 @@ export default function SessionDetailsCard({
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
+
+  const handleBook = async () => {
+    const success = await onBook(session.id);
+    if (success) {
+      toast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
+    }
+  };
+
+  const handleCancel = async () => {
+    const success = await onCancel(session.id);
+    if (success) {
+      toast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+    }
+  };
+
+  const handleJoinWaitlist = async () => {
+    const success = await onWaitlist(session.id);
+    if (success) {
+      toast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+    }
+  };
+
+  const handleLeaveWaitlist = async () => {
+    const success = await onLeaveWaitlist(session.id);
+    if (success) {
+      toast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
+    }
+  };
+
 
   return (
     <Card className="flex flex-col md:flex-row overflow-hidden transition-all hover:shadow-xl w-full animate-scale-in">
@@ -122,7 +153,7 @@ export default function SessionDetailsCard({
             <Button
               className="w-full"
               variant="outline"
-              onClick={() => onCancel(session.id)}
+              onClick={handleCancel}
               disabled={!canCancel}
               title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
             >
@@ -132,12 +163,12 @@ export default function SessionDetailsCard({
           ) : (
             <>
               {!isFull && (
-                 <Button className="w-full" onClick={() => onBook(session.id)}>
+                 <Button className="w-full" onClick={handleBook}>
                     Book My Spot
                 </Button>
               )}
               {isOnWaitlist ? (
-                <Button className="w-full" variant="secondary" onClick={() => onLeaveWaitlist(session.id)}>
+                <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Leave Waitlist
                 </Button>
@@ -145,7 +176,7 @@ export default function SessionDetailsCard({
                 isFull && <Button
                     className="w-full"
                     variant="secondary"
-                    onClick={() => onWaitlist(session.id)}
+                    onClick={handleJoinWaitlist}
                 >
                     <UserPlus className="mr-2 h-4 w-4" />
                     Join Waitlist

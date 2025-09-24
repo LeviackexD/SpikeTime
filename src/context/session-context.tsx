@@ -23,7 +23,7 @@ interface SessionContextType {
   bookSession: (sessionId: string) => Promise<boolean>;
   cancelBooking: (sessionId: string) => Promise<boolean>;
   joinWaitlist: (sessionId: string) => Promise<boolean>;
-  leaveWaitlist: (sessionId: string) => Promise<void>;
+  leaveWaitlist: (sessionId: string) => Promise<boolean>;
   addMessage: (sessionId: string, message: Omit<Message, 'id' | 'sender' | 'timestamp'>) => Promise<void>;
   createAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
   updateAnnouncement: (announcement: Omit<Announcement, 'date'>) => Promise<void>;
@@ -47,23 +47,17 @@ const getSafeDate = (date: string | Timestamp): Date => {
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const { user: currentUser } = useAuth();
-  const [sessions, setSessions] = React.useState<Session[]>([]);
-  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
-  const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
+  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>(mockAnnouncements);
+  const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
   const [users, setUsers] = React.useState<User[]>(mockUsers);
   const { toast } = useToast();
 
-  // --- Load Mock Data ---
   React.useEffect(() => {
-    const enrichedSessions = mockSessions.map(session => ({
-      ...session,
-      players: (session.players as string[]).map(id => users.find(u => u.id === id)).filter(Boolean) as User[],
-      waitlist: (session.waitlist as string[]).map(id => users.find(u => u.id === id)).filter(Boolean) as User[],
-    }));
-    setSessions(enrichedSessions.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
-    setAnnouncements(mockAnnouncements.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
-    setDirectChats(mockDirectChats);
-  }, [users]);
+    // Sort initial data
+    setSessions(prev => [...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+    setAnnouncements(prev => [...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+  }, []);
 
 
   // --- In-memory State Operations ---
@@ -96,17 +90,18 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     let success = false;
+    let toastInfo: ToastInfo | null = null;
+
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
             if (session.players.length >= session.maxPlayers) {
-                toast({ title: 'Session Full', description: 'This session is full. You can join the waitlist.', variant: 'destructive' });
+                toastInfo = { title: 'Session Full', description: 'This session is full. You can join the waitlist.', variant: 'destructive' };
                 return session;
             }
             if ((session.players as User[]).some(p => p.id === currentUser.id)) {
-                toast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
+                toastInfo = { title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' };
                 return session;
             }
-            toast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
             success = true;
             return {
                 ...session,
@@ -116,12 +111,15 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         }
         return session;
     }));
+
     return success;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     let success = false;
+    let toastInfo: ToastInfo | null = null;
+
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
             const sessionDateTime = new Date(`${getSafeDate(session.date).toISOString().split('T')[0]}T${session.startTime}`);
@@ -129,7 +127,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
             if (hoursUntilSession <= 12) {
-                toast({ title: 'Cancellation Period Over', description: 'You can only cancel a session more than 12 hours in advance.', variant: 'destructive' });
+                toastInfo = { title: 'Cancellation Period Over', description: 'You can only cancel a session more than 12 hours in advance.', variant: 'destructive' };
                 return session;
             }
 
@@ -139,46 +137,58 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             // Promote from waitlist
             if (newWaitlist.length > 0) {
                 const nextPlayer = newWaitlist.shift();
-                if(nextPlayer) newPlayers.push(nextPlayer);
-                console.log(`User ${nextPlayer?.name} moved from waitlist to session ${sessionId}.`);
+                if(nextPlayer) {
+                  newPlayers.push(nextPlayer);
+                  console.log(`User ${nextPlayer?.name} moved from waitlist to session ${sessionId}.`);
+                }
             }
             
-            toast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
             success = true;
             return { ...session, players: newPlayers, waitlist: newWaitlist };
         }
         return session;
     }));
+
+    if (toastInfo) {
+      toast(toastInfo);
+    }
+    
     return success;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     let success = false;
+    let toastInfo: ToastInfo | null = null;
+    
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
              if ((session.waitlist as User[]).some(p => p.id === currentUser.id) || (session.players as User[]).some(p => p.id === currentUser.id)) {
-                toast({ title: 'Action Not Allowed', description: 'You are already registered or on the waitlist.', variant: 'destructive' });
+                toastInfo = { title: 'Action Not Allowed', description: 'You are already registered or on the waitlist.', variant: 'destructive' };
                 return session;
             }
-            toast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
             success = true;
             return { ...session, waitlist: [...session.waitlist, currentUser] };
         }
         return session;
     }));
+
+    if (toastInfo) {
+      toast(toastInfo);
+    }
+
     return success;
   };
   
-  const leaveWaitlist = async (sessionId: string) => {
-    if (!currentUser) return;
+  const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
+    if (!currentUser) return false;
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
-            toast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
             return { ...session, waitlist: (session.waitlist as User[]).filter(p => p.id !== currentUser.id) };
         }
         return session;
     }));
+    return true;
   };
 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {

@@ -31,13 +31,14 @@ import {
   LogOut,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionListItemProps {
   session: Session;
-  onBook: (sessionId: string) => void;
-  onCancel: (sessionId: string) => void;
-  onWaitlist: (sessionId: string) => void;
-  onLeaveWaitlist: (sessionId: string) => void;
+  onBook: (sessionId: string) => Promise<boolean>;
+  onCancel: (sessionId: string) => Promise<boolean>;
+  onWaitlist: (sessionId: string) => Promise<boolean>;
+  onLeaveWaitlist: (sessionId: string) => Promise<boolean>;
   onViewPlayers: (session: Session) => void;
   priority?: boolean;
   animationDelay?: number;
@@ -54,6 +55,7 @@ export default function SessionListItem({
   animationDelay = 0,
 }: SessionListItemProps) {
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
 
   if (!currentUser) return null;
 
@@ -72,6 +74,34 @@ export default function SessionListItem({
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
+
+  const handleBook = async () => {
+    const success = await onBook(session.id);
+    if (success) {
+      toast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
+    }
+  };
+
+  const handleCancel = async () => {
+    const success = await onCancel(session.id);
+    if (success) {
+      toast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+    }
+  };
+
+  const handleJoinWaitlist = async () => {
+    const success = await onWaitlist(session.id);
+    if (success) {
+      toast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+    }
+  };
+
+  const handleLeaveWaitlist = async () => {
+    const success = await onLeaveWaitlist(session.id);
+    if (success) {
+      toast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
+    }
+  };
 
   const formatDate = (date: Date) => {
      const day = date.toLocaleDateString('en-US', { day: '2-digit', timeZone: 'UTC' });
@@ -157,7 +187,7 @@ export default function SessionListItem({
           <Button
             className="w-full"
             variant="outline"
-            onClick={() => onCancel(session.id)}
+            onClick={handleCancel}
             disabled={!canCancel}
             title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
           >
@@ -167,13 +197,13 @@ export default function SessionListItem({
         ) : (
           <>
             {!isFull && (
-              <Button className="w-full" onClick={() => onBook(session.id)}>
+              <Button className="w-full" onClick={handleBook}>
                 Book My Spot
               </Button>
             )}
             
             {isOnWaitlist ? (
-              <Button className="w-full" variant="secondary" onClick={() => onLeaveWaitlist(session.id)}>
+              <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Leave Waitlist
               </Button>
@@ -181,7 +211,7 @@ export default function SessionListItem({
              isFull && <Button
                 className="w-full"
                 variant="secondary"
-                onClick={() => onWaitlist(session.id)}
+                onClick={handleJoinWaitlist}
               >
                 <UserPlus className="mr-2 h-4 w-4" />
                 Join Waitlist

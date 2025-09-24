@@ -24,6 +24,7 @@ import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut } fro
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { Timestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 
 interface PlayerListProps {
@@ -77,10 +78,10 @@ interface SessionDetailsModalProps {
   session: Session | null;
   isOpen: boolean;
   onClose: () => void;
-  onBook: (sessionId: string) => void;
-  onCancel: (sessionId: string) => void;
-  onWaitlist: (sessionId: string) => void;
-  onLeaveWaitlist: (sessionId: string) => void;
+  onBook: (sessionId: string) => Promise<boolean>;
+  onCancel: (sessionId: string) => Promise<boolean>;
+  onWaitlist: (sessionId: string) => Promise<boolean>;
+  onLeaveWaitlist: (sessionId: string) => Promise<boolean>;
 }
 
 export default function SessionDetailsModal({ 
@@ -93,6 +94,7 @@ export default function SessionDetailsModal({
   onLeaveWaitlist,
 }: SessionDetailsModalProps) {
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
   
   if (!session || !currentUser) return null;
 
@@ -106,9 +108,12 @@ export default function SessionDetailsModal({
   const isOnWaitlist = waitlistList.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
   
-  const handleAction = (action: (id: string) => void) => {
+  const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }) => {
     if (session) {
-      action(session.id);
+      const success = await action(session.id);
+      if (success) {
+        toast({ ...successToast, variant: 'success' });
+      }
       onClose(); // Close modal after action
     }
   }
@@ -128,6 +133,11 @@ export default function SessionDetailsModal({
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
+
+  const bookAction = () => handleAction(onBook, { title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.` });
+  const cancelAction = () => handleAction(onCancel, { title: 'Booking Canceled', description: 'Your spot has been successfully canceled.' });
+  const joinWaitlistAction = () => handleAction(onWaitlist, { title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up." });
+  const leaveWaitlistAction = () => handleAction(onLeaveWaitlist, { title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.' });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -179,7 +189,7 @@ export default function SessionDetailsModal({
             {isRegistered ? (
               <Button 
                 variant="outline" 
-                onClick={() => handleAction(onCancel)}
+                onClick={cancelAction}
                 disabled={!canCancel}
                 title={!canCancel ? "Cancellations must be made more than 12 hours in advance." : "Cancel your spot"}
               >
@@ -188,19 +198,19 @@ export default function SessionDetailsModal({
             ) : (
               <>
                 {!isFull && (
-                   <Button onClick={() => handleAction(onBook)}>
+                   <Button onClick={bookAction}>
                       Book My Spot
                   </Button>
                 )}
                 {isOnWaitlist ? (
-                  <Button variant="secondary" onClick={() => handleAction(onLeaveWaitlist)}>
+                  <Button variant="secondary" onClick={leaveWaitlistAction}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Leave Waitlist
                   </Button>
                 ) : (
                   isFull && <Button
                       variant="secondary"
-                      onClick={() => handleAction(onWaitlist)}
+                      onClick={joinWaitlistAction}
                   >
                       <UserPlus className="mr-2 h-4 w-4" />
                       Join Waitlist
