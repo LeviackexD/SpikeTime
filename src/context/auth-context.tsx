@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
       if (firebaseUser) {
-        console.log("AuthProvider: Firebase user found, fetching profile...", firebaseUser.uid);
+        console.log("AuthProvider: Firebase user found (onAuthStateChanged), fetching profile...", firebaseUser.uid);
         try {
           const userDocRef = doc(firestore, 'users', firebaseUser.uid);
           const userDoc = await getDoc(userDocRef);
@@ -41,7 +41,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const userData = userDoc.data() as User;
             console.log("AuthProvider: User profile found in Firestore.");
             
-            // Check for admin role in Realtime Database
             const adminRef = ref(db, `adminConfig/adminUserUids/${firebaseUser.uid}`);
             const adminSnapshot = await get(adminRef);
             const isAdmin = adminSnapshot.exists() && adminSnapshot.val() === true;
@@ -49,19 +48,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             setUser({ ...userData, id: firebaseUser.uid, role: isAdmin ? 'admin' : 'user' });
           } else {
+            // Log the warning but DO NOT sign the user out. This prevents the redirect loop.
             console.warn("AuthProvider: User document not found in Firestore for UID:", firebaseUser.uid);
-            // This can happen if user is created in Auth but Firestore doc creation fails.
-            // Log them out to force a clean state.
-            await signOut(auth);
-            setUser(null);
+            // We'll set a minimal user object to keep them authenticated,
+            // but the app might not function fully. This is for debugging.
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email || 'unknown',
+              name: firebaseUser.displayName || 'New User',
+              role: 'user',
+              skillLevel: 'Beginner',
+              favoritePosition: 'Hitter',
+              username: firebaseUser.email?.split('@')[0] || 'newuser',
+              avatarUrl: '',
+              stats: { sessionsPlayed: 0, attendanceRate: 0 },
+            });
           }
         } catch (error) {
-          console.error("AuthProvider: Error fetching user profile:", error);
-          await signOut(auth);
-          setUser(null);
+          console.error("AuthProvider: CRITICAL_ERROR fetching user profile:", error);
+          // Don't sign out, to prevent the loop. Let the user stay on the page.
+          // setUser(null);
         }
       } else {
-        console.log("AuthProvider: No Firebase user.");
+        console.log("AuthProvider: No Firebase user (onAuthStateChanged).");
         setUser(null);
       }
       setLoading(false);
@@ -72,14 +81,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   React.useEffect(() => {
     const isAuthPage = pathname === '/login' || pathname === '/register';
-    if (!loading) {
-        if (user && isAuthPage) {
-            console.log("AuthProvider: User is logged in, redirecting from auth page to home.");
-            router.push('/');
-        } else if (!user && !isAuthPage) {
-            console.log("AuthProvider: No user, redirecting to login.");
-            router.push('/login');
-        }
+    if (loading) return; 
+
+    if (user && isAuthPage) {
+        console.log("AuthProvider Effect: User is logged in, redirecting from auth page to home.");
+        router.push('/');
+    } else if (!user && !isAuthPage) {
+        console.log("AuthProvider Effect: No user, redirecting to login.");
+        router.push('/login');
     }
   }, [user, loading, pathname, router]);
 
@@ -117,7 +126,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await setDoc(doc(firestore, 'users', firebaseUser.uid), newUser);
       console.log("signUpWithEmail: User document created successfully in Firestore for UID:", firebaseUser.uid);
       
-      // After successful registration, sign the user out to force them to log in.
       await signOut(auth);
       return true;
     } catch (error) {
