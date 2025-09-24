@@ -2,32 +2,22 @@
 'use client';
 
 import * as React from 'react';
+import type { Session, Message, User, Announcement, DirectChat } from '@/lib/types';
 import { 
-  collection, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc,
-  arrayUnion,
-  arrayRemove,
-  serverTimestamp,
-  query,
-  orderBy,
-  Timestamp,
-  writeBatch
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { Session, Message, User, DirectChat, Announcement } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
+    mockSessions, 
+    mockAnnouncements, 
+    mockUsers,
+    mockDirectChats,
+} from '@/lib/mock-data';
 import { useAuth } from './auth-context';
-import { useLanguage } from './language-context';
+import { useToast } from '@/hooks/use-toast';
+import { Timestamp } from 'firebase/firestore';
 
 interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
-  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => Promise<void>;
-  updateSession: (session: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string, id: string }) => Promise<void>;
+  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'> & { date: string }) => Promise<void>;
+  updateSession: (session: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string, id: string, players: User[], waitlist: User[] }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<boolean>;
   cancelBooking: (sessionId: string) => Promise<boolean>;
@@ -49,281 +39,197 @@ export const getSafeDate = (date: string | Date | Timestamp): Date => {
     if (date instanceof Timestamp) {
       return date.toDate();
     }
-    // Handle ISO strings from server or string dates from forms
-    const dateString = typeof date === 'string' && !date.endsWith('Z') ? `${date}Z` : date;
-    const d = new Date(dateString);
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+        // Handle YYYY-MM-DD format from forms by ensuring it's parsed as UTC
+        const parts = String(date).split('-');
+        if (parts.length === 3) {
+            return new Date(Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])));
+        }
+        return new Date(); // fallback
+    }
     return d;
 };
 
+
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
+  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>(mockAnnouncements);
+  const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
+  const [users, setUsers] = React.useState<User[]>(mockUsers);
   const { user: currentUser } = useAuth();
-  const [sessions, setSessions] = React.useState<Session[]>([]);
-  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
-  const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
-  const [users, setUsers] = React.useState<User[]>([]);
   const { toast } = useToast();
-  const { t } = useLanguage();
 
-  // --- REAL-TIME DATA LISTENERS ---
-
-  React.useEffect(() => {
-    const q = query(collection(db, 'sessions'), orderBy('date', 'desc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const sessionsData: Session[] = [];
-      querySnapshot.forEach((doc) => {
-        sessionsData.push({ id: doc.id, ...doc.data() } as Session);
-      });
-      setSessions(sessionsData);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  React.useEffect(() => {
-    const q = query(collection(db, 'announcements'), orderBy('date', 'desc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const announcementsData: Announcement[] = [];
-      querySnapshot.forEach((doc) => {
-        announcementsData.push({ id: doc.id, ...doc.data() } as Announcement);
-      });
-      setAnnouncements(announcementsData);
-    });
-    return () => unsubscribe();
-  }, []);
+  const createSession = async (sessionData: Omit<Session, 'id' | 'players'| 'waitlist'|'messages' | 'date'> & { date: string }) => {
+    const newSession: Session = {
+      id: `session-${Date.now()}`,
+      ...sessionData,
+      date: Timestamp.fromDate(getSafeDate(sessionData.date)),
+      players: [],
+      waitlist: [],
+      messages: [],
+    };
+    setSessions(prev => [newSession, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+  };
   
-  React.useEffect(() => {
-    const q = query(collection(db, 'users'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const usersData: User[] = [];
-        querySnapshot.forEach((doc) => {
-            usersData.push({ id: doc.id, ...doc.data() } as User);
-        });
-        setUsers(usersData);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  React.useEffect(() => {
-      if (!currentUser) return;
-      const q = query(collection(db, 'directChats'), where('participantIds', 'array-contains', currentUser.id));
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-          const chatsData: DirectChat[] = [];
-          querySnapshot.forEach((doc) => {
-              chatsData.push({ id: doc.id, ...doc.data()} as DirectChat);
-          });
-          setDirectChats(chatsData);
-      });
-      return () => unsubscribe();
-  }, [currentUser]);
-
-
-  // --- MUTATION FUNCTIONS ---
-
-  const createSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages'| 'date'> & { date: string }) => {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    try {
-      await addDoc(collection(db, 'sessions'), {
-        ...sessionData,
-        date: Timestamp.fromDate(getSafeDate(sessionData.date)),
-        players: [],
-        waitlist: [],
-        messages: [],
-        createdBy: currentUser.id,
-      });
-      toast({ title: t('toasts.sessionCreatedTitle'), description: t('toasts.sessionCreatedDescription'), variant: 'success' });
-    } catch (e) {
-      console.error("Error creating session: ", e);
-    }
+  const updateSession = async (sessionData: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string, id: string, players: User[], waitlist: User[] }) => {
+    setSessions(prev =>
+      prev.map(s =>
+        s.id === sessionData.id ? { ...s, ...sessionData, date: Timestamp.fromDate(getSafeDate(sessionData.date)) } : s
+      )
+    );
   };
-
-  const updateSession = async (updatedSessionData: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string; id: string }) => {
-     if (!currentUser || currentUser.role !== 'admin') return;
-     try {
-        const sessionRef = doc(db, 'sessions', updatedSessionData.id);
-        const { id, ...dataToUpdate } = updatedSessionData;
-        await updateDoc(sessionRef, {
-            ...dataToUpdate,
-            date: Timestamp.fromDate(getSafeDate(updatedSessionData.date)),
-        });
-        toast({ title: t('toasts.sessionUpdatedTitle'), description: t('toasts.sessionUpdatedDescription'), variant: 'success' });
-     } catch(e) {
-        console.error("Error updating session: ", e);
-     }
-  };
+  
 
   const deleteSession = async (sessionId: string) => {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    try {
-      await deleteDoc(doc(db, 'sessions', sessionId));
-      toast({ title: t('toasts.sessionDeletedTitle'), description: t('toasts.sessionDeletedDescription'), variant: 'success' });
-    } catch(e) {
-      console.error("Error deleting session: ", e);
-    }
+    setSessions(prev => prev.filter(s => s.id !== sessionId));
   };
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const batch = writeBatch(db);
-      batch.update(sessionRef, { 
-        players: arrayUnion(currentUser),
-        waitlist: arrayRemove(currentUser) // Remove from waitlist if booking a spot
-      });
-      await batch.commit();
-      return true;
-    } catch (e) {
-      console.error("Error booking session: ", e);
-      return false;
-    }
+    setSessions(prev =>
+      prev.map(s => {
+        if (s.id === sessionId && s.players.length < s.maxPlayers) {
+          // Add user to players list and remove from waitlist
+          const newPlayers = s.players.some(p => p.id === currentUser.id) ? s.players : [...s.players, currentUser];
+          const newWaitlist = s.waitlist.filter(u => u.id !== currentUser.id);
+          return { ...s, players: newPlayers, waitlist: newWaitlist };
+        }
+        return s;
+      })
+    );
+    return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const sessionDoc = await getDoc(sessionRef);
-      if (!sessionDoc.exists()) return false;
-
-      const session = sessionDoc.data() as Session;
-      const batch = writeBatch(db);
-      
-      // Remove current user
-      batch.update(sessionRef, { players: arrayRemove(currentUser) });
-
-      // Promote first from waitlist if exists
-      if (session.waitlist.length > 0) {
-        const nextPlayer = session.waitlist[0];
-        batch.update(sessionRef, {
-          players: arrayUnion(nextPlayer),
-          waitlist: arrayRemove(nextPlayer)
-        });
-        // TODO: Send notification to `nextPlayer`
-      }
-      
-      await batch.commit();
-      return true;
-    } catch (e) {
-      console.error("Error canceling booking: ", e);
-      return false;
-    }
+    setSessions(prev =>
+      prev.map(s => {
+        if (s.id === sessionId) {
+          const newPlayers = s.players.filter(p => p.id !== currentUser.id);
+          // If there's a waitlist, move the first person to the players list
+          if (s.waitlist.length > 0 && newPlayers.length < s.maxPlayers) {
+            const nextPlayer = s.waitlist[0];
+            newPlayers.push(nextPlayer);
+            const newWaitlist = s.waitlist.slice(1);
+            return { ...s, players: newPlayers, waitlist: newWaitlist };
+          }
+          return { ...s, players: newPlayers };
+        }
+        return s;
+      })
+    );
+    return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      await updateDoc(sessionRef, { waitlist: arrayUnion(currentUser) });
-      return true;
-    } catch (e) {
-      console.error("Error joining waitlist: ", e);
-      return false;
-    }
+    setSessions(prev =>
+      prev.map(s => {
+        if (s.id === sessionId && !s.waitlist.some(w => w.id === currentUser.id)) {
+          return { ...s, waitlist: [...s.waitlist, currentUser] };
+        }
+        return s;
+      })
+    );
+    return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      await updateDoc(sessionRef, { waitlist: arrayRemove(currentUser) });
-      return true;
-    } catch (e) {
-      console.error("Error leaving waitlist: ", e);
-      return false;
-    }
+    setSessions(prev =>
+      prev.map(s => {
+        if (s.id === sessionId) {
+          return { ...s, waitlist: s.waitlist.filter(w => w.id !== currentUser.id) };
+        }
+        return s;
+      })
+    );
+    return true;
   };
 
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
     if (!currentUser) return;
-    try {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      const newMessage = {
-        sender: currentUser,
-        content: messageContent.content,
-        timestamp: serverTimestamp(),
-      };
-      await updateDoc(sessionRef, { messages: arrayUnion(newMessage) });
-    } catch (e) {
-      console.error("Error adding message: ", e);
-    }
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
+      sender: currentUser,
+      content: messageContent.content,
+      timestamp: Timestamp.now(),
+    };
+    setSessions(prev =>
+      prev.map(s =>
+        s.id === sessionId ? { ...s, messages: [...s.messages, newMessage] } : s
+      )
+    );
   };
 
-   const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
-     if (!currentUser || currentUser.role !== 'admin') return;
-     try {
-       await addDoc(collection(db, 'announcements'), {
-         ...announcementData,
-         date: serverTimestamp(),
-       });
-       toast({ title: t('toasts.announcementCreatedTitle'), description: t('toasts.announcementCreatedDescription'), variant: 'success' });
-     } catch (e) {
-       console.error("Error creating announcement: ", e);
-     }
+  const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
+    const newAnnouncement: Announcement = {
+      id: `ann-${Date.now()}`,
+      ...announcementData,
+      date: Timestamp.now(),
+    };
+    setAnnouncements(prev => [newAnnouncement, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
   };
 
-  const updateAnnouncement = async (announcement: Omit<Announcement, 'date'> & {id: string}) => {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    try {
-        const annRef = doc(db, 'announcements', announcement.id);
-        await updateDoc(annRef, announcement);
-        toast({ title: t('toasts.announcementUpdatedTitle'), description: t('toasts.announcementUpdatedDescription'), variant: 'success' });
-    } catch (e) {
-        console.error("Error updating announcement: ", e);
-    }
+  const updateAnnouncement = async (announcementData: Omit<Announcement, 'date'> & {id: string}) => {
+    setAnnouncements(prev =>
+      prev.map(a =>
+        a.id === announcementData.id ? { ...a, ...announcementData, date: Timestamp.now() } : a
+      )
+    );
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    try {
-      await deleteDoc(doc(db, 'announcements', announcementId));
-      toast({ title: t('toasts.announcementDeletedTitle'), description: t('toasts.announcementDeletedDescription'), variant: 'success' });
-    } catch (e) {
-        console.error("Error deleting announcement: ", e);
+    setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
+  };
+  
+  const createDirectChat = async (otherUser: User): Promise<string> => {
+    if(!currentUser) return '';
+
+    // Check if a chat already exists
+    const existingChat = directChats.find(chat => chat.participants.some(p => p.id === otherUser.id));
+    if(existingChat) {
+        return existingChat.id;
     }
+
+    const newChat: DirectChat = {
+      id: `chat-${Date.now()}`,
+      participants: [currentUser, otherUser],
+      messages: [],
+    };
+    setDirectChats(prev => [...prev, newChat]);
+    return newChat.id;
   };
 
-  const createDirectChat = async (otherUser: User) => {
-    if (!currentUser) return '';
-    try {
-        const newChatRef = await addDoc(collection(db, 'directChats'), {
-            participants: [currentUser, otherUser],
-            participantIds: [currentUser.id, otherUser.id],
-            messages: []
-        });
-        return newChatRef.id;
-    } catch (e) {
-        console.error("Error creating direct chat: ", e);
-        return '';
-    }
-  }
-
   const addDirectMessage = async (chatId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
-     if (!currentUser) return;
-     try {
-       const chatRef = doc(db, 'directChats', chatId);
-       const newMessage = {
-         sender: currentUser,
-         content: messageContent.content,
-         timestamp: serverTimestamp(),
-       };
-       await updateDoc(chatRef, { messages: arrayUnion(newMessage) });
-     } catch (e) {
-       console.error("Error adding direct message: ", e);
-     }
-  }
+    if (!currentUser) return;
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
+      sender: currentUser,
+      content: messageContent.content,
+      timestamp: Timestamp.now(),
+    };
+    setDirectChats(prev =>
+      prev.map(c =>
+        c.id === chatId ? { ...c, messages: [...c.messages, newMessage] } : c
+      )
+    );
+  };
+
 
   return (
-    <SessionContext.Provider
-      value={{ 
+    <SessionContext.Provider value={{ 
         sessions, 
-        announcements,
         createSession, 
         updateSession, 
-        deleteSession, 
-        bookSession, 
-        cancelBooking, 
+        deleteSession,
+        bookSession,
+        cancelBooking,
         joinWaitlist,
         leaveWaitlist,
         addMessage,
+        announcements,
         createAnnouncement,
         updateAnnouncement,
         deleteAnnouncement,
@@ -331,8 +237,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         createDirectChat,
         addDirectMessage,
         users,
-    }}
-    >
+     }}>
       {children}
     </SessionContext.Provider>
   );
