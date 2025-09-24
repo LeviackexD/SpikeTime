@@ -20,9 +20,9 @@ interface SessionContextType {
   createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => Promise<void>;
   updateSession: (session: Omit<Session, 'date' | 'players' | 'waitlist'> & { date: string, players: User[], waitlist: User[] }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
-  bookSession: (sessionId: string) => Promise<void>;
-  cancelBooking: (sessionId: string) => Promise<void>;
-  joinWaitlist: (sessionId: string) => Promise<void>;
+  bookSession: (sessionId: string) => Promise<boolean>;
+  cancelBooking: (sessionId: string) => Promise<boolean>;
+  joinWaitlist: (sessionId: string) => Promise<boolean>;
   leaveWaitlist: (sessionId: string) => Promise<void>;
   addMessage: (sessionId: string, message: Omit<Message, 'id' | 'sender' | 'timestamp'>) => Promise<void>;
   createAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
@@ -66,14 +66,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   }, [users]);
 
 
-  const showToast = (toastInfo: ToastInfo) => {
-    toast({
-      title: toastInfo.title,
-      description: toastInfo.description,
-      variant: toastInfo.variant,
-    });
-  };
-
   // --- In-memory State Operations ---
 
   const createSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string }) => {
@@ -88,32 +80,34 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       createdBy: currentUser.id,
     };
     setSessions(prev => [newSession, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
-    showToast({ title: 'Session Created!', description: 'The new session has been successfully added.', variant: 'success' });
+    toast({ title: 'Session Created!', description: 'The new session has been successfully added.', variant: 'success' });
   };
 
   const updateSession = async (updatedSessionData: Omit<Session, 'date'| 'players' | 'waitlist'> & { date: string, players: User[], waitlist: User[] }) => {
      setSessions(prev => prev.map(s => s.id === updatedSessionData.id ? { ...s, ...updatedSessionData, date: `${updatedSessionData.date}T00:00:00` } : s));
-     showToast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
+     toast({ title: 'Session Updated', description: 'The session has been successfully updated.', variant: 'success' });
   };
 
   const deleteSession = async (sessionId: string) => {
     setSessions(prev => prev.filter(s => s.id !== sessionId));
-    showToast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
+    toast({ title: 'Session Deleted', description: 'The session has been successfully deleted.', variant: 'success' });
   };
   
-  const bookSession = async (sessionId: string) => {
-    if (!currentUser) return;
+  const bookSession = async (sessionId: string): Promise<boolean> => {
+    if (!currentUser) return false;
+    let success = false;
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
             if (session.players.length >= session.maxPlayers) {
-                showToast({ title: 'Session Full', description: 'This session is full. You can join the waitlist.', variant: 'destructive' });
+                toast({ title: 'Session Full', description: 'This session is full. You can join the waitlist.', variant: 'destructive' });
                 return session;
             }
             if ((session.players as User[]).some(p => p.id === currentUser.id)) {
-                showToast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
+                toast({ title: 'Already Registered', description: 'You are already registered for this session.', variant: 'destructive' });
                 return session;
             }
-            showToast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
+            toast({ title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.`, variant: 'success' });
+            success = true;
             return {
                 ...session,
                 players: [...session.players, currentUser],
@@ -122,10 +116,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         }
         return session;
     }));
+    return success;
   };
   
-  const cancelBooking = async (sessionId: string) => {
-    if (!currentUser) return;
+  const cancelBooking = async (sessionId: string): Promise<boolean> => {
+    if (!currentUser) return false;
+    let success = false;
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
             const sessionDateTime = new Date(`${getSafeDate(session.date).toISOString().split('T')[0]}T${session.startTime}`);
@@ -133,7 +129,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
             if (hoursUntilSession <= 12) {
-                showToast({ title: 'Cancellation Period Over', description: 'You can only cancel a session more than 12 hours in advance.', variant: 'destructive' });
+                toast({ title: 'Cancellation Period Over', description: 'You can only cancel a session more than 12 hours in advance.', variant: 'destructive' });
                 return session;
             }
 
@@ -144,37 +140,41 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             if (newWaitlist.length > 0) {
                 const nextPlayer = newWaitlist.shift();
                 if(nextPlayer) newPlayers.push(nextPlayer);
-                 // In a real app, you'd send a notification to nextPlayerId here.
                 console.log(`User ${nextPlayer?.name} moved from waitlist to session ${sessionId}.`);
             }
             
-            showToast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+            toast({ title: 'Booking Canceled', description: 'Your spot has been successfully canceled.', variant: 'success' });
+            success = true;
             return { ...session, players: newPlayers, waitlist: newWaitlist };
         }
         return session;
     }));
+    return success;
   };
 
-  const joinWaitlist = async (sessionId: string) => {
-    if (!currentUser) return;
+  const joinWaitlist = async (sessionId: string): Promise<boolean> => {
+    if (!currentUser) return false;
+    let success = false;
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
              if ((session.waitlist as User[]).some(p => p.id === currentUser.id) || (session.players as User[]).some(p => p.id === currentUser.id)) {
-                showToast({ title: 'Action Not Allowed', description: 'You are already registered or on the waitlist.', variant: 'destructive' });
+                toast({ title: 'Action Not Allowed', description: 'You are already registered or on the waitlist.', variant: 'destructive' });
                 return session;
             }
-            showToast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+            toast({ title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up.", variant: 'success' });
+            success = true;
             return { ...session, waitlist: [...session.waitlist, currentUser] };
         }
         return session;
     }));
+    return success;
   };
   
   const leaveWaitlist = async (sessionId: string) => {
     if (!currentUser) return;
     setSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
-            showToast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
+            toast({ title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.', variant: 'success' });
             return { ...session, waitlist: (session.waitlist as User[]).filter(p => p.id !== currentUser.id) };
         }
         return session;
@@ -199,17 +199,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       date: new Date().toISOString(),
     };
     setAnnouncements(prev => [newAnnouncement, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
-    showToast({ title: 'Announcement Created!', description: 'The new announcement is now live.', variant: 'success' });
+    toast({ title: 'Announcement Created!', description: 'The new announcement is now live.', variant: 'success' });
   };
 
   const updateAnnouncement = async (announcement: Omit<Announcement, 'date'>) => {
     setAnnouncements(prev => prev.map(a => a.id === announcement.id ? { ...a, ...announcement, date: a.date } : a));
-    showToast({ title: 'Announcement Updated', description: 'The announcement has been successfully updated.', variant: 'success' });
+    toast({ title: 'Announcement Updated', description: 'The announcement has been successfully updated.', variant: 'success' });
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
     setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
-    showToast({ title: 'Announcement Deleted', description: 'The announcement has been removed.', variant: 'success' });
+    toast({ title: 'Announcement Deleted', description: 'The announcement has been removed.', variant: 'success' });
   };
 
   const createDirectChat = async (otherUser: User) => {
