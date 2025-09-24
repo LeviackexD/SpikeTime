@@ -24,7 +24,7 @@ import { Bell, Palette, UserCircle, Moon, Sun } from 'lucide-react';
 export default function SettingsPage() {
   const { setTheme, theme } = useTheme();
   const [notifications, setNotifications] = React.useState({
-    email: true,
+    email: false,
     push: false,
   });
 
@@ -58,12 +58,13 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div>
                 <Label htmlFor="email-notifications" className="font-semibold">Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive updates about sessions and news via email.</p>
+                <p className="text-sm text-muted-foreground">Receive updates about sessions and news via email (coming soon).</p>
               </div>
               <Switch
                 id="email-notifications"
                 checked={notifications.email}
                 onCheckedChange={() => handleNotificationChange('email')}
+                disabled
               />
             </div>
              <div className="flex items-center justify-between rounded-lg border p-4">
