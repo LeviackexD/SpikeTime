@@ -23,8 +23,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Loader2 } from 'lucide-react';
 
 
@@ -68,26 +66,20 @@ export default function EditProfileModal({ isOpen, onClose, onSave, user }: Edit
                 return;
             }
             setIsUploading(true);
-            try {
-                const storageRef = ref(storage, `avatars/${user.id}/${file.name}`);
-                const snapshot = await uploadBytes(storageRef, file);
-                const downloadURL = await getDownloadURL(snapshot.ref);
-
-                setFormData(prev => prev ? { ...prev, avatarUrl: downloadURL } : null);
-                 toast({
-                    title: "Avatar updated",
-                    description: "Your new avatar is ready. Save your profile to keep the changes.",
-                    variant: "success",
-                });
-            } catch (error) {
-                 toast({
-                    title: "Upload Failed",
-                    description: "Could not upload the new avatar. Please try again.",
-                    variant: "destructive"
-                });
-            } finally {
-                setIsUploading(false);
-            }
+            // This is a mock upload. In a real app, you'd upload to a service like Firebase Storage.
+            setTimeout(() => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                  setFormData(prev => prev ? { ...prev, avatarUrl: reader.result as string } : null);
+                  toast({
+                      title: "Avatar updated",
+                      description: "Your new avatar is ready. Save your profile to keep the changes.",
+                      variant: "success",
+                  });
+                  setIsUploading(false);
+              };
+              reader.readAsDataURL(file);
+            }, 1500);
         }
     };
 

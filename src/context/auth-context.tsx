@@ -5,16 +5,7 @@ import * as React from 'react';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { auth, db } from '@/lib/firebase';
-import {
-  onAuthStateChanged,
-  signOut,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile as updateFirebaseProfile,
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, onSnapshot, DocumentData, Unsubscribe } from 'firebase/firestore';
-
+import { mockUsers } from '@/lib/mock-data';
 
 type AuthUser = User | null;
 
@@ -31,6 +22,9 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 const publicRoutes = ['/login', '/register'];
 
+// Change this to test different users. 0 is admin, 1+ are regular users.
+const currentUser: User = mockUsers[0]; 
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<AuthUser>(null);
   const [loading, setLoading] = React.useState(true);
@@ -39,40 +33,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   React.useEffect(() => {
-    let userDocUnsubscribe: Unsubscribe | undefined;
-
-    const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        if (userDocUnsubscribe) {
-          userDocUnsubscribe();
-        }
-        
-        const userRef = doc(db, 'users', firebaseUser.uid);
-        userDocUnsubscribe = onSnapshot(userRef, (docSnap) => {
-          if (docSnap.exists()) {
-            setUser({ id: docSnap.id, ...docSnap.data() } as User);
-          } else {
-             // This case might happen if the Firestore doc wasn't created on signup
-             console.log("User document not found, logging out.");
-             signOut(auth);
-          }
-          setLoading(false);
-        });
-      } else {
-        if (userDocUnsubscribe) {
-          userDocUnsubscribe();
-        }
-        setUser(null);
-        setLoading(false);
-      }
-    });
-
-    return () => {
-        authUnsubscribe();
-        if (userDocUnsubscribe) {
-          userDocUnsubscribe();
-        }
-    };
+    // Simulate auth check
+    setTimeout(() => {
+      setUser(currentUser);
+      setLoading(false);
+    }, 500);
   }, []);
 
 
@@ -91,78 +56,61 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const logout = async () => {
-    await signOut(auth);
+    setUser(null);
     toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
     router.push('/login');
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
+    // Mock implementation
+    if (email === 'admin@invernesseagles.com' && pass === 'password') {
+      setUser(mockUsers[0]);
       return true;
-    } catch (error: any) {
-      console.error(error);
-      handleAuthError('Invalid email or password.');
-      return false;
     }
+    const foundUser = mockUsers.find(u => u.email === email);
+    if(foundUser) {
+        setUser(foundUser);
+        return true;
+    }
+    handleAuthError('Invalid email or password.');
+    return false;
   };
 
   const signUpWithEmail = async (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      const firebaseUser = userCredential.user;
-      
-      await updateFirebaseProfile(firebaseUser, { displayName: additionalData.name });
-
-      const newUser: Omit<User, 'id'> = {
+    // Mock implementation
+    const newUser: User = {
+        id: `u${mockUsers.length + 1}`,
         name: additionalData.name,
-        email: firebaseUser.email || '',
-        username: firebaseUser.email?.split('@')[0] || `user${Date.now()}`,
-        avatarUrl: `https://picsum.photos/seed/${firebaseUser.uid}/100/100`,
-        role: 'user', // default role
+        email: email,
+        username: email.split('@')[0],
+        avatarUrl: `https://picsum.photos/seed/u${mockUsers.length + 1}/100/100`,
+        role: 'user',
         skillLevel: additionalData.skillLevel,
         favoritePosition: additionalData.favoritePosition,
         stats: {
-          sessionsPlayed: 0,
-          attendanceRate: 100,
+            sessionsPlayed: 0,
+            attendanceRate: 100,
         },
-      };
-
-      await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-      return true;
-    } catch (error: any) {
-      console.error(error);
-       handleAuthError(error.message || 'An unexpected error occurred during sign up.');
-      return false;
-    }
+    };
+    mockUsers.push(newUser);
+    return true;
   };
 
   const updateUser = async (updatedData: Partial<User>) => {
     if (!user) return;
-    try {
-        const userRef = doc(db, 'users', user.id);
-        await setDoc(userRef, updatedData, { merge: true });
-
-        if (updatedData.name || updatedData.avatarUrl) {
-            await updateFirebaseProfile(auth.currentUser!, {
-                displayName: updatedData.name,
-                photoURL: updatedData.avatarUrl
-            });
-        }
-        
-        toast({
-            title: "Profile Updated",
-            description: "Your profile information has been saved.",
-            variant: "success"
-        });
-    } catch(error) {
-        console.error("Error updating profile:", error);
-         toast({
-            title: "Update Failed",
-            description: "Could not save your profile changes.",
-            variant: "destructive"
-        });
+    setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
+    
+    // In a real app, you would update this in your database
+    const userIndex = mockUsers.findIndex(u => u.id === user.id);
+    if (userIndex !== -1) {
+        mockUsers[userIndex] = { ...mockUsers[userIndex], ...updatedData };
     }
+
+    toast({
+        title: "Profile Updated",
+        description: "Your profile information has been saved.",
+        variant: "success"
+    });
   }
   
   if (loading && !publicRoutes.includes(pathname)) {
