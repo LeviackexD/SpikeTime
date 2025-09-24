@@ -58,22 +58,13 @@ const PlayerList: React.FC<PlayerListProps> = ({ title, players, emptyMessage })
         <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {players.map((player) => (
-                <TooltipProvider key={player.id}>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                                <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
-                                <div className="flex-grow">
-                                    <p className="font-semibold text-sm">{player.name}</p>
-                                    <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
-                                </div>
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>{player.name}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                    <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                    <div className="flex-grow">
+                        <p className="font-semibold text-sm">{player.name}</p>
+                        <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                    </div>
+                </div>
             ))}
           </div>
         </div>
@@ -105,7 +96,7 @@ export default function SessionDetailsModal({
   
   if (!session || !currentUser) return null;
 
-  const spotsFilled = session.players.length;
+  const spotsFilled = (session.players as User[]).length;
   const progressValue = (spotsFilled / session.maxPlayers) * 100;
   
   const playersList = session.players as User[];
@@ -115,11 +106,13 @@ export default function SessionDetailsModal({
   const isOnWaitlist = waitlistList.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
   
-  const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }) => {
+  const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }, errorToast: { title: string, description: string }) => {
     if (session) {
       const success = await action(session.id);
       if (success) {
         toast({ ...successToast, variant: 'success' });
+      } else {
+        toast({ ...errorToast, variant: 'destructive' });
       }
       onClose(); // Close modal after action
     }
@@ -141,10 +134,26 @@ export default function SessionDetailsModal({
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
 
-  const bookAction = () => handleAction(onBook, { title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.` });
-  const cancelAction = () => handleAction(onCancel, { title: 'Booking Canceled', description: 'Your spot has been successfully canceled.' });
-  const joinWaitlistAction = () => handleAction(onWaitlist, { title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up." });
-  const leaveWaitlistAction = () => handleAction(onLeaveWaitlist, { title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.' });
+  const bookAction = () => handleAction(
+      onBook, 
+      { title: 'Booking Confirmed!', description: `You're all set for the ${session.level} session.` },
+      { title: 'Booking Failed', description: 'Could not book your spot. The session might be full.' }
+    );
+  const cancelAction = () => handleAction(
+      onCancel, 
+      { title: 'Booking Canceled', description: 'Your spot has been successfully canceled.' },
+      { title: 'Cancellation Failed', description: 'Could not cancel your booking. You can only cancel more than 12 hours in advance.' }
+    );
+  const joinWaitlistAction = () => handleAction(
+      onWaitlist, 
+      { title: 'You are on the waitlist!', description: "We'll notify you if a spot opens up." },
+      { title: 'Could not join waitlist', description: 'You might already be on the list.' }
+    );
+  const leaveWaitlistAction = () => handleAction(
+      onLeaveWaitlist, 
+      { title: 'Removed from Waitlist', description: 'You have successfully left the waitlist.' },
+      { title: 'Action Failed', description: 'Could not leave the waitlist.' }
+    );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

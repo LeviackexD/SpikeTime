@@ -1,12 +1,18 @@
+
 /**
- * @fileoverview A simple component to display a user's avatar.
- * It's intended to be wrapped by a Tooltip for showing the user's name.
+ * @fileoverview A component to display a user's avatar wrapped in a tooltip showing their name.
  */
 
 'use client';
 
 import type { User } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface PlayerAvatarProps {
     player: User;
@@ -15,9 +21,18 @@ interface PlayerAvatarProps {
 
 export default function PlayerAvatar({ player, className }: PlayerAvatarProps) {
     return (
-        <Avatar className={className}>
-            <AvatarImage src={player.avatarUrl} alt={player.name} />
-            <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-        </Avatar>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Avatar className={className}>
+                        <AvatarImage src={player.avatarUrl} alt={player.name} />
+                        <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>{player.name}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     )
 }
