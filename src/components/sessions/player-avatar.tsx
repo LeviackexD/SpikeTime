@@ -4,6 +4,12 @@
 import type { User } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { cn } from '@/lib/utils';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+  } from '@/components/ui/tooltip';
 
 interface PlayerAvatarProps {
     player: User;
@@ -16,9 +22,17 @@ export default function PlayerAvatar({ player, className }: PlayerAvatarProps) {
     }
 
     return (
-        <Avatar className={className}>
-            <AvatarImage src={player.avatarUrl} alt={player.name} />
-            <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-        </Avatar>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Avatar className={className}>
+                    <AvatarImage src={player.avatarUrl} alt={player.name} />
+                    <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+            </TooltipTrigger>
+            <TooltipContent>
+                <p className='font-semibold'>{player.name}</p>
+                <p className='text-muted-foreground'>{player.skillLevel}</p>
+            </TooltipContent>
+        </Tooltip>
     )
 }
