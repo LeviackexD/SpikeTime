@@ -1,10 +1,4 @@
 
-/**
- * @fileoverview A modal dialog that displays comprehensive details about a session.
- * It shows the list of registered players and the waitlist, and provides
- * action buttons for booking, canceling, or joining the waitlist.
- */
-
 'use client';
 
 import * as React from 'react';
@@ -27,7 +21,6 @@ import type { Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import GenerateTeamsButton from '../ai/generate-teams-button';
 
 interface SessionDetailsModalProps {
   session: Session | null;
@@ -161,9 +154,6 @@ export default function SessionDetailsModal({
                     <Users className="h-5 w-5 text-muted-foreground" />
                     {t('modals.sessionDetails.registeredPlayers', { count: session.players.length })}
                 </h3>
-                { currentUser.role === 'admin' && session.players.length === 12 && (
-                    <GenerateTeamsButton players={session.players as User[]} />
-                )}
               </div>
               {session.players.length > 0 ? (
                 <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
