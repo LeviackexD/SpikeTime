@@ -20,6 +20,7 @@ interface AuthContextType {
   logout: () => void;
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
   signUpWithEmail: (email: string, pass: string, additionalData: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<boolean>;
+  updateUser: (updatedData: User) => void;
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
@@ -78,13 +79,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // We just pretend it worked and redirect to login.
     return true;
   };
+
+  const updateUser = (updatedData: User) => {
+    setUser(updatedData);
+    toast({
+        title: "Profile Updated",
+        description: "Your profile information has been saved.",
+        variant: "success"
+    })
+  }
   
   if (loading && !user && !publicRoutes.includes(pathname)) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, signInWithEmail, signUpWithEmail }}>
+    <AuthContext.Provider value={{ user, loading, logout, signInWithEmail, signUpWithEmail, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

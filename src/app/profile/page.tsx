@@ -47,13 +47,11 @@ const StatCard = ({ icon: Icon, label, value, badge }: { icon: React.ElementType
 
 
 export default function ProfilePage() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, updateUser } = useAuth();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   const handleSaveProfile = (updatedUser: User) => {
-    // In a real app, you would call an API to save the user data.
-    // For this prototype, we can't persist it, but we can close the modal.
-    console.log('Saving user:', updatedUser);
+    updateUser(updatedUser);
     setIsModalOpen(false);
   };
   
