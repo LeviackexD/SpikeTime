@@ -108,33 +108,39 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
-    if (!currentUser) return false;
     let success = false;
 
-    setSessions(prev => prev.map(session => {
-        if (session.id !== sessionId) {
-            return session;
+    setSessions(prev => {
+        const newSessions = [...prev];
+        const sessionIndex = newSessions.findIndex(s => s.id === sessionId);
+        if (sessionIndex === -1 || !currentUser) {
+            return newSessions;
         }
 
+        const session = newSessions[sessionIndex];
         const sessionDateTime = new Date(`${getSafeDate(session.date).toISOString().split('T')[0]}T${session.startTime}`);
         const now = new Date();
         const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         if (hoursUntilSession <= 12) {
-            return session;
+            toast({ title: 'Cancellation Failed', description: 'You can only cancel more than 12 hours in advance.', variant: 'destructive' });
+            return newSessions;
         }
         
-        const isUserRegistered = (session.players as User[]).some(p => p.id === currentUser.id);
+        const playerIndex = session.players.findIndex(p => p.id === currentUser.id);
 
-        if (!isUserRegistered) {
-            return session; 
+        if (playerIndex === -1) {
+             return newSessions; // User not in session
         }
         
         success = true;
-        let newPlayers = (session.players as User[]).filter(p => p.id !== currentUser.id);
-        let newWaitlist = [...(session.waitlist as User[])];
+
+        const newPlayers = [...session.players];
+        newPlayers.splice(playerIndex, 1);
         
-        if (session.players.length <= session.maxPlayers && newWaitlist.length > 0) {
+        const newWaitlist = [...session.waitlist];
+        
+        if (newWaitlist.length > 0) {
           const nextPlayer = newWaitlist.shift();
           if(nextPlayer) {
             newPlayers.push(nextPlayer);
@@ -142,8 +148,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
           }
         }
         
-        return { ...session, players: newPlayers, waitlist: newWaitlist };
-    }));
+        newSessions[sessionIndex] = { ...session, players: newPlayers, waitlist: newWaitlist };
+        return newSessions;
+    });
     
     return success;
   };
