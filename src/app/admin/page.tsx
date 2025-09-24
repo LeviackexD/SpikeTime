@@ -299,7 +299,7 @@ export default function AdminPage() {
   const renderSessionTable = () => (
     <div className="rounded-lg border">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted/50">
           <TableRow>
             <TableHead>{t('adminPage.sessionTable.dateAndTime')}</TableHead>
             <TableHead>{t('adminPage.sessionTable.level')}</TableHead>
@@ -364,7 +364,7 @@ export default function AdminPage() {
   const renderAnnouncementTable = () => (
     <div className="rounded-lg border">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted/50">
           <TableRow>
             <TableHead>{t('adminPage.announcementTable.title')}</TableHead>
             <TableHead>{t('adminPage.announcementTable.content')}</TableHead>
@@ -491,3 +491,5 @@ export default function AdminPage() {
     </>
   );
 }
+
+    

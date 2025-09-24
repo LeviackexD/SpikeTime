@@ -94,8 +94,8 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-paper">
         <DialogHeader>
-          <DialogTitle className="font-headline text-brown handwriting text-2xl">{announcement ? t('modals.announcementForm.editTitle') : t('modals.announcementForm.createTitle')}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="handwriting text-2xl font-bold text-brown">{announcement ? t('modals.announcementForm.editTitle') : t('modals.announcementForm.createTitle')}</DialogTitle>
+          <DialogDescription className="text-brown-light">
             {announcement ? t('modals.announcementForm.editDescription') : t('modals.announcementForm.createDescription')}
           </DialogDescription>
         </DialogHeader>
@@ -137,3 +137,5 @@ export default function AnnouncementFormModal({ isOpen, onClose, onSave, announc
     </Dialog>
   );
 }
+
+    
