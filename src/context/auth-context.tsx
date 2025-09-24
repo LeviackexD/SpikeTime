@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   React.useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in, now fetch profile and admin status
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const adminRef = dbRef(rtdb, `adminConfig/adminUserUids/${firebaseUser.uid}`);
 
@@ -43,7 +42,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         let isAdmin: boolean | null = null;
 
         const updateUserState = () => {
-          // This function is now responsible for setting the final state
           if (userProfileData !== null && isAdmin !== null) {
             setUser({ 
               id: firebaseUser.uid,
@@ -59,8 +57,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             userProfileData = docSnap.data() as Omit<User, 'id' | 'role'>;
             updateUserState();
           } else {
-            // This can happen briefly during user creation.
-            // We don't need to log an error. The snapshot will trigger again once the doc is created.
+            // Document might not exist yet during signup. onSnapshot will trigger again.
+            // Do not set loading to false here, wait for the doc.
           }
         });
         
@@ -68,25 +66,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             isAdmin = snapshot.val() === true;
             updateUserState();
         }, () => {
-            // If there's an error reading from RTDB (e.g., permissions), assume not admin
             isAdmin = false;
             updateUserState();
         });
         
-        // Return a cleanup function for all listeners
         return () => {
           unsubFromFirestore();
           unsubFromRealtimeDB();
         };
 
       } else {
-        // User is signed out, no need to fetch anything else.
+        // User is signed out.
         setUser(null);
-        setLoading(false);
+        setLoading(false); // THIS IS THE KEY FIX.
       }
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribeAuth();
   }, []);
 
@@ -137,13 +132,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const firebaseUser = userCredential.user;
 
-        // Create user document in Firestore
         const newUser: Omit<User, 'id' | 'role'> = {
             name: additionalData.name,
             email: email,
             username: email.split('@')[0],
             avatarUrl: `https://picsum.photos/seed/${firebaseUser.uid}/100/100`,
-            // Role will be determined dynamically by the onAuthStateChanged listener
             skillLevel: additionalData.skillLevel,
             favoritePosition: additionalData.favoritePosition,
             stats: {
