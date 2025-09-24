@@ -1,7 +1,7 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, initializeFirestore } from 'firebase/firestore';
+import { getFirestore, memoryLocalCache } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig: FirebaseOptions = {
@@ -16,7 +16,9 @@ const firebaseConfig: FirebaseOptions = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const firestore = initializeFirestore(app, {
+// Use memory cache to bypass corrupted IndexedDB cache.
+const firestore = getFirestore(app, {
+  localCache: memoryLocalCache(),
   experimentalAutoDetectLongPolling: true,
 });
 const db = getDatabase(app);
