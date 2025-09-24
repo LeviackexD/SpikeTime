@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, User, Users } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -37,8 +37,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import type { Session, Announcement, User } from '@/lib/types';
+import type { Session, Announcement } from '@/lib/types';
 import { Timestamp } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
+import PlayerAvatar from '@/components/sessions/player-avatar';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 // --- Helper Functions ---
 
@@ -69,19 +72,21 @@ const SessionCards = ({
   locale: string;
 }) => (
   <div className="space-y-4">
-    {sessions.map((session) => (
-      <Card key={session.id}>
-        <CardHeader>
-          <div className="flex justify-between items-start">
+    {sessions.map((session, index) => {
+      const rotationClass = `note-${(index % 4) + 1}`;
+      return (
+      <div key={session.id} className={cn('note bg-paper-yellow p-4 rounded-lg shadow-lg relative', rotationClass)}>
+         <div className={cn('pushpin bg-red-500')}></div>
+         <div className="flex justify-between items-start mb-2">
             <div>
-              <CardTitle>{t(`skillLevels.${session.level}`)}</CardTitle>
-              <div className="text-sm text-muted-foreground">
-                {formatDate(session.date, locale)} - {session.startTime} - {session.endTime}
+              <h3 className="handwriting text-xl font-bold text-brown mb-1">{t(`skillLevels.${session.level}`)}</h3>
+              <div className="text-xs text-brown-light">
+                {formatDate(session.date, locale)} - {session.startTime}
               </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="text-brown-dark hover:bg-brown-light/20 -mr-2 -mt-2">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -101,24 +106,22 @@ const SessionCards = ({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <div>
-            <span className="font-semibold">{t('adminPage.sessionTable.players')}: </span>
-            {(session.players as User[]).length} / {session.maxPlayers}
-            {(session.waitlist as User[]).length > 0 && ` ${t('adminPage.statusValues.waitlist').replace('{count}', String((session.waitlist as User[]).length))}`}
+          <div className="space-y-3 text-sm border-t border-dashed border-brown-light/30 pt-3">
+             <div className="flex items-center gap-2 text-brown-dark">
+                <Users className="h-4 w-4" />
+                <span className="font-semibold">{session.players.length} / {session.maxPlayers} {t('adminPage.sessionTable.players')}</span>
+                 {session.waitlist.length > 0 && <span className="text-xs">({t('adminPage.statusValues.waitlist', {count: session.waitlist.length})})</span>}
+            </div>
+            <div className="flex items-center gap-2">
+                <Badge
+                  variant={(session.players as User[]).length >= session.maxPlayers ? 'destructive' : 'secondary'}
+                >
+                  {(session.players as User[]).length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
+                </Badge>
+            </div>
           </div>
-          <div>
-            <span className="font-semibold">{t('adminPage.sessionTable.status')}: </span>
-            <Badge
-              variant={(session.players as User[]).length >= session.maxPlayers ? 'destructive' : 'secondary'}
-            >
-              {(session.players as User[]).length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-    ))}
+      </div>
+    )})}
   </div>
 );
 
@@ -136,37 +139,36 @@ const AnnouncementCards = ({
   locale: string;
 }) => (
   <div className="space-y-4">
-    {announcements.map((ann) => (
-      <Card key={ann.id}>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle>{ann.title[locale]}</CardTitle>
-              <div className="text-sm text-muted-foreground">{formatDate(ann.date, locale)}</div>
+    {announcements.map((ann, index) => {
+       const rotationClass = `note-${(index % 4) + 1}`;
+       return (
+        <div key={ann.id} className={cn('note bg-paper-blue p-4 rounded-lg shadow-lg relative', rotationClass)}>
+            <div className={cn('pushpin bg-blue-500')}></div>
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="handwriting text-xl font-bold text-brown mb-1">{ann.title[locale]}</h3>
+                <div className="text-xs text-brown-light">{formatDate(ann.date, locale)}</div>
+              </div>
+               <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                   <Button variant="ghost" size="icon" className="text-brown-dark hover:bg-brown-light/20 -mr-2 -mt-2">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>{t('adminPage.actions.edit')}</DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-red-500"
+                    onClick={() => handleDeleteAnnouncementClick(ann)}
+                  >
+                    {t('adminPage.actions.delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleEditAnnouncement(ann)}>{t('adminPage.actions.edit')}</DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-red-500"
-                  onClick={() => handleDeleteAnnouncementClick(ann)}
-                >
-                  {t('adminPage.actions.delete')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div>{ann.content[locale]}</div>
-        </CardContent>
-      </Card>
-    ))}
+            <p className="text-sm text-brown-dark border-t border-dashed border-brown-light/30 pt-3">{ann.content[locale]}</p>
+        </div>
+    )})}
   </div>
 );
 
@@ -297,44 +299,53 @@ export default function AdminPage() {
   // --- RENDER LOGIC ---
 
   const renderSessionTable = () => (
-    <div className="rounded-lg border">
+    <div className="chalkboard-bg rounded-lg p-4 shadow-lg">
       <Table>
-        <TableHeader className="bg-muted/50">
-          <TableRow>
-            <TableHead>{t('adminPage.sessionTable.dateAndTime')}</TableHead>
-            <TableHead>{t('adminPage.sessionTable.level')}</TableHead>
-            <TableHead>{t('adminPage.sessionTable.players')}</TableHead>
-            <TableHead>{t('adminPage.sessionTable.status')}</TableHead>
-            <TableHead className="text-right">{t('adminPage.sessionTable.actions')}</TableHead>
+        <TableHeader>
+          <TableRow className="border-b-chalk/20">
+            <TableHead className="text-chalk">{t('adminPage.sessionTable.dateAndTime')}</TableHead>
+            <TableHead className="text-chalk">{t('adminPage.sessionTable.level')}</TableHead>
+            <TableHead className="text-chalk">{t('adminPage.sessionTable.players')}</TableHead>
+            <TableHead className="text-chalk">{t('adminPage.sessionTable.status')}</TableHead>
+            <TableHead className="text-right text-chalk">{t('adminPage.sessionTable.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sessions.map((session) => (
-            <TableRow key={session.id}>
-              <TableCell>
+            <TableRow key={session.id} className="border-b-chalk/10 hover:bg-white/5">
+              <TableCell className="text-chalk/90">
                 <div className="font-medium">{formatDate(session.date, locale)}</div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-chalk/60">
                   {session.startTime} - {session.endTime}
                 </div>
               </TableCell>
-              <TableCell>{t(`skillLevels.${session.level}`)}</TableCell>
-              <TableCell>
-                {(session.players as User[]).length} / {session.maxPlayers}
-                {(session.waitlist as User[]).length > 0 && ` ${t('adminPage.statusValues.waitlist').replace('{count}', String((session.waitlist as User[]).length))}`}
+              <TableCell className="text-chalk/90">{t(`skillLevels.${session.level}`)}</TableCell>
+              <TableCell className="text-chalk/90">
+                <TooltipProvider>
+                  <div className="flex items-center gap-2">
+                    <span>{session.players.length} / {session.maxPlayers}</span>
+                    <div className="flex -space-x-2 overflow-hidden">
+                      {session.players.slice(0, 3).map(player => (
+                        <PlayerAvatar key={player.id} player={player as User} className="h-6 w-6 border-2 border-chalkboard" />
+                      ))}
+                    </div>
+                  </div>
+                  </TooltipProvider>
+                  {session.waitlist.length > 0 && <div className="text-xs text-chalk/60 mt-1">{t('adminPage.statusValues.waitlist', {count: session.waitlist.length})}</div>}
               </TableCell>
               <TableCell>
                 <Badge
                   variant={
-                    (session.players as User[]).length >= session.maxPlayers ? 'destructive' : 'secondary'
+                    session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'
                   }
                 >
-                  {(session.players as User[]).length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
+                  {session.players.length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="text-chalk/80 hover:bg-white/10 hover:text-chalk">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -362,26 +373,26 @@ export default function AdminPage() {
   );
 
   const renderAnnouncementTable = () => (
-    <div className="rounded-lg border">
+    <div className="chalkboard-bg rounded-lg p-4 shadow-lg">
       <Table>
-        <TableHeader className="bg-muted/50">
-          <TableRow>
-            <TableHead>{t('adminPage.announcementTable.title')}</TableHead>
-            <TableHead>{t('adminPage.announcementTable.content')}</TableHead>
-            <TableHead>{t('adminPage.announcementTable.date')}</TableHead>
-            <TableHead className="text-right">{t('adminPage.announcementTable.actions')}</TableHead>
+        <TableHeader>
+          <TableRow className="border-b-chalk/20">
+            <TableHead className="text-chalk">{t('adminPage.announcementTable.title')}</TableHead>
+            <TableHead className="text-chalk">{t('adminPage.announcementTable.content')}</TableHead>
+            <TableHead className="text-chalk">{t('adminPage.announcementTable.date')}</TableHead>
+            <TableHead className="text-right text-chalk">{t('adminPage.announcementTable.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {announcements.map((ann) => (
-            <TableRow key={ann.id}>
-              <TableCell className="font-medium">{ann.title[locale]}</TableCell>
-              <TableCell className="max-w-xs md:max-w-sm truncate">{ann.content[locale]}</TableCell>
-              <TableCell>{formatDate(ann.date, locale)}</TableCell>
+            <TableRow key={ann.id} className="border-b-chalk/10 hover:bg-white/5">
+              <TableCell className="font-medium text-chalk/90">{ann.title[locale]}</TableCell>
+              <TableCell className="max-w-xs md:max-w-sm truncate text-chalk/70">{ann.content[locale]}</TableCell>
+              <TableCell className="text-chalk/70">{formatDate(ann.date, locale)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="text-chalk/80 hover:bg-white/10 hover:text-chalk">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -491,5 +502,3 @@ export default function AdminPage() {
     </>
   );
 }
-
-    

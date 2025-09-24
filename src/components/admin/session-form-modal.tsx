@@ -61,8 +61,10 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     React.useEffect(() => {
         if (isOpen) {
             if (session) {
-                // When editing, get the 'YYYY-MM-DD' part from the ISO string
-                const formattedDate = session.date.split('T')[0];
+                // When editing, get the 'YYYY-MM-DD' part from the ISO string or Date object
+                const date = new Date(session.date);
+                const formattedDate = !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : getTodayString();
+                
                 setFormData({
                     date: formattedDate,
                     startTime: session.startTime,
@@ -109,39 +111,39 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg bg-paper">
         <DialogHeader>
-          <DialogTitle className="font-headline">{session ? t('modals.sessionForm.editTitle') : t('modals.sessionForm.createTitle')}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="handwriting text-2xl font-bold text-brown">{session ? t('modals.sessionForm.editTitle') : t('modals.sessionForm.createTitle')}</DialogTitle>
+          <DialogDescription className="text-brown-light">
             {session ? t('modals.sessionForm.editDescription') : t('modals.sessionForm.createDescription')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="col-span-2 space-y-2">
-                    <Label htmlFor="date">{t('modals.sessionForm.date')}</Label>
-                    <Input id="date" type="date" value={formData.date} onChange={handleChange} required />
+                    <Label htmlFor="date" className="text-brown font-semibold">{t('modals.sessionForm.date')}</Label>
+                    <Input id="date" type="date" value={formData.date} onChange={handleChange} required className="bg-cream border-brown-light focus:border-brown" />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="startTime">{t('modals.sessionForm.startTime')}</Label>
-                    <Input id="startTime" type="time" value={formData.startTime} onChange={handleChange} required/>
+                    <Label htmlFor="startTime" className="text-brown font-semibold">{t('modals.sessionForm.startTime')}</Label>
+                    <Input id="startTime" type="time" value={formData.startTime} onChange={handleChange} required className="bg-cream border-brown-light focus:border-brown"/>
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="endTime">{t('modals.sessionForm.endTime')}</Label>
-                    <Input id="endTime" type="time" value={formData.endTime} onChange={handleChange} required/>
+                    <Label htmlFor="endTime" className="text-brown font-semibold">{t('modals.sessionForm.endTime')}</Label>
+                    <Input id="endTime" type="time" value={formData.endTime} onChange={handleChange} required className="bg-cream border-brown-light focus:border-brown"/>
                 </div>
                 <div className="col-span-2 space-y-2">
-                    <Label htmlFor="location">{t('modals.sessionForm.location')}</Label>
-                    <Input id="location" value={formData.location} onChange={handleChange} placeholder={t('modals.sessionForm.location')} required/>
+                    <Label htmlFor="location" className="text-brown font-semibold">{t('modals.sessionForm.location')}</Label>
+                    <Input id="location" value={formData.location} onChange={handleChange} placeholder={t('modals.sessionForm.location')} required className="bg-cream border-brown-light focus:border-brown"/>
                 </div>
                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="imageUrl">{t('modals.sessionForm.coverImageUrl')}</Label>
-                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://picsum.photos/seed/1/400/300"/>
+                    <Label htmlFor="imageUrl" className="text-brown font-semibold">{t('modals.sessionForm.coverImageUrl')}</Label>
+                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://picsum.photos/seed/1/400/300" className="bg-cream border-brown-light focus:border-brown"/>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="level">{t('modals.sessionForm.level')}</Label>
+                    <Label htmlFor="level" className="text-brown font-semibold">{t('modals.sessionForm.level')}</Label>
                     <Select value={formData.level} onValueChange={handleSelectChange}>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-cream border-brown-light focus:border-brown">
                             <SelectValue placeholder={t('modals.sessionForm.selectLevel')} />
                         </SelectTrigger>
                         <SelectContent>
@@ -152,13 +154,13 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="maxPlayers">{t('modals.sessionForm.maxPlayers')}</Label>
-                    <Input id="maxPlayers" type="number" value={formData.maxPlayers} onChange={handleChange} required/>
+                    <Label htmlFor="maxPlayers" className="text-brown font-semibold">{t('modals.sessionForm.maxPlayers')}</Label>
+                    <Input id="maxPlayers" type="number" value={formData.maxPlayers} onChange={handleChange} required className="bg-cream border-brown-light focus:border-brown"/>
                 </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" onClick={onClose}>{t('modals.cancel')}</Button>
-                <Button type="submit">{t('modals.save')}</Button>
+                <Button type="button" variant="outline" onClick={onClose} className="button-hover">{t('modals.cancel')}</Button>
+                <Button type="submit" className="bg-brown text-cream button-hover">{t('modals.save')}</Button>
             </DialogFooter>
         </form>
       </DialogContent>
