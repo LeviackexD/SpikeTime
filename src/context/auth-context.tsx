@@ -48,10 +48,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             setUser({ ...userData, id: firebaseUser.uid, role: isAdmin ? 'admin' : 'user' });
           } else {
-            // Log the warning but DO NOT sign the user out. This prevents the redirect loop.
             console.warn("AuthProvider: User document not found in Firestore for UID:", firebaseUser.uid);
-            // We'll set a minimal user object to keep them authenticated,
-            // but the app might not function fully. This is for debugging.
+            // This is a fallback. If the user doc doesn't exist, create a temporary user object
+            // to prevent the redirect loop. The app might not function fully.
             setUser({
               id: firebaseUser.uid,
               email: firebaseUser.email || 'unknown',
@@ -66,8 +65,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         } catch (error) {
           console.error("AuthProvider: CRITICAL_ERROR fetching user profile:", error);
-          // Don't sign out, to prevent the loop. Let the user stay on the page.
-          // setUser(null);
+          // Don't sign out. Create a fallback user to prevent the redirect loop.
+          setUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email || 'unknown',
+            name: firebaseUser.displayName || 'Fallback User',
+            role: 'user',
+            skillLevel: 'Beginner',
+            favoritePosition: 'Hitter',
+            username: firebaseUser.email?.split('@')[0] || 'fallbackuser',
+            avatarUrl: '',
+            stats: { sessionsPlayed: 0, attendanceRate: 0 },
+          });
         }
       } else {
         console.log("AuthProvider: No Firebase user (onAuthStateChanged).");
