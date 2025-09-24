@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
@@ -21,18 +20,16 @@ interface PlayerAvatarProps {
 
 export default function PlayerAvatar({ player, className }: PlayerAvatarProps) {
     return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Avatar className={className}>
-                        <AvatarImage src={player.avatarUrl} alt={player.name} />
-                        <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>{player.name}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Avatar className={className}>
+                    <AvatarImage src={player.avatarUrl} alt={player.name} />
+                    <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>{player.name}</p>
+            </TooltipContent>
+        </Tooltip>
     )
 }

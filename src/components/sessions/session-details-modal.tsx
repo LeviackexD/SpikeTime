@@ -56,17 +56,19 @@ const PlayerList: React.FC<PlayerListProps> = ({ title, players, emptyMessage })
             {title} ({players.length})
         </h3>
         <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {players.map((player) => (
-                <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                    <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
-                    <div className="flex-grow">
-                        <p className="font-semibold text-sm">{player.name}</p>
-                        <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
-                    </div>
-                </div>
-            ))}
-          </div>
+          <TooltipProvider>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {players.map((player) => (
+                  <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                      <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                      <div className="flex-grow">
+                          <p className="font-semibold text-sm">{player.name}</p>
+                          <p className="text-xs text-muted-foreground">{player.skillLevel}</p>
+                      </div>
+                  </div>
+              ))}
+            </div>
+          </TooltipProvider>
         </div>
     </div>
   );
