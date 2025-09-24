@@ -33,13 +33,13 @@ const SessionCalendar = dynamic(() => import('@/components/dashboard/session-cal
 });
 
 
-const skillLevels: (SkillLevel | 'All')[] = ['All', 'Beginner', 'Intermediate', 'Advanced'];
+const skillLevels: SkillLevel[] = ['Beginner', 'Intermediate', 'Advanced'];
 
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
   const { user: currentUser } = useAuth();
   const [selectedDate, setSelectedDate] = React.useState(new Date());
-  const [skillFilter, setSkillFilter] = React.useState<SkillLevel | 'All'>('All');
+  const [skillFilter, setSkillFilter] = React.useState<SkillLevel>('Beginner');
   
   const handleDateChange = (date: Date | undefined) => {
     if(date) {
@@ -54,7 +54,7 @@ const CalendarPage: NextPage = () => {
   const filteredSessions = sessions.filter(session => {
     const sessionDate = getSafeDate(session.date);
     const isSameDay = sessionDate.toDateString() === selectedDate.toDateString();
-    const skillMatch = skillFilter === 'All' || session.level === skillFilter;
+    const skillMatch = session.level === skillFilter;
     return isSameDay && skillMatch;
   }).sort((a,b) => a.startTime.localeCompare(b.startTime));
 
@@ -93,7 +93,7 @@ const CalendarPage: NextPage = () => {
                      <div className="flex items-center flex-wrap gap-2 mt-4 p-2">
                         <div className='flex items-center gap-2'>
                             <Filter className="h-4 w-4 text-muted-foreground" />
-                            <Select value={skillFilter} onValueChange={(value) => setSkillFilter(value as SkillLevel | 'All')}>
+                            <Select value={skillFilter} onValueChange={(value) => setSkillFilter(value as SkillLevel)}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Filter by skill level" />
                                 </SelectTrigger>
@@ -101,10 +101,8 @@ const CalendarPage: NextPage = () => {
                                     {skillLevels.map(level => (
                                         <SelectItem key={level} value={level}>
                                             <div className="flex items-center gap-2">
-                                                {level !== 'All' && (
-                                                    <div className={cn("h-3 w-3 rounded-full", skillLevelColors[level as keyof typeof skillLevelColors])} />
-                                                )}
-                                                {level === 'All' ? 'All Levels' : level}
+                                                <div className={cn("h-3 w-3 rounded-full", skillLevelColors[level as keyof typeof skillLevelColors])} />
+                                                {level}
                                             </div>
                                         </SelectItem>
                                     ))}

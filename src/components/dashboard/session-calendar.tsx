@@ -2,23 +2,14 @@
 /**
  * @fileoverview Main calendar component for displaying sessions.
  * It uses react-day-picker to render a calendar, highlighting days with scheduled sessions
- * by displaying colored dots for each skill level present on that day.
+ * by giving them a colored background.
  */
 
 'use client';
 
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import type { Session, SkillLevel } from '@/lib/types';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import type { DayProps } from 'react-day-picker';
-import { skillLevelColors } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import type { Session } from '@/lib/types';
 import { getSafeDate } from '@/context/session-context';
 
 interface SessionCalendarProps {
@@ -51,40 +42,6 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
     }
     return filtered;
   }, [sessionsByDate, skillFilter]);
-
-  const DayContent = ({ date: day, ...props }: DayProps) => {
-    const dateString = day.toISOString().split('T')[0];
-    const dailySessions = sessionsByDate[dateString] || [];
-    const skillLevelsOnDay = [...new Set(dailySessions.map(s => s.level))] as SkillLevel[];
-
-    return (
-        <div className='relative flex flex-col items-center justify-center h-full w-full'>
-            <p>{day.getDate()}</p>
-            {dailySessions.length > 0 && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="absolute bottom-2 flex space-x-1">
-                                {skillLevelsOnDay.map((level) => (
-                                    <div
-                                        key={level}
-                                        className={cn("h-1.5 w-1.5 rounded-full", skillLevelColors[level as keyof typeof skillLevelColors])}
-                                    />
-                                ))}
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>{dailySessions.length} session{dailySessions.length > 1 ? 's' : ''}</p>
-                            <ul className="text-xs list-disc list-inside">
-                                {skillLevelsOnDay.map(level => <li key={level}>{level}</li>)}
-                            </ul>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
-    );
-  };
   
   return (
       <Calendar
@@ -117,9 +74,6 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange, 
             day: "h-14 w-full p-0 font-normal aria-selected:opacity-100",
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
             day_today: "font-bold text-primary",
-        }}
-        components={{
-          DayContent: DayContent,
         }}
       />
   );
