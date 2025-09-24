@@ -111,37 +111,41 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     let success = false;
 
     setSessions(prev => prev.map(session => {
-        if (session.id === sessionId) {
-            const sessionDateTime = new Date(`${getSafeDate(session.date).toISOString().split('T')[0]}T${session.startTime}`);
-            const now = new Date();
-            const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-            if (hoursUntilSession <= 12) {
-                return session;
-            }
-            
-            const isUserRegistered = (session.players as User[]).some(p => p.id === currentUser.id);
-
-            if (!isUserRegistered) {
-                return session; // User not in this session, do nothing
-            }
-
-            let newPlayers = (session.players as User[]).filter(p => p.id !== currentUser.id);
-            let newWaitlist = [...(session.waitlist as User[])];
-            
-            // If the session was full and there's a waitlist, promote the first person.
-            if (session.players.length >= session.maxPlayers && newWaitlist.length > 0) {
-              const nextPlayer = newWaitlist.shift();
-              if(nextPlayer) {
-                newPlayers.push(nextPlayer);
-                console.log(`User ${nextPlayer.name} moved from waitlist to session ${sessionId}.`);
-              }
-            }
-            
-            success = true;
-            return { ...session, players: newPlayers, waitlist: newWaitlist };
+        if (session.id !== sessionId) {
+            return session;
         }
-        return session;
+
+        const sessionDateTime = new Date(`${getSafeDate(session.date).toISOString().split('T')[0]}T${session.startTime}`);
+        const now = new Date();
+        const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+        if (hoursUntilSession <= 12) {
+            // Can't cancel, return original session
+            return session;
+        }
+        
+        const isUserRegistered = (session.players as User[]).some(p => p.id === currentUser.id);
+
+        if (!isUserRegistered) {
+            // User not in this session, do nothing
+            return session; 
+        }
+
+        // User is registered, proceed with cancellation
+        success = true;
+        let newPlayers = (session.players as User[]).filter(p => p.id !== currentUser.id);
+        let newWaitlist = [...(session.waitlist as User[])];
+        
+        // If there's a waitlist, promote the first person.
+        if (newWaitlist.length > 0) {
+          const nextPlayer = newWaitlist.shift();
+          if(nextPlayer) {
+            newPlayers.push(nextPlayer);
+            console.log(`User ${nextPlayer.name} moved from waitlist to session ${sessionId}.`);
+          }
+        }
+        
+        return { ...session, players: newPlayers, waitlist: newWaitlist };
     }));
     
     return success;
