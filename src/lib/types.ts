@@ -52,6 +52,7 @@ export interface Session {
   imageUrl?: string;
   messages: Message[];
   createdBy?: string; // Admin User ID
+  momentImageUrl?: string;
 }
 
 export interface Announcement {
