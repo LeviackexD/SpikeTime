@@ -118,7 +118,7 @@ function AppHeader() {
       isAnnouncementsPage ? 'bg-brown/80 text-cream border-b border-brown-dark' : 'border-b bg-background/80'
       )}>
       <div className="flex items-center gap-4">
-        {isMobile ? <MobileNav /> : <InvernessEaglesLogo className="h-8 w-auto" />}
+        {isMobile ? <MobileNav /> : <Link href="/"><InvernessEaglesLogo className="h-8 w-auto" /></Link>}
       </div>
 
       <DesktopNav />
@@ -149,10 +149,11 @@ function DesktopNav() {
             return null;
           }
           
-          const linkContent = (
+          return (
             <Link
               key={item.href}
               href={item.href}
+              prefetch={true}
               className={cn(
                 'transition-colors',
                 isAnnouncementsPage 
@@ -166,8 +167,6 @@ function DesktopNav() {
               {item.label}
             </Link>
           );
-
-          return linkContent;
         })}
       </TooltipProvider>
     </nav>
@@ -199,7 +198,9 @@ function MobileNav() {
         <SheetContent side="left" className="flex flex-col p-0 bg-primary text-primary-foreground border-primary-foreground/20">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <div className="p-4 border-b border-primary-foreground/20">
-            <InvernessEaglesLogo className="h-8 w-auto" />
+            <Link href="/" onClick={() => setIsSheetOpen(false)}>
+              <InvernessEaglesLogo className="h-8 w-auto" />
+            </Link>
           </div>
           <nav className="grid gap-2 p-4 text-lg font-medium">
             {navItems.map((item) => {
@@ -210,6 +211,7 @@ function MobileNav() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={true}
                   onClick={() => setIsSheetOpen(false)}
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-primary-foreground/80 transition-all hover:text-primary-foreground',
