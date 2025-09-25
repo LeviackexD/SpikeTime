@@ -252,9 +252,9 @@ export default function AdminPage() {
     setIsViewModalOpen(true);
   };
 
-  const confirmDeleteSession = async () => {
+  const confirmDeleteSession = () => {
     if (sessionToDelete) {
-      await deleteSession(sessionToDelete.id);
+      deleteSession(sessionToDelete.id);
       setSessionToDelete(null);
       setIsDeleteSessionDialogOpen(false);
     }
@@ -281,9 +281,9 @@ export default function AdminPage() {
     setIsDeleteAnnouncementDialogOpen(true);
   };
 
-  const confirmDeleteAnnouncement = async () => {
+  const confirmDeleteAnnouncement = () => {
     if (announcementToDelete) {
-      await deleteAnnouncement(announcementToDelete.id);
+      deleteAnnouncement(announcementToDelete.id);
       setAnnouncementToDelete(null);
       setIsDeleteAnnouncementDialogOpen(false);
     }
@@ -508,5 +508,3 @@ export default function AdminPage() {
     </>
   );
 }
-
-    

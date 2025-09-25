@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -115,7 +114,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
-        fetchSessions();
     }
   };
   
@@ -131,7 +129,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
         toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success", duration: 1500});
-        fetchSessions();
      }
   };
   
@@ -257,7 +254,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
-        fetchAnnouncements();
     }
   };
 
@@ -269,7 +265,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
-        fetchAnnouncements();
     }
   };
 
@@ -324,5 +319,4 @@ export const useSessions = () => {
     
 
     
-
 
