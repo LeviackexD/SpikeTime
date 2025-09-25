@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/context/auth-context';
+import { supabase } from '@/lib/supabase-client';
 
 
 interface EditProfileModalProps {
@@ -71,16 +72,47 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                 return;
             }
             setIsUploading(true);
-            // This is a mock upload. In a real app, you'd upload to a service like Firebase Storage.
-            // For now, we'll use FileReader to get a data URL.
-            setTimeout(() => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                  setFormData(prev => prev ? { ...prev, avatarUrl: reader.result as string } : null);
-                  setIsUploading(false);
-              };
-              reader.readAsDataURL(file);
-            }, 1500);
+
+            const filePath = `public/${user.id}-${Date.now()}`;
+            
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true, // Overwrite existing file with the same name
+                });
+
+            if (uploadError) {
+                toast({
+                    title: "Upload Failed",
+                    description: "Could not upload your new avatar.",
+                    variant: "destructive"
+                });
+                console.error(uploadError);
+                setIsUploading(false);
+                return;
+            }
+
+            const { data: publicUrlData } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+            
+            if (!publicUrlData) {
+                 toast({
+                    title: "Upload Failed",
+                    description: "Could not get the public URL for the avatar.",
+                    variant: "destructive"
+                });
+                setIsUploading(false);
+                return;
+            }
+            
+            setFormData(prev => prev ? { ...prev, avatarUrl: publicUrlData.publicUrl } : null);
+            setIsUploading(false);
+            toast({
+                title: t('toasts.avatarUpdatedTitle'),
+                description: t('toasts.avatarUpdatedDescription'),
+            });
         }
     };
 
