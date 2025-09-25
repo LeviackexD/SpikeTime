@@ -21,8 +21,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange }
   const sessionsByDate = React.useMemo(() => {
     const dateSet = new Set<string>();
     sessions.forEach(session => {
-        // Use toYYYYMMDD on the UTC date to get a consistent date string
-        dateSet.add(toYYYYMMDD(getSafeDate(session.start_datetime)));
+      dateSet.add(toYYYYMMDD(getSafeDate(session.date)));
     });
     return dateSet;
   }, [sessions]);
@@ -30,13 +29,13 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange }
   
   return (
       <Calendar
+        key={JSON.stringify(sessions)}
         mode="single"
         selected={selectedDate}
         onSelect={onDateChange}
         className="p-0"
         modifiers={{
             hasSessions: (day) => {
-                // Also use toYYYYMMDD here for comparison
                 return sessionsByDate.has(toYYYYMMDD(day));
             }
         }}

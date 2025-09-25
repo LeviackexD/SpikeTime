@@ -7,13 +7,12 @@ import { useAuth } from './auth-context';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
 import { getSafeDate } from '@/lib/utils';
-import { fromZonedTime } from 'date-fns-tz';
 
 interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
   loading: boolean;
-  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'createdBy' | 'start_datetime' | 'end_datetime'> & { date: string, startTime: string, endTime: string }) => Promise<void>;
+  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'createdBy'>) => Promise<void>;
   updateSession: (session: Partial<Session> & { id: string }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<boolean>;

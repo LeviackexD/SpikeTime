@@ -41,8 +41,9 @@ export interface Message {
 
 export interface Session {
   id: string;
-  start_datetime: string; // ISO 8601 string in UTC
-  end_datetime: string; // ISO 8601 string in UTC
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
   location: string;
   level: SkillLevel;
   players: Partial<User>[];

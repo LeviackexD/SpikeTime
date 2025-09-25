@@ -17,8 +17,7 @@ import { useLanguage } from '@/context/language-context';
 import { Separator } from '@/components/ui/separator';
 import SessionNoteCard from '@/components/sessions/session-note-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getSafeDate, toYYYYMMDD, formatDateTimeLocal } from '@/lib/utils';
-import { isSameDay } from 'date-fns';
+import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
 
 const SessionCalendar = dynamic(() => import('@/components/dashboard/session-calendar'), {
   loading: () => <Skeleton className="w-full h-[300px]" />,
@@ -42,12 +41,15 @@ const CalendarPage: NextPage = () => {
     return null; // or a loading indicator
   }
 
-  const filteredSessions = sessions.filter(session => {
-    const sessionDate = getSafeDate(session.start_datetime);
-    return isSameDay(sessionDate, selectedDate);
-  }).sort((a,b) => getSafeDate(a.start_datetime).getTime() - getSafeDate(b.start_datetime).getTime());
+  const filteredSessions = sessions.filter(session => toYYYYMMDD(getSafeDate(session.date)) === toYYYYMMDD(selectedDate))
+      .sort((a,b) => a.startTime.localeCompare(b.startTime));
   
-  const formattedDate = formatDateTimeLocal(selectedDate, 'PPP');
+  const formattedDate = selectedDate.toLocaleDateString(locale, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -96,6 +98,7 @@ const CalendarPage: NextPage = () => {
                 ) : (
                     <div className="flex flex-col items-center justify-center text-center p-12 rounded-lg bg-cream/50 border border-dashed animate-fade-in">
                         <p className="text-brown-dark font-semibold">{t('calendarPage.noSessionsPinned')}</p>
+
                     </div>
                 )}
               </div>

@@ -27,8 +27,7 @@ import {
 } from '@/components/ui/select';
 import type { Session, SkillLevel } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
-import { getSafeDate, toYYYYMMDD, toHHMM } from '@/lib/utils';
-import { fromZonedTime } from 'date-fns-tz';
+import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
 
 type FormData = {
   date: string;
@@ -66,12 +65,10 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     React.useEffect(() => {
         if (isOpen) {
             if (session) {
-                const startDate = getSafeDate(session.start_datetime);
-                const endDate = getSafeDate(session.end_datetime);
                 setFormData({
-                    date: toYYYYMMDD(startDate),
-                    startTime: toHHMM(startDate),
-                    endTime: toHHMM(endDate),
+                    date: session.date,
+                    startTime: session.startTime,
+                    endTime: session.endTime,
                     location: session.location,
                     level: session.level,
                     maxPlayers: session.maxPlayers,
@@ -97,24 +94,10 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const startUTC = fromZonedTime(`${formData.date}T${formData.startTime}`, userTimeZone);
-        const endUTC = fromZonedTime(`${formData.date}T${formData.endTime}`, userTimeZone);
-        
-        let dataToSave: any = { 
-            location: formData.location,
-            level: formData.level,
-            maxPlayers: formData.maxPlayers,
-            imageUrl: formData.imageUrl,
-            start_datetime: startUTC.toISOString(),
-            end_datetime: endUTC.toISOString(),
-        };
-        
+        let dataToSave: any = { ...formData };
         if (session) {
             dataToSave.id = session.id;
         }
-        
         onSave(dataToSave);
     }
     

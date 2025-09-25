@@ -14,7 +14,7 @@ import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
-import { cn, formatDateTimeLocal, getSafeDate } from '@/lib/utils';
+import { cn, formatTime, getSafeDate } from '@/lib/utils';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
@@ -51,7 +51,7 @@ export default function SessionNoteCard({
   const isRegistered = players.some(p => p.id === currentUser.id);
   const isOnWaitlist = waitlist.some(p => p.id === currentUser.id);
 
-  const sessionDateTime = getSafeDate(session.start_datetime);
+  const sessionDateTime = getSafeDate(`${session.date}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
@@ -177,7 +177,7 @@ export default function SessionNoteCard({
             <div className="space-y-2 text-sm border-t border-dashed border-brown-light/30 pt-3">
                 <div className="flex items-center gap-2 text-brown-dark">
                     <Clock className="h-4 w-4" />
-                    <span className="font-semibold">{formatDateTimeLocal(session.start_datetime, 'p')} - {formatDateTimeLocal(session.end_datetime, 'p')}</span>
+                    <span className="font-semibold">{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-brown-dark">
                     <MapPin className="h-4 w-4" />

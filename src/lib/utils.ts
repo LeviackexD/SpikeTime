@@ -1,7 +1,5 @@
-import { clsx, type ClassValue } from "clsx"
+import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { format as formatTz, utcToZonedTime } from 'date-fns-tz';
-
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -11,25 +9,25 @@ export const getSafeDate = (date: string | Date): Date => {
   if (date instanceof Date) {
     return date;
   }
-  // This handles ISO strings from the DB (which are in UTC)
-  // and creates a Date object representing that same moment in time.
+  // This handles ISO strings from the DB (which might be just 'YYYY-MM-DD')
+  // By appending T00:00:00, we ensure it's parsed as local time, not UTC.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return new Date(`${date}T00:00:00`);
+  }
   return new Date(date);
 };
 
-export const formatDateTimeLocal = (date: Date | string, formatString: string) => {
-    const safeDate = getSafeDate(date);
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const zonedDate = utcToZonedTime(safeDate, timeZone);
-    return formatTz(zonedDate, formatString, { timeZone });
-};
+export const formatTime = (time: string) => {
+  const [hours, minutes] = time.split(':');
+  const date = new Date();
+  date.setHours(parseInt(hours, 10));
+  date.setMinutes(parseInt(minutes, 10));
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+}
 
 export const toYYYYMMDD = (date: Date): string => {
-  // Use local date parts for input fields to match user's expectation
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+  return date.toISOString().split('T')[0];
+}
 
 export const toHHMM = (date: Date): string => {
     const hours = String(date.getHours()).padStart(2, '0');
