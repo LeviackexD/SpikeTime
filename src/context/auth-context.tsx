@@ -4,8 +4,9 @@
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { User } from '@/lib/types';
-import { mockUsers, currentUser as mockCurrentUser } from '@/lib/mock-data';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
+import { supabase } from '@/lib/supabase-client';
+import { AuthChangeEvent, Session as SupabaseSession } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -25,13 +26,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
   React.useEffect(() => {
-    // Simulate fetching user data
-    setTimeout(() => {
-      setUser(mockCurrentUser);
-      setLoading(false);
-    }, 500);
-  }, []);
-  
+    setLoading(true);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: SupabaseSession | null) => {
+        if (session && session.user) {
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            if (error) {
+                console.error('Error fetching profile:', error);
+                setUser(null);
+            } else {
+                 // Map Supabase profile to app's User type
+                const appUser: User = {
+                    id: profile.id,
+                    name: profile.name,
+                    username: profile.username,
+                    email: session.user.email!,
+                    avatarUrl: profile.avatar_url,
+                    role: profile.role,
+                    skillLevel: profile.skill_level,
+                    favoritePosition: profile.favorite_position,
+                    stats: { // Mock stats for now
+                        sessionsPlayed: profile.sessions_played || 0,
+                        attendanceRate: profile.attendance_rate || 90,
+                    }
+                };
+                setUser(appUser);
+            }
+        } else {
+            setUser(null);
+        }
+        setLoading(false);
+    });
+
+    return () => {
+        subscription.unsubscribe();
+    };
+}, []);
+
   React.useEffect(() => {
     const isAuthPage = pathname === '/login' || pathname === '/register';
     if (loading) return;
@@ -44,31 +80,73 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user, loading, pathname, router]);
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    // Mock sign-in logic
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser) {
-        setUser(foundUser);
-        return true;
-    }
-    return false;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return !error;
   };
 
   const signUpWithEmail = async (email: string, pass: string, data: Omit<User, 'id' | 'email' | 'role' | 'avatarUrl' | 'username' | 'stats'>): Promise<boolean> => {
-    // Mock sign-up logic. In a real app, this would create a new user.
-    console.log("Mock sign up for:", email, data);
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+            data: {
+                name: data.name,
+                avatar_url: `https://i.pravatar.cc/150?u=${email}`, // default avatar
+                skill_level: data.skillLevel,
+                favorite_position: data.favoritePosition,
+            }
+        }
+    });
+
+    if (authError || !authData.user) {
+        console.error("Supabase sign up error:", authError);
+        return false;
+    }
+
+    // Supabase automatically creates the user in `auth.users`, but we need to create the profile in `public.profiles`.
+    // A Supabase Function (Trigger) is the best way to do this automatically. For now, we are doing it on the client.
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+            id: authData.user.id,
+            name: data.name,
+            username: email.split('@')[0],
+            avatar_url: `https://i.pravatar.cc/150?u=${email}`,
+            skill_level: data.skillLevel,
+            favorite_position: data.favoritePosition,
+        });
+
+    if (profileError) {
+        console.error("Error creating profile:", profileError);
+        // Here you might want to delete the created user if profile creation fails.
+        return false;
+    }
+
     return true;
   };
 
   const logout = async (): Promise<void> => {
+    await supabase.auth.signOut();
     setUser(null);
     router.push('/login');
   };
   
   const updateUser = async (updatedData: Partial<User>): Promise<boolean> => {
       if (user) {
-        setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
-        // In a real app, you would also update the source of truth (e.g., mockUsers array or DB)
-        return true;
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                name: updatedData.name,
+                skill_level: updatedData.skillLevel,
+                favorite_position: updatedData.favoritePosition,
+                avatar_url: updatedData.avatarUrl,
+            })
+            .eq('id', user.id);
+
+        if (!error) {
+             setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
+        }
+        return !error;
       }
       return false;
   };
@@ -98,3 +176,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    
