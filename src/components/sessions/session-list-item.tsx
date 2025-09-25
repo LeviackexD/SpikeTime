@@ -288,7 +288,7 @@ export default function SessionListItem({
           </CardHeader>
 
           <CardContent className="p-4 flex-grow space-y-4 bg-card">
-              <div className="space-y-1 text-sm text-muted-foreground">
+              <div className="space-y-1 text-base text-muted-foreground">
                  <p className="font-medium text-foreground">{sessionDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                  <p>{formatTime(session.startTime)} - {formatTime(session.endTime)}</p>
                  <p>{session.location}</p>
