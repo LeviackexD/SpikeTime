@@ -28,7 +28,6 @@ import EditProfileModal from '@/components/profile/edit-profile-modal';
 import type { User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import MonthlyActivityChart from '@/components/profile/monthly-activity-chart';
 
 const StatCard = ({ icon: Icon, label, value, badge }: { icon: React.ElementType, label: string, value: string | React.ReactNode, badge?: boolean }) => (
     <Card className="flex flex-col items-center justify-center p-4 text-center transition-all hover:shadow-lg hover:-translate-y-1">
@@ -96,21 +95,6 @@ export default function ProfilePage() {
                   <StatCard icon={Target} label={t('profilePage.favoritePosition')} value={t(`positions.${currentUser.favoritePosition}`)} badge />
                   <StatCard icon={BarChart} label={t('profilePage.sessionsPlayed')} value={currentUser.stats.sessionsPlayed} />
                   <StatCard icon={CheckCircle} label={t('profilePage.attendanceRate')} value={`${currentUser.stats.attendanceRate}%`} />
-              </CardContent>
-            </Card>
-            
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="font-headline flex items-center gap-2">
-                  <LineChart className="h-6 w-6 text-primary" />
-                  {t('profilePage.monthlyActivity')}
-                </CardTitle>
-                <CardDescription>
-                    {t('profilePage.monthlyActivitySubtitle')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <MonthlyActivityChart />
               </CardContent>
             </Card>
           </div>
