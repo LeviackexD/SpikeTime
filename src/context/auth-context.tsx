@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -87,7 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else if (!user && !isAuthPage) {
         router.push('/login');
     }
-  }, [user, loading, pathname, router]);
+  }, [user, loading, pathname]);
 
   const signInWithEmail = async (email: string, pass: string): Promise<void> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
