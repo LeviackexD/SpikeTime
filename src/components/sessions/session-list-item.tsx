@@ -1,4 +1,5 @@
 
+
 /**
  * @fileoverview A card component for displaying a summary of a single session in a list.
  * Used on the main dashboard to show upcoming and available sessions.
@@ -171,6 +172,7 @@ export default function SessionListItem({
   };
 
   const renderActionButtons = () => {
+    // 1. User is registered
     if (isRegistered) {
       return (
         <Button
@@ -186,6 +188,7 @@ export default function SessionListItem({
       );
     }
   
+    // 2. User is on the waitlist
     if (isOnWaitlist) {
       return (
         <div className="w-full flex flex-col gap-2">
@@ -202,20 +205,28 @@ export default function SessionListItem({
       );
     }
   
-    if (!isFull) {
-      return (
-        <Button className="w-full" onClick={handleBook}>
-            {t('modals.sessionDetails.bookSpot')}
-        </Button>
-      );
-    } else {
-      return (
-        <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          {t('modals.sessionDetails.joinWaitlist')}
-        </Button>
-      );
+    // 3. User is not involved, and session is full
+    if (isFull) {
+        return (
+            <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              {t('modals.sessionDetails.joinWaitlist')}
+            </Button>
+        );
     }
+
+    // 4. User is not involved, session has space
+    return (
+        <div className="w-full flex flex-col gap-2">
+            <Button className="w-full" onClick={handleBook}>
+                {t('modals.sessionDetails.bookSpot')}
+            </Button>
+            <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                {t('modals.sessionDetails.joinWaitlist')}
+            </Button>
+        </div>
+    );
   };
 
   const mainAction = isRegistered ? 'cancel' : isFull ? 'waitlist' : 'book';
@@ -320,12 +331,6 @@ export default function SessionListItem({
 
           <CardFooter className="p-4 pt-0 mt-auto flex flex-col gap-2 bg-card">
             {renderActionButtons()}
-            {mainAction === 'book' && !isFull && (
-                <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    {t('modals.sessionDetails.joinWaitlist')}
-                </Button>
-            )}
           </CardFooter>
         </Card>
       </div>
