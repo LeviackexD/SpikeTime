@@ -43,20 +43,25 @@ const ImageViewer = ({ user, onClose }: { user: Partial<User>; onClose: () => vo
       className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center animate-fade-in"
       onClick={onClose}
     >
-      <div className="relative w-80 h-80 sm:w-96 sm:h-96">
-        <Image
-          src={user.avatarUrl || '/default-avatar.png'}
-          alt={user.name || 'Player avatar'}
-          fill
-          className="rounded-full object-cover border-4 border-white shadow-2xl"
-          sizes="(max-width: 768px) 80vw, 33vw"
-        />
-        <p className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-white text-lg font-bold">{user.name}</p>
+      <div 
+        className="relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative w-80 h-80 sm:w-96 sm:h-96">
+          <Image
+            src={user.avatarUrl || '/default-avatar.png'}
+            alt={user.name || 'Player avatar'}
+            fill
+            className="rounded-full object-cover border-4 border-white shadow-2xl"
+            sizes="(max-width: 768px) 80vw, 33vw"
+          />
+        </div>
+        <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-white text-lg font-bold text-center w-full">{user.name}</p>
         <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="absolute top-0 right-0 text-white hover:bg-white/20 hover:text-white"
+            className="absolute -top-10 right-0 text-white hover:bg-white/20 hover:text-white"
         >
             <X className="h-6 w-6" />
         </Button>
