@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
-import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut, Camera, Loader2 } from 'lucide-react';
+import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
@@ -22,8 +22,6 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import GenerateTeamsButton from './generate-teams-button';
 import { cn, formatTime, getSafeDate } from '@/lib/utils';
 import Image from 'next/image';
-import { Input } from '../ui/input';
-import CreateMemoryModal from './create-memory-modal';
 
 
 interface SessionDetailsModalProps {
@@ -48,7 +46,6 @@ export default function SessionDetailsModal({
   const { user: currentUser } = useAuth();
   const { t, locale } = useLanguage();
   const { toast } = useToast();
-  const [isMemoryModalOpen, setIsMemoryModalOpen] = React.useState(false);
   
   if (!session || !currentUser) return null;
 
@@ -63,11 +60,9 @@ export default function SessionDetailsModal({
   const isFull = spotsFilled >= session.maxPlayers;
   const canGenerateTeams = spotsFilled >= 2;
 
-  const sessionEndDateTime = getSafeDate(`${session.date}T${session.endTime}`);
   const sessionStartDateTime = getSafeDate(`${session.date}T${session.startTime}`);
   const now = new Date();
   
-  const hasSessionEnded = now > sessionEndDateTime;
   const canCancel = (sessionStartDateTime.getTime() - now.getTime()) / (1000 * 60 * 60) > 6;
   
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {
@@ -116,17 +111,6 @@ export default function SessionDetailsModal({
   }
 
   const renderActionButtons = () => {
-    if (hasSessionEnded) {
-        if (!session.momentImageUrl) {
-            return (
-                <Button onClick={() => setIsMemoryModalOpen(true)}>
-                    <Camera className="mr-2 h-4 w-4" /> {t('modals.sessionDetails.uploadMoment')}
-                </Button>
-            );
-        }
-        return null; // Don't show any action buttons if a moment is already uploaded
-    }
-      
     if (isRegistered) {
       return (
         <Button
@@ -267,14 +251,6 @@ export default function SessionDetailsModal({
               )}
             </div>
             
-            {session.momentImageUrl && (
-                <div className="pt-4">
-                    <h3 className="font-semibold text-center mb-2">{t('modals.sessionDetails.sessionMoment')}</h3>
-                    <div className="relative aspect-video w-full rounded-lg overflow-hidden">
-                        <Image src={session.momentImageUrl} alt={t('modals.sessionDetails.sessionMoment')} fill style={{ objectFit: 'cover' }} />
-                    </div>
-                </div>
-            )}
           </TooltipProvider>
 
         </div>
@@ -288,13 +264,6 @@ export default function SessionDetailsModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-     {isMemoryModalOpen && (
-        <CreateMemoryModal 
-            isOpen={isMemoryModalOpen}
-            onClose={() => setIsMemoryModalOpen(false)}
-            session={session}
-        />
-     )}
     </>
   );
 }

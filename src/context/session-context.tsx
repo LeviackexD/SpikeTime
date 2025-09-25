@@ -20,7 +20,6 @@ interface SessionContextType {
   joinWaitlist: (sessionId: string) => Promise<boolean>;
   leaveWaitlist: (sessionId: string) => Promise<boolean>;
   addMessage: (sessionId: string, message: Omit<Message, 'id' | 'sender' | 'timestamp'>) => Promise<void>;
-  addMomentToSession: (sessionId: string, momentImageUrl: string) => Promise<boolean>;
   createAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
   updateAnnouncement: (announcement: Omit<Announcement, 'date'> & { id: string }) => Promise<void>;
   deleteAnnouncement: (announcementId: string) => Promise<void>;
@@ -42,69 +41,40 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
-      .select('*')
-      .gte('endTime', twoHoursAgo.toTimeString().slice(0, 8)) // Check against end time
-      .order('date', { ascending: false });
+      .select('*, players:profiles(*), waitlist:profiles(*)')
+      .gte('date', twoHoursAgo.toISOString().split('T')[0]); // Only fetch sessions from today onwards roughly
 
     if (sessionError) {
       console.error("Error fetching sessions:", sessionError);
       setSessions([]); // Clear sessions on error
       return;
     }
-
-    if (!sessionData || sessionData.length === 0) {
-      setSessions([]);
-      return;
-    }
     
-    const sessionIds = sessionData.map(s => s.id);
-
-    // 2. Fetch all players for the active sessions
-    const { data: playersData, error: playersError } = await supabase
-      .from('session_players')
-      .select('session_id, profiles(*)')
-      .in('session_id', sessionIds);
-
-    if (playersError) {
-      console.error("Error fetching session players:", playersError);
-      // Continue without player data if this fails
-    }
-
-    // 3. Fetch all waitlisted users for the active sessions
-    const { data: waitlistData, error: waitlistError } = await supabase
-      .from('session_waitlist')
-      .select('session_id, profiles(*)')
-      .in('session_id', sessionIds);
-      
-    if (waitlistError) {
-        console.error("Error fetching session waitlist:", waitlistError);
-        // Continue without waitlist data if this fails
-    }
-
-    // 4. Combine the data on the client side
-    const sessionsWithData: Session[] = sessionData.map((session: any) => {
-        const relatedPlayers = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) as User[] || [];
-        const relatedWaitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) as User[] || [];
-        return {
-            id: session.id,
-            date: session.date,
-            startTime: session.startTime,
-            endTime: session.endTime,
-            location: session.location,
-            level: session.level,
-            maxPlayers: session.maxPlayers,
-            imageUrl: session.imageUrl,
-            momentImageUrl: session.momentImageUrl,
-            createdBy: session.createdBy,
-            players: relatedPlayers,
-            waitlist: relatedWaitlist,
-            messages: [], // Keep messages property
-        };
+    // Manual filter for time, as Supabase doesn't directly support datetime filtering well with separate date/time columns
+    const filteredSessionData = sessionData.filter(session => {
+        const sessionEndDateTime = getSafeDate(`${session.date}T${session.endTime}`);
+        return sessionEndDateTime >= twoHoursAgo;
     });
 
+
+    // Map the nested data correctly
+    const sessionsWithData: Session[] = filteredSessionData.map((session: any) => ({
+      id: session.id,
+      date: session.date,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      location: session.location,
+      level: session.level,
+      maxPlayers: session.maxPlayers,
+      imageUrl: session.imageUrl,
+      createdBy: session.createdBy,
+      players: session.session_players?.map((sp: any) => sp.profiles) || [],
+      waitlist: session.session_waitlist?.map((sw: any) => sw.profiles) || [],
+      messages: [], // Keep messages property
+    }));
+    
     setSessions(sessionsWithData);
   }, []);
-
 
   const fetchAnnouncements = React.useCallback(async () => {
       const { data, error } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
@@ -281,19 +251,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
     }
   };
-
-  const addMomentToSession = async (sessionId: string, momentImageUrl: string): Promise<boolean> => {
-    const { error } = await supabase
-      .from('sessions')
-      .update({ momentImageUrl })
-      .eq('id', sessionId);
-
-    if (error) {
-      console.error('Error adding moment to session:', error);
-      return false;
-    }
-    return true;
-  };
   
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {};
 
@@ -309,7 +266,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         joinWaitlist,
         leaveWaitlist,
         addMessage,
-        addMomentToSession,
         createAnnouncement,
         updateAnnouncement,
         deleteAnnouncement,
