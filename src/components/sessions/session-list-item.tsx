@@ -126,6 +126,7 @@ export default function SessionListItem({
   const { day, month } = formatDate(sessionDate);
 
   const renderActionButtons = () => {
+    // 1. User is registered for the session
     if (isRegistered) {
       return (
         <Button
@@ -140,15 +141,39 @@ export default function SessionListItem({
         </Button>
       );
     }
+  
+    // 2. User is on the waitlist
     if (isOnWaitlist) {
       return (
-        <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
-          <LogOut className="mr-2 h-4 w-4" />
-          {t('modals.sessionDetails.leaveWaitlist')}
-        </Button>
+        <div className="w-full flex flex-col gap-2">
+          {!isFull && (
+            <Button className="w-full" onClick={handleBook}>
+              {t('modals.sessionDetails.bookSpot')}
+            </Button>
+          )}
+          <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
+            <LogOut className="mr-2 h-4 w-4" />
+            {t('modals.sessionDetails.leaveWaitlist')}
+          </Button>
+        </div>
       );
     }
-    if (isFull) {
+  
+    // 3. User is not registered or on the waitlist
+    if (!isFull) {
+      return (
+        <div className="w-full flex flex-col gap-2">
+          <Button className="w-full" onClick={handleBook}>
+            {t('modals.sessionDetails.bookSpot')}
+          </Button>
+          <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            {t('modals.sessionDetails.joinWaitlist')}
+          </Button>
+        </div>
+      );
+    } else {
+      // Session is full, and user is not involved
       return (
         <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
           <UserPlus className="mr-2 h-4 w-4" />
@@ -156,17 +181,6 @@ export default function SessionListItem({
         </Button>
       );
     }
-    return (
-      <div className="w-full flex flex-col gap-2">
-        <Button className="w-full" onClick={handleBook}>
-          {t('modals.sessionDetails.bookSpot')}
-        </Button>
-        <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          {t('modals.sessionDetails.joinWaitlist')}
-        </Button>
-      </div>
-    );
   };
 
   return (
@@ -246,5 +260,3 @@ export default function SessionListItem({
     </Card>
   );
 }
-
-    

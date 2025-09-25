@@ -121,6 +121,7 @@ export default function SessionDetailsModal({
   }
 
   const renderActionButtons = () => {
+    // 1. User is registered for the session
     if (isRegistered) {
       return (
         <Button
@@ -133,15 +134,39 @@ export default function SessionDetailsModal({
         </Button>
       );
     }
+  
+    // 2. User is on the waitlist
     if (isOnWaitlist) {
       return (
-        <Button variant="secondary" onClick={leaveWaitlistAction}>
-          <LogOut className="mr-2 h-4 w-4" />
-          {t('modals.sessionDetails.leaveWaitlist')}
-        </Button>
+        <>
+          {!isFull && (
+            <Button onClick={bookAction}>
+              {t('modals.sessionDetails.bookSpot')}
+            </Button>
+          )}
+          <Button variant="secondary" onClick={leaveWaitlistAction}>
+            <LogOut className="mr-2 h-4 w-4" />
+            {t('modals.sessionDetails.leaveWaitlist')}
+          </Button>
+        </>
       );
     }
-    if (isFull) {
+  
+    // 3. User is not registered or on the waitlist
+    if (!isFull) {
+      return (
+        <>
+          <Button onClick={bookAction}>
+            {t('modals.sessionDetails.bookSpot')}
+          </Button>
+          <Button variant="secondary" onClick={joinWaitlistAction}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            {t('modals.sessionDetails.joinWaitlist')}
+          </Button>
+        </>
+      );
+    } else {
+      // Session is full, and user is not involved
       return (
         <Button variant="secondary" onClick={joinWaitlistAction}>
           <UserPlus className="mr-2 h-4 w-4" />
@@ -149,17 +174,6 @@ export default function SessionDetailsModal({
         </Button>
       );
     }
-    return (
-      <>
-        <Button onClick={bookAction}>
-          {t('modals.sessionDetails.bookSpot')}
-        </Button>
-        <Button variant="secondary" onClick={joinWaitlistAction}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          {t('modals.sessionDetails.joinWaitlist')}
-        </Button>
-      </>
-    );
   };
 
   return (
@@ -264,5 +278,3 @@ export default function SessionDetailsModal({
     </Dialog>
   );
 }
-
-    

@@ -87,6 +87,7 @@ export default function SessionNoteCard({
   };
 
   const renderActionButtons = () => {
+    // 1. User is registered for the session
     if (isRegistered) {
       return (
         <Button
@@ -101,15 +102,39 @@ export default function SessionNoteCard({
         </Button>
       );
     }
+  
+    // 2. User is on the waitlist
     if (isOnWaitlist) {
       return (
-        <Button size="sm" variant="secondary" onClick={handleLeaveWaitlist}>
-          <LogOut className="mr-2 h-4 w-4" />
-          {t('modals.sessionDetails.leaveWaitlist')}
-        </Button>
+        <div className="w-full flex flex-col gap-2">
+          {!isFull && (
+            <Button size="sm" onClick={handleBook} className="bg-brown text-cream button-hover">
+              {t('modals.sessionDetails.bookSpot')}
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={handleLeaveWaitlist}>
+            <LogOut className="mr-2 h-4 w-4" />
+            {t('modals.sessionDetails.leaveWaitlist')}
+          </Button>
+        </div>
       );
     }
-    if (isFull) {
+  
+    // 3. User is not registered or on the waitlist
+    if (!isFull) {
+      return (
+        <>
+          <Button size="sm" onClick={handleBook} className="bg-brown text-cream button-hover">
+            {t('modals.sessionDetails.bookSpot')}
+          </Button>
+          <Button size="sm" variant="outline" className="mt-2" onClick={handleJoinWaitlist}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            {t('modals.sessionDetails.joinWaitlist')}
+          </Button>
+        </>
+      );
+    } else {
+      // Session is full, and user is not involved
       return (
         <Button
           size="sm"
@@ -121,17 +146,6 @@ export default function SessionNoteCard({
         </Button>
       );
     }
-    return (
-       <>
-        <Button size="sm" onClick={handleBook} className="bg-brown text-cream button-hover">
-          {t('modals.sessionDetails.bookSpot')}
-        </Button>
-         <Button size="sm" variant="outline" className="mt-2" onClick={handleJoinWaitlist}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          {t('modals.sessionDetails.joinWaitlist')}
-        </Button>
-      </>
-    );
   };
 
   return (
@@ -180,5 +194,3 @@ export default function SessionNoteCard({
     </div>
   );
 }
-
-    
