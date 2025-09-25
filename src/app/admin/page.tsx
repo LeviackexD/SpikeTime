@@ -45,13 +45,23 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 // --- Helper Functions ---
 
 const formatDate = (date: string | Date, locale: string) => {
-  return getSafeDate(date).toLocaleDateString(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
+  const d = getSafeDate(date);
+  const year = d.getUTCFullYear();
+  const month = d.getUTCMonth(); // 0-11
+  const day = d.getUTCDate();
+  
+  // We manually build the date string to avoid timezone issues with toLocaleDateString
+  // This is a simplified approach. For more complex localization, a library like date-fns-tz would be needed.
+  if (locale === 'es') {
+      const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      return `${day} de ${monthNames[month]} de ${year}`;
+  }
+  
+  // Default to English format
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return `${monthNames[month]} ${day}, ${year}`;
 };
+
 
 // --- Sub-components for Mobile View ---
 
@@ -506,5 +516,7 @@ export default function AdminPage() {
     </>
   );
 }
+
+    
 
     
