@@ -63,7 +63,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && user) {
             const file = e.target.files[0];
-            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
                 toast({
                     title: t('toasts.imageTooLargeTitle'),
                     description: t('toasts.imageTooLargeDescription'),
