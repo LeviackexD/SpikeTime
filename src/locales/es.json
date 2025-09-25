@@ -53,10 +53,7 @@
         "selectChatButton": "Seleccionar Chat",
         "members": "{count} miembros",
         "messagePlaceholder": "Escribe tu mensaje...",
-        "send": "Enviar",
-        "newChatModalTitle": "Iniciar un Nuevo Chat",
-        "newChatModalDescription": "Selecciona un usuario para iniciar una conversación de mensajes directos.",
-        "searchUserPlaceholder": "Buscar un usuario..."
+        "send": "Enviar"
     },
     "comingSoon": {
         "title": "¡Próximamente!",
@@ -169,6 +166,7 @@
         "registrationFailedDescription": "Este correo ya podría estar en uso o la contraseña es demasiado débil.",
         "accountCreatedTitle": "¡Cuenta Creada!",
         "accountCreatedDescription": "Por favor, inicia sesión con tus nuevas credenciales.",
+        "confirmEmailDescription": "Por favor, revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.",
         "profileUpdatedTitle": "Perfil Actualizado",
         "profileUpdatedDescription": "Tu información de perfil ha sido guardada.",
         "avatarUpdatedTitle": "Avatar actualizado",
@@ -263,14 +261,6 @@
             "changePicture": "Cambiar Foto",
             "uploading": "Subiendo...",
             "fullName": "Nombre Completo"
-        },
-        "aiSuggestion": {
-            "title": "Nivel de Sesión Sugerido por IA",
-            "suggestedLevel": "Nivel Sugerido:",
-            "reasoning": "Razonamiento:"
-        },
-        "aiSummary": {
-            "title": "Resumen de Anuncios"
         },
         "generateTeams": {
             "button": "Generar Equipos",

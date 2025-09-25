@@ -69,14 +69,24 @@ export default function RegisterPage() {
         favoritePosition,
     };
 
-    const success = await signUpWithEmail(email, password, userData);
+    const {success, requiresConfirmation} = await signUpWithEmail(email, password, userData);
     setIsLoading(false);
+
     if (success) {
-      toast({
-        title: t('toasts.accountCreatedTitle'),
-        description: t('toasts.accountCreatedDescription'),
-        variant: 'success',
-      });
+        if(requiresConfirmation){
+             toast({
+                title: t('toasts.accountCreatedTitle'),
+                description: t('toasts.confirmEmailDescription'),
+                variant: 'success',
+                duration: 5000,
+            });
+        } else {
+            toast({
+                title: t('toasts.accountCreatedTitle'),
+                description: t('toasts.accountCreatedDescription'),
+                variant: 'success',
+            });
+        }
       router.push('/login');
     } else {
       toast({

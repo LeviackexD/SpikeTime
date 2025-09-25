@@ -53,10 +53,7 @@
         "selectChatButton": "Select Chat",
         "members": "{count} members",
         "messagePlaceholder": "Type your message...",
-        "send": "Send",
-        "newChatModalTitle": "Start a New Chat",
-        "newChatModalDescription": "Select a user to start a direct message conversation.",
-        "searchUserPlaceholder": "Search for a user..."
+        "send": "Send"
     },
     "comingSoon": {
         "title": "Coming Soon!",
@@ -169,6 +166,7 @@
         "registrationFailedDescription": "This email might already be in use or the password is too weak.",
         "accountCreatedTitle": "Account Created!",
         "accountCreatedDescription": "Please sign in with your new credentials.",
+        "confirmEmailDescription": "Please check your email to confirm your account before signing in.",
         "profileUpdatedTitle": "Profile Updated",
         "profileUpdatedDescription": "Your profile information has been saved.",
         "avatarUpdatedTitle": "Avatar updated",
@@ -263,14 +261,6 @@
             "changePicture": "Change Picture",
             "uploading": "Uploading...",
             "fullName": "Full Name"
-        },
-        "aiSuggestion": {
-            "title": "AI-Suggested Session Level",
-            "suggestedLevel": "Suggested Level:",
-            "reasoning": "Reasoning:"
-        },
-        "aiSummary": {
-            "title": "Announcements Summary"
         },
         "generateTeams": {
             "button": "Generate Teams",

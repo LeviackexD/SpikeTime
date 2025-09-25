@@ -12,7 +12,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
-  signUpWithEmail: (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<boolean>;
+  signUpWithEmail: (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<{success: boolean, requiresConfirmation: boolean}>;
   logout: () => Promise<void>;
   updateUser: (updatedData: Partial<User>) => Promise<boolean>;
 }
@@ -84,8 +84,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return !error;
   };
 
-  const signUpWithEmail = async (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
-    const { error } = await supabase.auth.signUp({ 
+  const signUpWithEmail = async (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<{success: boolean, requiresConfirmation: boolean}> => {
+    const { data: signUpData, error } = await supabase.auth.signUp({ 
         email, 
         password: pass,
         options: {
@@ -96,7 +96,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
         }
     });
-    return !error;
+
+    const success = !error;
+    // A user exists but a session is null, this means email confirmation is required.
+    const requiresConfirmation = success && signUpData.user && !signUpData.session;
+    
+    return { success, requiresConfirmation };
   };
 
   const logout = async (): Promise<void> => {
