@@ -43,6 +43,7 @@ const CalendarPage: NextPage = () => {
   const filteredSessions = sessions.filter(session => {
     const sessionDate = getSafeDate(session.date);
     const selected = selectedDate || new Date();
+    // Compare dates by year, month, and day in UTC to avoid timezone issues.
     return sessionDate.getUTCFullYear() === selected.getUTCFullYear() &&
            sessionDate.getUTCMonth() === selected.getUTCMonth() &&
            sessionDate.getUTCDate() === selected.getUTCDate();

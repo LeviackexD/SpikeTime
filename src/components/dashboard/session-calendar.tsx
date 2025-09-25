@@ -19,11 +19,12 @@ interface SessionCalendarProps {
 export default function SessionCalendar({ sessions, selectedDate, onDateChange }: SessionCalendarProps) {
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
-      const date = getSafeDate(session.date).toDateString();
-      if (!acc[date]) {
-        acc[date] = [];
+      // Use toISOString and split to get 'YYYY-MM-DD', which is timezone-agnostic.
+      const dateKey = getSafeDate(session.date).toISOString().split('T')[0];
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
       }
-      acc[date].push(session);
+      acc[dateKey].push(session);
       return acc;
     }, {} as Record<string, Session[]>);
   }, [sessions]);
@@ -38,8 +39,9 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange }
         className="p-0"
         modifiers={{
             hasSessions: (day) => {
-                const dateString = day.toDateString();
-                return !!sessionsByDate[dateString];
+                // Also use 'YYYY-MM-DD' for comparison here to ensure consistency.
+                const dayKey = day.toISOString().split('T')[0];
+                return !!sessionsByDate[dayKey];
             }
         }}
         modifiersClassNames={{
