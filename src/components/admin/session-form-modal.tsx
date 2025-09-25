@@ -39,7 +39,7 @@ type SaveSessionData = SessionFormData | (SessionFormData & { id: string, player
 interface SessionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (session: SaveSessionData) => void;
+  onSave: (session: any) => void;
   session: Session | null;
 }
 
@@ -97,14 +97,11 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        let dataToSave: SaveSessionData = { ...formData };
+        let dataToSave: any = { ...formData };
         
         if (session) {
-            // If editing, include the original session ID and player/waitlist data
-            dataToSave = {
-                ...session,
-                ...formData,
-            };
+            // If editing, include the original session ID
+            dataToSave.id = session.id;
         }
         
         onSave(dataToSave);

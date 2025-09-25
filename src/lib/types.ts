@@ -46,9 +46,9 @@ export interface Session {
   endTime: string;
   location: string;
   level: SkillLevel;
-  players: User[];
+  players: Pick<User, 'id' | 'name' | 'avatarUrl' | 'skillLevel'>[];
   maxPlayers: number;
-  waitlist: User[];
+  waitlist: Pick<User, 'id' | 'name' | 'avatarUrl' | 'skillLevel'>[];
   imageUrl?: string;
   messages: Message[];
   createdBy?: string; // Admin User ID

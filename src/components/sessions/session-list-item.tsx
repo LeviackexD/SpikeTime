@@ -172,7 +172,7 @@ export default function SessionListItem({
                 <div className="flex justify-between items-center">
                   <div className="flex -space-x-2 overflow-hidden">
                     {players.slice(0, 4).map(player => (
-                      <PlayerAvatar key={player.id} player={player} className="h-8 w-8 border-2 border-background" />
+                      <PlayerAvatar key={player.id} player={player as User} className="h-8 w-8 border-2 border-background" />
                     ))}
                     {players.length > 4 && (
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
@@ -227,14 +227,16 @@ export default function SessionListItem({
                 {t('modals.sessionDetails.bookSpot')}
               </Button>
             )}
-            <Button
-              className="w-full"
-              variant="secondary"
-              onClick={handleJoinWaitlist}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              {t('modals.sessionDetails.joinWaitlist')}
-            </Button>
+            { isFull && (
+              <Button
+                className="w-full"
+                variant="secondary"
+                onClick={handleJoinWaitlist}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                {t('modals.sessionDetails.joinWaitlist')}
+              </Button>
+            )}
           </div>
         )}
       </CardFooter>

@@ -3,12 +3,14 @@
 
 import * as React from 'react';
 import type { Session, Message, User, Announcement, DirectChat } from '@/lib/types';
-import { mockSessions, mockAnnouncements } from '@/lib/mock-data';
 import { useAuth } from './auth-context';
+import { supabase } from '@/lib/supabase-client';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
+  loading: boolean;
   createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date' | 'createdBy'> & { date: string }) => Promise<void>;
   updateSession: (session: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages' | 'createdBy'> & { date: string, id: string, players: User[], waitlist: User[] }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
@@ -20,10 +22,6 @@ interface SessionContextType {
   createAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
   updateAnnouncement: (announcement: Omit<Announcement, 'date'> & { id: string }) => Promise<void>;
   deleteAnnouncement: (announcementId: string) => Promise<void>;
-  directChats: DirectChat[];
-  createDirectChat: (otherUser: User) => Promise<string>;
-  addDirectMessage: (chatId: string, message: Omit<Message, 'id' | 'sender' | 'timestamp'>) => Promise<void>;
-  users: User[];
 }
 
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
@@ -31,7 +29,6 @@ const SessionContext = React.createContext<SessionContextType | undefined>(undef
 export const getSafeDate = (date: string | Date): Date => {
     const d = new Date(date);
     if (isNaN(d.getTime())) {
-        // Handle 'YYYY-MM-DD' format which Date constructor can misinterpret
         const parts = String(date).split(/[-T:]/);
         if (parts.length >= 3) {
             return new Date(Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])));
@@ -43,141 +40,240 @@ export const getSafeDate = (date: string | Date): Date => {
 
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
-  // Data is now mocked and static. In a real app, this would come from a database.
-  const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
-  const [announcements, setAnnouncements] = React.useState<Announcement[]>(mockAnnouncements);
-  const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
-  const [users, setUsers] = React.useState<User[]>([]);
+  const [sessions, setSessions] = React.useState<Session[]>([]);
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
+
+  const fetchSessions = React.useCallback(async () => {
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select(`
+        *,
+        players:session_players(profile:profiles(id, name, avatarUrl, skillLevel)),
+        waitlist:session_waitlist(profile:profiles(id, name, avatarUrl, skillLevel))
+      `)
+      .order('date', { ascending: false });
+
+    if (sessionError) {
+      console.error('Error fetching sessions:', sessionError);
+      return [];
+    }
+
+    const transformedSessions = sessionData.map(s => ({
+      ...s,
+      date: getSafeDate(s.date),
+      // The players and waitlist are nested inside junction table results
+      players: s.players.map((p: any) => p.profile).filter(Boolean),
+      waitlist: s.waitlist.map((w: any) => w.profile).filter(Boolean),
+      messages: [], // Chat messages not implemented in DB yet
+    }));
+    
+    return transformedSessions;
+  }, []);
+
+  const fetchAnnouncements = React.useCallback(async () => {
+      const { data, error } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
+      if(error) {
+          console.error("Error fetching announcements:", error);
+          return [];
+      }
+      return data.map(a => ({...a, date: getSafeDate(a.date)}));
+  }, []);
+
+  // Initial fetch and real-time subscriptions
+  React.useEffect(() => {
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    };
+    
+    setLoading(true);
+    Promise.all([fetchSessions(), fetchAnnouncements()]).then(([sessionRes, announcementRes]) => {
+      setSessions(sessionRes);
+      setAnnouncements(announcementRes);
+      setLoading(false);
+    });
+
+    const sessionChanges = supabase.channel('sessions-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, () => fetchSessions().then(setSessions))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, () => fetchSessions().then(setSessions))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, () => fetchSessions().then(setSessions))
+      .subscribe();
+
+    const announcementChanges = supabase.channel('announcements-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => fetchAnnouncements().then(setAnnouncements))
+        .subscribe();
+    
+    return () => {
+        supabase.removeChannel(sessionChanges);
+        supabase.removeChannel(announcementChanges);
+    }
+
+  }, [currentUser, fetchSessions, fetchAnnouncements]);
 
 
   const createSession = async (sessionData: Omit<Session, 'id' | 'players'| 'waitlist'|'messages' | 'date' | 'createdBy'> & { date: string }) => {
     if (!currentUser) return;
-    const newSession: Session = {
-      ...sessionData,
-      id: `session-${Date.now()}`,
-      date: getSafeDate(sessionData.date),
-      createdBy: currentUser.id,
-      players: [],
-      waitlist: [],
-      messages: [],
-    };
-    setSessions(prev => [newSession, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+    const { error } = await supabase.from('sessions').insert({
+        ...sessionData,
+        date: sessionData.date, // Already a string
+        createdBy: currentUser.id,
+    });
+    if(error) {
+        console.error("Error creating session:", error);
+        toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
+    } else {
+        toast({ title: "Session Created!", description: "The new session has been added.", variant: "success"});
+    }
   };
   
   const updateSession = async (sessionData: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'| 'createdBy'> & { date: string, id: string, players: User[], waitlist: User[] }) => {
-     setSessions(prev => prev.map(s => s.id === sessionData.id ? {
-        ...s,
-        ...sessionData,
-        date: getSafeDate(sessionData.date),
-     } : s));
+     const { id, ...updateData } = sessionData;
+     const { error } = await supabase.from('sessions').update({
+         ...updateData,
+         date: sessionData.date,
+     }).eq('id', id);
+
+     if(error) {
+        console.error("Error updating session:", error);
+        toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
+     } else {
+        toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success"});
+     }
   };
   
   const deleteSession = async (sessionId: string) => {
-    setSessions(prev => prev.filter(s => s.id !== sessionId));
+    const { error } = await supabase.from('sessions').delete().eq('id', sessionId);
+    if(error) {
+        console.error("Error deleting session:", error);
+        toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
+    } else {
+        toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success"});
+    }
   };
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    setSessions(prev => prev.map(s => {
-      if (s.id === sessionId && !s.players.some(p => p.id === currentUser.id) && s.players.length < s.maxPlayers) {
-        return {
-          ...s,
-          players: [...s.players, currentUser],
-          waitlist: s.waitlist.filter(p => p.id !== currentUser.id), // Also remove from waitlist if they were on it
-        };
-      }
-      return s;
-    }));
+    // We must handle the waitlist logic here
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return false;
+    
+    // If user is on waitlist, they might be automatically promoted
+    const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
+
+    const { error } = await supabase.from('session_players').insert({
+        session_id: sessionId,
+        user_id: currentUser.id,
+    });
+
+    if (error) {
+        console.error("Error booking session:", error);
+        return false;
+    }
+    
+    // If user was on waitlist, remove them from it
+    if(isOnWaitlist){
+        await leaveWaitlist(sessionId);
+    }
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    setSessions(prev => prev.map(s => {
-      if (s.id === sessionId) {
-        const updatedPlayers = s.players.filter(p => p.id !== currentUser.id);
-        const updatedWaitlist = [...s.waitlist];
-        
-        // If there's a waitlist, move the first person from waitlist to players
-        if (s.players.length === s.maxPlayers && updatedWaitlist.length > 0) {
-            const nextPlayer = updatedWaitlist.shift();
-            if(nextPlayer) {
-                updatedPlayers.push(nextPlayer);
-            }
-        }
-        
-        return { ...s, players: updatedPlayers, waitlist: updatedWaitlist };
-      }
-      return s;
-    }));
+
+    // First, remove the player
+    const { error: cancelError } = await supabase.from('session_players').delete()
+        .eq('session_id', sessionId)
+        .eq('user_id', currentUser.id);
+    
+    if (cancelError) {
+        console.error("Error canceling booking:", cancelError);
+        return false;
+    }
+
+    // Now, check if there's someone on the waitlist to promote
+    const session = sessions.find(s => s.id === sessionId);
+    if (session && session.waitlist.length > 0) {
+        const nextPlayer = session.waitlist[0];
+        // Promote nextPlayer (book them and remove from waitlist)
+        await supabase.from('session_players').insert({ session_id: sessionId, user_id: nextPlayer.id });
+        await supabase.from('session_waitlist').delete().eq('session_id', sessionId).eq('user_id', nextPlayer.id);
+        // TODO: In a real app, you would send a notification to `nextPlayer` here.
+    }
+
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    setSessions(prev => prev.map(s => {
-      if (s.id === sessionId && !s.waitlist.some(p => p.id === currentUser.id)) {
-        return { ...s, waitlist: [...s.waitlist, currentUser] };
-      }
-      return s;
-    }));
+    const { error } = await supabase.from('session_waitlist').insert({
+        session_id: sessionId,
+        user_id: currentUser.id
+    });
+    if (error) {
+        console.error("Error joining waitlist:", error);
+        return false;
+    }
     return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
-     setSessions(prev => prev.map(s => {
-      if (s.id === sessionId) {
-        return { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) };
-      }
-      return s;
-    }));
+     const { error } = await supabase.from('session_waitlist').delete()
+        .eq('session_id', sessionId)
+        .eq('user_id', currentUser.id);
+     
+     if (error) {
+        console.error("Error leaving waitlist:", error);
+        return false;
+    }
     return true;
   };
 
-  const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
-    if (!currentUser) return;
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      sender: currentUser,
-      content: messageContent.content,
-      timestamp: new Date(),
-    };
-    setSessions(prev => prev.map(s => 
-        s.id === sessionId ? { ...s, messages: [...s.messages, newMessage] } : s
-    ));
-  };
-
   const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
-    const newAnnouncement: Announcement = {
-      ...announcementData,
-      id: `ann-${Date.now()}`,
-      date: new Date(),
-    };
-    setAnnouncements(prev => [newAnnouncement, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
+    const { error } = await supabase.from('announcements').insert({
+        ...announcementData,
+        date: new Date().toISOString().split('T')[0] // Use current date
+    });
+    if(error) {
+        console.error("Error creating announcement:", error);
+        toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
+    } else {
+        toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success"});
+    }
   };
 
   const updateAnnouncement = async (announcementData: Omit<Announcement, 'date'> & {id: string}) => {
-    setAnnouncements(prev => prev.map(a => a.id === announcementData.id ? { ...a, ...announcementData, date: new Date() } : a));
+    const { id, ...updateData } = announcementData;
+    const { error } = await supabase.from('announcements').update(updateData).eq('id', id);
+    if(error) {
+        console.error("Error updating announcement:", error);
+        toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
+    } else {
+        toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success"});
+    }
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
-    setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
+    const { error } = await supabase.from('announcements').delete().eq('id', announcementId);
+     if(error) {
+        console.error("Error deleting announcement:", error);
+        toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
+    } else {
+        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success"});
+    }
   };
   
-  const createDirectChat = async (otherUser: User): Promise<string> => {
-    // This is a mock implementation
-    return '';
-  };
-
-  const addDirectMessage = async (chatId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
-    // This is a mock implementation
-  };
+  // The following functions are placeholders and not connected to DB yet.
+  const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {};
 
   return (
     <SessionContext.Provider value={{ 
         sessions, 
+        announcements,
+        loading,
         createSession, 
         updateSession, 
         deleteSession,
@@ -186,14 +282,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         joinWaitlist,
         leaveWaitlist,
         addMessage,
-        announcements,
         createAnnouncement,
         updateAnnouncement,
         deleteAnnouncement,
-        directChats,
-        createDirectChat,
-        addDirectMessage,
-        users,
      }}>
       {children}
     </SessionContext.Provider>

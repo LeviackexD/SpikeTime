@@ -61,7 +61,7 @@ export default function SessionDetailsModal({
       const success = await action(session.id);
       if (success) {
         toast({ ...successToast, variant: 'success' });
-        onClose(); // Close modal on success
+        // The modal is no longer closed on success to allow the UI to update via subscription.
       } else {
         toast({ ...failureToast, variant: 'destructive' });
       }
@@ -163,7 +163,7 @@ export default function SessionDetailsModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {session.players.map((player) => (
                         <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                          <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                          <PlayerAvatar player={player as User} className="h-10 w-10 border-2 border-primary/50" />
                           <div className="flex-grow">
                               <p className="font-semibold text-sm">{player.name}</p>
                               <p className="text-xs text-muted-foreground">{t(`skillLevels.${player.skillLevel}`)}</p>
@@ -189,7 +189,7 @@ export default function SessionDetailsModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {session.waitlist.map((player) => (
                         <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                          <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                          <PlayerAvatar player={player as User} className="h-10 w-10 border-2 border-primary/50" />
                           <div className="flex-grow">
                               <p className="font-semibold text-sm">{player.name}</p>
                               <p className="text-xs text-muted-foreground">{t(`skillLevels.${player.skillLevel}`)}</p>

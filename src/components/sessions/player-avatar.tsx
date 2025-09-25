@@ -12,14 +12,14 @@ import {
 import { useLanguage } from '@/context/language-context';
 
 interface PlayerAvatarProps {
-    player: User;
+    player: Partial<User>; // Allow partial user for flexibility with DB relations
     className?: string;
 }
 
 export default function PlayerAvatar({ player, className }: PlayerAvatarProps) {
     const { t } = useLanguage();
     if (!player || !player.name) {
-        return <Avatar className={cn("bg-muted", className)}><AvatarFallback></AvatarFallback></Avatar>; 
+        return <Avatar className={cn("bg-muted", className)}><AvatarFallback>?</AvatarFallback></Avatar>; 
     }
 
     return (
@@ -32,7 +32,7 @@ export default function PlayerAvatar({ player, className }: PlayerAvatarProps) {
             </TooltipTrigger>
             <TooltipContent>
                 <p className='font-semibold'>{player.name}</p>
-                <p className='text-muted-foreground'>{t(`skillLevels.${player.skillLevel}`)}</p>
+                {player.skillLevel && <p className='text-muted-foreground'>{t(`skillLevels.${player.skillLevel}`)}</p>}
             </TooltipContent>
         </Tooltip>
     )
