@@ -30,8 +30,8 @@ export const getSafeDate = (date: string | Date): Date => {
     if (date instanceof Date && !isNaN(date.getTime())) {
         return date;
     }
-    // Handles date strings like '2024-10-02'. The 'T00:00:00' ensures it's parsed as midnight UTC.
-    const d = new Date(String(date) + 'T00:00:00');
+    // Handles date strings like '2024-10-02'. The 'T00:00:00Z' ensures it's parsed as midnight UTC.
+    const d = new Date(String(date) + 'T00:00:00Z');
     if (!isNaN(d.getTime())) {
         return d;
     }

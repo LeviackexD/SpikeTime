@@ -41,11 +41,14 @@ const CalendarPage: NextPage = () => {
   }
 
   const filteredSessions = sessions.filter(session => {
-    // Compare date strings to ignore time and timezone differences
-    return getSafeDate(session.date).toDateString() === selectedDate.toDateString();
+    const sessionDate = getSafeDate(session.date);
+    const selected = selectedDate || new Date();
+    return sessionDate.getUTCFullYear() === selected.getUTCFullYear() &&
+           sessionDate.getUTCMonth() === selected.getUTCMonth() &&
+           sessionDate.getUTCDate() === selected.getUTCDate();
   }).sort((a,b) => a.startTime.localeCompare(b.startTime));
   
-  const formattedDate = selectedDate.toLocaleDateString(locale, { month: 'long', day: 'numeric' });
+  const formattedDate = selectedDate.toLocaleDateString(locale, { month: 'long', day: 'numeric', timeZone: 'UTC' });
 
   return (
     <div className="space-y-8 animate-fade-in">
