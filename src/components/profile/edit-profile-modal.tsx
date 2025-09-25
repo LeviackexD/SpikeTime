@@ -37,7 +37,7 @@ interface EditProfileModalProps {
 
 export default function EditProfileModal({ isOpen, onClose, user }: EditProfileModalProps) {
     const { t } = useLanguage();
-    const { updateUser } = useAuth();
+    const { updateUser, updateAvatarUrl } = useAuth();
     const [formData, setFormData] = React.useState<User | null>(user);
     const [isUploading, setIsUploading] = React.useState(false);
     const [isSaving, setIsSaving] = React.useState(false);
@@ -72,7 +72,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             }
             setIsUploading(true);
 
-            // --- New logic to delete old files ---
+            // --- Logic to delete old files ---
             const { data: files, error: listError } = await supabase
                 .storage
                 .from('avatars')
@@ -82,7 +82,6 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             
             if (listError) {
                 console.error('Error listing old avatars:', listError);
-                // We can still proceed with the upload
             }
 
             if (files && files.length > 0) {
@@ -94,7 +93,6 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                 
                 if (removeError) {
                     console.error('Error removing old avatars:', removeError);
-                    // Non-critical error, so we still proceed
                 }
             }
             // --- End of delete logic ---
@@ -111,8 +109,8 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
 
             if (uploadError) {
                 toast({
-                    title: "Upload Failed",
-                    description: uploadError.message || "Could not upload your new avatar.",
+                    title: t('toasts.uploadFailedTitle'),
+                    description: uploadError.message || t('toasts.uploadFailedDescription'),
                     variant: "destructive"
                 });
                 console.error(uploadError);
@@ -123,15 +121,25 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             const { data: publicUrlData } = supabase.storage
                 .from('avatars')
                 .getPublicUrl(filePath);
-            
+
             const avatarUrlWithCacheBuster = `${publicUrlData.publicUrl}?t=${new Date().getTime()}`;
+
+            const success = await updateAvatarUrl(avatarUrlWithCacheBuster);
             
-            setFormData(prev => prev ? { ...prev, avatarUrl: avatarUrlWithCacheBuster } : null);
             setIsUploading(false);
-            toast({
-                title: t('toasts.avatarUpdatedTitle'),
-                description: t('toasts.avatarUpdatedDescription'),
-            });
+
+            if(success) {
+                toast({
+                    title: t('toasts.avatarUpdatedTitle'),
+                    description: t('toasts.avatarUpdatedDescription'),
+                });
+            } else {
+                 toast({
+                    title: t('toasts.uploadFailedTitle'),
+                    description: t('toasts.uploadFailedDescription'),
+                    variant: "destructive"
+                });
+            }
         }
     };
 
@@ -149,8 +157,8 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                 onClose();
             } else {
                 toast({
-                    title: "Update Failed",
-                    description: "Could not save your profile changes.",
+                    title: t('toasts.updateFailedTitle'),
+                    description: t('toasts.updateFailedDescription'),
                     variant: "destructive",
                 });
             }
@@ -235,3 +243,5 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
     </Dialog>
   );
 }
+
+    

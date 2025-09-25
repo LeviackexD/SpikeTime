@@ -169,8 +169,12 @@
         "confirmEmailDescription": "Por favor, revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.",
         "profileUpdatedTitle": "Perfil Actualizado",
         "profileUpdatedDescription": "Tu información de perfil ha sido guardada.",
+        "updateFailedTitle": "Fallo en la Actualización",
+        "updateFailedDescription": "No se pudieron guardar los cambios en tu perfil.",
+        "uploadFailedTitle": "Fallo en la Subida",
+        "uploadFailedDescription": "No se pudo subir tu nuevo avatar.",
         "avatarUpdatedTitle": "Avatar actualizado",
-        "avatarUpdatedDescription": "Tu nuevo avatar está listo. Guarda tu perfil para mantener los cambios.",
+        "avatarUpdatedDescription": "Tu nuevo avatar ha sido guardado.",
         "imageTooLargeTitle": "Imagen demasiado grande",
         "imageTooLargeDescription": "Por favor, selecciona una imagen de menos de {maxSize}MB.",
         "sessionCreatedTitle": "¡Sesión Creada!",
@@ -305,3 +309,5 @@
         "es": "Español"
     }
 }
+
+    

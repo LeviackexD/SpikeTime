@@ -169,8 +169,12 @@
         "confirmEmailDescription": "Please check your email to confirm your account before signing in.",
         "profileUpdatedTitle": "Profile Updated",
         "profileUpdatedDescription": "Your profile information has been saved.",
+        "updateFailedTitle": "Update Failed",
+        "updateFailedDescription": "Could not save your profile changes.",
+        "uploadFailedTitle": "Upload Failed",
+        "uploadFailedDescription": "Could not upload your new avatar.",
         "avatarUpdatedTitle": "Avatar updated",
-        "avatarUpdatedDescription": "Your new avatar is ready. Save your profile to keep the changes.",
+        "avatarUpdatedDescription": "Your new avatar has been saved.",
         "imageTooLargeTitle": "Image too large",
         "imageTooLargeDescription": "Please select an image smaller than {maxSize}MB.",
         "sessionCreatedTitle": "Session Created!",
@@ -305,3 +309,5 @@
         "es": "Español"
     }
 }
+
+    

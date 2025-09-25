@@ -15,6 +15,7 @@ interface AuthContextType {
   signUpWithEmail: (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<{success: boolean, requiresConfirmation: boolean}>;
   logout: () => Promise<void>;
   updateUser: (updatedData: Partial<User>) => Promise<boolean>;
+  updateAvatarUrl: (avatarUrl: string) => Promise<boolean>;
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
@@ -173,6 +174,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return false;
   };
   
+  const updateAvatarUrl = async (avatarUrl: string): Promise<boolean> => {
+      if (!user) return false;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ avatarUrl })
+        .eq('id', user.id)
+        .select()
+        .single();
+      
+      if (error) {
+          console.error("Error updating avatar URL:", error);
+          return false;
+      }
+      
+      if (data) {
+        setUser(prevUser => prevUser ? { ...prevUser, ...data } : null);
+        return true;
+      }
+
+      return false;
+  }
+  
   const isAuthPage = pathname === '/login' || pathname === '/register';
   
   if (loading && !isAuthPage) {
@@ -185,7 +209,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithEmail, signUpWithEmail, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, signInWithEmail, signUpWithEmail, logout, updateUser, updateAvatarUrl }}>
       {children}
     </AuthContext.Provider>
   );
@@ -198,3 +222,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    
