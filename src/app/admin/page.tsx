@@ -73,6 +73,8 @@ const SessionCards = ({
   <div className="space-y-4">
     {sessions.map((session, index) => {
       const rotationClass = `note-${(index % 4) + 1}`;
+      const players = session.players || [];
+      const waitlist = session.waitlist || [];
       return (
       <div key={session.id} className={cn('note bg-paper-yellow p-4 rounded-lg shadow-lg relative', rotationClass)}>
          <div className={cn('pushpin bg-red-500')}></div>
@@ -108,14 +110,14 @@ const SessionCards = ({
           <div className="space-y-3 text-sm border-t border-dashed border-brown-light/30 pt-3">
              <div className="flex items-center gap-2 text-brown-dark">
                 <Users className="h-4 w-4" />
-                <span className="font-semibold">{session.players.length} / {session.maxPlayers} {t('adminPage.sessionTable.players')}</span>
-                 {session.waitlist.length > 0 && <span className="text-xs">({t('adminPage.statusValues.waitlist', {count: session.waitlist.length})})</span>}
+                <span className="font-semibold">{players.length} / {session.maxPlayers} {t('adminPage.sessionTable.players')}</span>
+                 {waitlist.length > 0 && <span className="text-xs">({t('adminPage.statusValues.waitlist', {count: waitlist.length})})</span>}
             </div>
             <div className="flex items-center gap-2">
                 <Badge
-                  variant={(session.players as User[]).length >= session.maxPlayers ? 'destructive' : 'secondary'}
+                  variant={players.length >= session.maxPlayers ? 'destructive' : 'secondary'}
                 >
-                  {(session.players as User[]).length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
+                  {players.length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
                 </Badge>
             </div>
           </div>
@@ -310,7 +312,10 @@ export default function AdminPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sessions.map((session) => (
+          {sessions.map((session) => {
+            const players = session.players || [];
+            const waitlist = session.waitlist || [];
+            return (
             <TableRow key={session.id} className="border-b-chalk/10 hover:bg-white/5">
               <TableCell className="text-chalk/90">
                 <div className="font-medium">{formatDate(session.date, locale)}</div>
@@ -322,23 +327,23 @@ export default function AdminPage() {
               <TableCell className="text-chalk/90">
                 <TooltipProvider>
                   <div className="flex items-center gap-2">
-                    <span>{session.players.length} / {session.maxPlayers}</span>
+                    <span>{players.length} / {session.maxPlayers}</span>
                     <div className="flex -space-x-2 overflow-hidden">
-                      {session.players.slice(0, 3).map(player => (
+                      {players.slice(0, 3).map(player => (
                         <PlayerAvatar key={player.id} player={player} className="h-6 w-6 border-2 border-chalkboard" />
                       ))}
                     </div>
                   </div>
                   </TooltipProvider>
-                  {session.waitlist.length > 0 && <div className="text-xs text-chalk/60 mt-1">{t('adminPage.statusValues.waitlist', {count: session.waitlist.length})}</div>}
+                  {waitlist.length > 0 && <div className="text-xs text-chalk/60 mt-1">{t('adminPage.statusValues.waitlist', {count: waitlist.length})}</div>}
               </TableCell>
               <TableCell>
                 <Badge
                   variant={
-                    session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'
+                    players.length >= session.maxPlayers ? 'destructive' : 'secondary'
                   }
                 >
-                  {session.players.length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
+                  {players.length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
@@ -365,7 +370,7 @@ export default function AdminPage() {
                 </DropdownMenu>
               </TableCell>
             </TableRow>
-          ))}
+          )})}
         </TableBody>
       </Table>
     </div>

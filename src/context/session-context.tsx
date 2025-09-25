@@ -56,8 +56,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       .from('sessions')
       .select(`
         *,
-        players:session_players(profile:profiles(id, name, avatarUrl, skillLevel, favoritePosition, username, email, role)),
-        waitlist:session_waitlist(profile:profiles(id, name, avatarUrl, skillLevel, favoritePosition, username, email, role))
+        players:profiles(*),
+        waitlist:profiles(*)
       `)
       .order('date', { ascending: false });
 
@@ -69,9 +69,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const transformedSessions = sessionData.map(s => ({
       ...s,
       date: getSafeDate(s.date),
-      // The players and waitlist are nested inside junction table results
-      players: s.players.map((p: any) => p.profile).filter(Boolean),
-      waitlist: s.waitlist.map((w: any) => w.profile).filter(Boolean),
+      players: s.players, // Directly use the profiles array
+      waitlist: s.waitlist, // Directy use the profiles array
       messages: [], // Chat messages not implemented in DB yet
     }));
     
