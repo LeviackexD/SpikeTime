@@ -11,7 +11,7 @@ import type { AuthChangeEvent, Session as SupabaseSession, User as SupabaseUser 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signInWithEmail: (email: string, pass: string) => Promise<boolean>;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<{success: boolean, requiresConfirmation: boolean}>;
   logout: () => Promise<void>;
   updateUser: (updatedData: Partial<User>) => Promise<boolean>;
@@ -79,9 +79,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, loading, pathname, router]);
 
-  const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
+  const signInWithEmail = async (email: string, pass: string): Promise<void> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-    return !error;
+    if (error) {
+        // El error se manejará en la página de login a través del toast
+        throw error;
+    }
+    // No es necesario devolver nada, el onAuthStateChange se encargará del resto
   };
 
   const signUpWithEmail = async (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<{success: boolean, requiresConfirmation: boolean}> => {
@@ -99,20 +103,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const success = !error;
     // A user exists but a session is null, this means email confirmation is required.
-    const requiresConfirmation = success && signUpData.user && !signUpData.session;
+    const requiresConfirmation = success && !!signUpData.user && !signUpData.session;
     
     return { success, requiresConfirmation };
   };
 
   const logout = async (): Promise<void> => {
     await supabase.auth.signOut();
-    setUser(null);
+    setUser(null); // Esto también lo hará el listener, pero es bueno ser explícito
     router.push('/login');
   };
   
   const updateUser = async (updatedData: Partial<User>): Promise<boolean> => {
       if (!user) return false;
 
+      // Make sure column names match the SQL script (e.g., "skillLevel")
       const { data, error } = await supabase
         .from('profiles')
         .update({

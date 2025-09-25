@@ -43,22 +43,19 @@ export default function LoginPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // In mock mode, this will find the user in mock-data.ts
-    const success = await signInWithEmail(email, password);
-    setIsLoading(false);
-    if (success) {
-      toast({
-        title: t('toasts.loginSuccessTitle'),
-        description: t('toasts.loginSuccessDescription'),
-        variant: 'success',
-      });
-      router.push('/');
-    } else {
-      toast({
+    try {
+      await signInWithEmail(email, password);
+      // The redirection will be handled by the AuthContext's useEffect
+      // We can show a success toast optimistically here if needed, 
+      // but it's better to let the context handle the state change.
+    } catch (error) {
+       toast({
         title: t('toasts.authFailedTitle'),
         description: t('toasts.authFailedDescription'),
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
