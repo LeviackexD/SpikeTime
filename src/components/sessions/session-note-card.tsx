@@ -13,9 +13,8 @@ import { Clock, MapPin, Users, UserPlus, XCircle, LogOut } from 'lucide-react';
 import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import { getSafeDate } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
-import { cn, formatTime } from '@/lib/utils';
+import { cn, formatTime, getSafeDate } from '@/lib/utils';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 

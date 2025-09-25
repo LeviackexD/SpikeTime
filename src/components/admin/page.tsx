@@ -34,11 +34,11 @@ import SessionDetailsModal from '@/components/sessions/session-details-modal';
 import AnnouncementFormModal from '@/components/admin/announcement-form-modal';
 import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useSessions, getSafeDate } from '@/context/session-context';
+import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import type { Session, Announcement, User } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, getSafeDate } from '@/lib/utils';
 import PlayerAvatar from '@/components/sessions/player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 

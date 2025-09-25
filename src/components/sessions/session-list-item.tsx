@@ -23,7 +23,6 @@ import { Badge } from '@/components/ui/badge';
 import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import { getSafeDate, toYYYYMMDD } from '@/context/session-context';
 import PlayerAvatar from './player-avatar';
 import {
   CheckCircle,
@@ -38,7 +37,7 @@ import {
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { formatTime, cn } from '@/lib/utils';
+import { formatTime, cn, getSafeDate, toYYYYMMDD } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 

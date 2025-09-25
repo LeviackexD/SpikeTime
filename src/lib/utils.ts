@@ -15,9 +15,19 @@ export function formatTime(timeString: string) {
   return `${h}:${m}`;
 }
 
+export const getSafeDate = (date: string | Date): Date => {
+  if (date instanceof Date) {
+    return date;
+  }
+  // This handles ISO strings from the DB (which are in UTC)
+  // and creates a Date object representing that same moment in time.
+  return new Date(date);
+};
+
 /**
- * Converts a Date object to a 'YYYY-MM-DD' string, ignoring timezone effects.
- * This is the safest way to compare dates without timezone-related issues.
+ * Converts a Date object to a 'YYYY-MM-DD' string, using UTC values.
+ * This is crucial for avoiding timezone-related off-by-one-day errors
+ * when interacting with date inputs and databases.
  */
 export const toYYYYMMDD = (date: Date): string => {
   const year = date.getUTCFullYear();

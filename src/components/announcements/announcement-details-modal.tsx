@@ -18,9 +18,8 @@ import {
 import { Button } from '@/components/ui/button';
 import type { Announcement, AnnouncementCategory } from '@/lib/types';
 import { Calendar } from 'lucide-react';
-import { getSafeDate } from '@/context/session-context';
 import { useLanguage } from '@/context/language-context';
-import { cn } from '@/lib/utils';
+import { cn, getSafeDate } from '@/lib/utils';
 
 interface AnnouncementDetailsModalProps {
   isOpen: boolean;
@@ -42,7 +41,7 @@ export default function AnnouncementDetailsModal({ isOpen, onClose, announcement
 
   const styles = categoryStyles[announcement.category] || categoryStyles.general;
 
-  const formatDate = (date: string) => {
+  const formatDate = (date: string | Date) => {
     return getSafeDate(date).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',

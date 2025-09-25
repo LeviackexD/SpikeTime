@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import type { Session, SkillLevel, User } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
-import { getSafeDate, toYYYYMMDD } from '@/context/session-context';
+import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
 
 // The data shape for the form, using a simple string for the date.
 type SessionFormData = Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date' | 'createdBy'> & { date: string };
@@ -94,18 +94,14 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        // IMPORTANT: Create a UTC date string to avoid timezone issues.
-        // '2024-05-21' and '09:00' becomes '2024-05-21T09:00:00.000Z'
-        const combinedDateTime = new Date(`${formData.date}T${formData.startTime}:00.000Z`);
+        const combinedDateTime = new Date(`${formData.date}T00:00:00.000Z`);
 
         let dataToSave: any = { 
             ...formData,
-            // Replace the simple date string with the full Date object in UTC
             date: combinedDateTime 
         };
         
         if (session) {
-            // If editing, include the original session ID and other properties
             dataToSave.id = session.id;
             dataToSave.players = session.players;
             dataToSave.waitlist = session.waitlist;

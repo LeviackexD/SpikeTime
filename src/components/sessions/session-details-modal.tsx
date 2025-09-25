@@ -13,14 +13,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut, Camera, Loader2 } from 'lucide-react';
-import { getSafeDate, useSessions, toYYYYMMDD } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import GenerateTeamsButton from './generate-teams-button';
-import { cn, formatTime } from '@/lib/utils';
+import { cn, formatTime, getSafeDate, toYYYYMMDD } from '@/lib/utils';
 import Image from 'next/image';
 import { Input } from '../ui/input';
 

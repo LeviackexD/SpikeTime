@@ -8,12 +8,13 @@
 
 import * as React from 'react';
 import type { NextPage } from 'next';
-import { useSessions, getSafeDate } from '@/context/session-context';
+import { useSessions } from '@/context/session-context';
 import { useLanguage } from '@/context/language-context';
 import { Camera, Loader2 } from 'lucide-react';
 import type { Session } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
+import { getSafeDate } from '@/lib/utils';
 
 interface MemoriesByMonth {
   [monthYear: string]: {

@@ -29,11 +29,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useSessions, getSafeDate } from '@/context/session-context';
+import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import type { Session, Announcement } from '@/lib/types';
-import { cn, formatTime } from '@/lib/utils';
+import { cn, formatTime, getSafeDate } from '@/lib/utils';
 import PlayerAvatar from '@/components/sessions/player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 

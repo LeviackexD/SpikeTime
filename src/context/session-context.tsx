@@ -7,6 +7,7 @@ import type { Session, Message, User, Announcement, DirectChat } from '@/lib/typ
 import { useAuth } from './auth-context';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
+import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
 
 interface SessionContextType {
   sessions: Session[];
@@ -27,21 +28,6 @@ interface SessionContextType {
 
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
-export const getSafeDate = (date: string | Date): Date => {
-  if (date instanceof Date) {
-    return date;
-  }
-  // This correctly parses ISO strings (from DB) into a local Date object.
-  return new Date(date);
-};
-
-export const toYYYYMMDD = (date: Date): string => {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
@@ -61,16 +47,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   
     const now = new Date();
-    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+    // Grace period of 2 hours after a session ends
+    const gracePeriodEnd = new Date(now.getTime() - 2 * 60 * 60 * 1000);
   
     return sessionData.filter(s => {
-      // Keep sessions that have a moment image, regardless of time
-      if (s.momentImageUrl) {
-        return true;
-      }
-      // Otherwise, only keep sessions that ended less than 2 hours ago or are in the future
-      const endTime = new Date(`${toYYYYMMDD(getSafeDate(s.date))}T${s.endTime}`);
-      return endTime > twoHoursAgo;
+      // The session end time in UTC
+      const sessionEndDate = getSafeDate(s.date);
+      const [endHours, endMinutes] = s.endTime.split(':').map(Number);
+      sessionEndDate.setUTCHours(endHours, endMinutes, 0, 0);
+
+      // Keep the session if it ended within the grace period or is in the future
+      return sessionEndDate > gracePeriodEnd;
     }).map(s => ({
       ...s,
       date: getSafeDate(s.date),
@@ -181,6 +168,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     if (error) {
       console.error("Error booking session (RPC):", error);
+      toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
       setSessions(originalSessions); // Revert on error
       return false;
     }
@@ -206,6 +194,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     
     if (error) {
         console.error("Error canceling booking (RPC):", error);
+        toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
         setSessions(originalSessions); // Revert on error
         return false;
     }
@@ -236,6 +225,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     if (error) {
         console.error("Error joining waitlist:", error);
+        toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
         setSessions(originalSessions); // Revert on error
         return false;
     }
@@ -263,6 +253,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      
      if (error) {
         console.error("Error leaving waitlist:", error);
+        toast({ title: "Action Failed", description: error.message, variant: "destructive" });
         setSessions(originalSessions); // Revert on error
         return false;
     }

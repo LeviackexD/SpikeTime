@@ -24,8 +24,8 @@ import {
 } from 'lucide-react';
 import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
-import { getSafeDate } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
+import { getSafeDate } from '@/lib/utils';
 
 interface SessionDetailsCardProps {
   session: Session;

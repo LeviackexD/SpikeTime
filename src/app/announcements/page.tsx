@@ -13,9 +13,9 @@ import dynamic from 'next/dynamic';
 import { Plus, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { cn, getSafeDate } from '@/lib/utils';
 import type { Announcement, AnnouncementCategory } from '@/lib/types';
-import { useSessions, getSafeDate } from '@/context/session-context';
+import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 

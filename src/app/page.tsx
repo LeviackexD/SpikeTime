@@ -26,20 +26,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 // Custom Components
 import SectionHeader from '@/components/layout/section-header';
-import AnnouncementDetailsModal from '@/components/announcements/announcement-details-modal';
 import SessionListItem from '@/components/sessions/session-list-item';
 
 
 // Context and Hooks
-import { useSessions, getSafeDate } from '@/context/session-context';
+import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { useUpcomingSessions, useAvailableSessions } from '@/hooks/use-session-filters';
 
 // Types
 import type { Session, Announcement } from '@/lib/types';
+import { getSafeDate } from '@/lib/utils';
 
 const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'));
+const AnnouncementDetailsModal = dynamic(() => import('@/components/announcements/announcement-details-modal'));
 
 const DashboardPage: NextPage = () => {
   // --- STATE MANAGEMENT ---
@@ -209,11 +210,11 @@ const DashboardPage: NextPage = () => {
         onLeaveWaitlist={leaveWaitlist}
       />}
 
-      <AnnouncementDetailsModal
+      {selectedAnnouncement && <AnnouncementDetailsModal
         isOpen={!!selectedAnnouncement}
         onClose={handleCloseAnnouncementModal}
         announcement={selectedAnnouncement}
-      />
+      />}
     </>
   );
 };

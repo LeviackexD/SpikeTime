@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import type { Session, User } from '@/lib/types';
-import { getSafeDate } from '@/context/session-context';
+import { getSafeDate } from '@/lib/utils';
 
 /**
  * A hook that returns a memoized list of sessions the user is booked into or waitlisted for.
@@ -17,16 +17,19 @@ import { getSafeDate } from '@/context/session-context';
  */
 export function useUpcomingSessions(currentUser: User | null, sessions: Session[]): Session[] {
   return React.useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
 
     return sessions
       .filter(session => {
         const sessionDate = getSafeDate(session.date);
-        sessionDate.setHours(0, 0, 0, 0);
+        const [endHours, endMinutes] = session.endTime.split(':').map(Number);
+        sessionDate.setHours(endHours, endMinutes, 0, 0);
+
         const players = session.players as User[];
         const waitlist = session.waitlist as User[];
-        return currentUser && sessionDate >= today && (players.some(p => p.id === currentUser.id) || waitlist.some(w => w.id === currentUser.id));
+        const isUserInvolved = currentUser && (players.some(p => p.id === currentUser.id) || waitlist.some(w => w.id === currentUser.id));
+        
+        return isUserInvolved && sessionDate > now;
       })
       .sort((a, b) => getSafeDate(a.date).getTime() - getSafeDate(b.date).getTime());
   }, [currentUser, sessions]);
@@ -41,20 +44,20 @@ export function useUpcomingSessions(currentUser: User | null, sessions: Session[
  */
 export function useAvailableSessions(currentUser: User | null, sessions: Session[]): Session[] {
   return React.useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
 
     return sessions
       .filter(session => {
         const sessionDate = getSafeDate(session.date);
-        sessionDate.setHours(0, 0, 0, 0);
+        const [endHours, endMinutes] = session.endTime.split(':').map(Number);
+        sessionDate.setHours(endHours, endMinutes, 0, 0);
+
         const players = session.players as User[];
         const waitlist = session.waitlist as User[];
-        const isUserInvolved = players.some(p => p.id === currentUser?.id) || waitlist.some(w => w.id === currentUser?.id);
-        return currentUser && sessionDate >= today && !isUserInvolved;
+        const isUserInvolved = currentUser && (players.some(p => p.id === currentUser?.id) || waitlist.some(w => w.id === currentUser?.id));
+        
+        return !isUserInvolved && sessionDate > now;
       })
       .sort((a, b) => getSafeDate(a.date).getTime() - getSafeDate(b.date).getTime());
   }, [currentUser, sessions]);
 }
-
-    
