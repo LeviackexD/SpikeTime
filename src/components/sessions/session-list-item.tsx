@@ -119,9 +119,17 @@ export default function SessionListItem({
   };
 
   const formatDate = (date: Date) => {
-     const day = date.toLocaleDateString(locale, { day: '2-digit', timeZone: 'UTC' });
-     const month = date.toLocaleDateString(locale, { month: 'short', timeZone: 'UTC' });
-     return { day, month };
+    // This is the robust way to get date parts without timezone issues.
+    const day = date.getUTCDate();
+    const monthIndex = date.getUTCMonth();
+    
+    const monthNames = locale === 'es' 
+      ? ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']
+      : ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+    const month = monthNames[monthIndex];
+
+    return { day: day.toString().padStart(2, '0'), month };
   };
   
   const { day, month } = formatDate(sessionDate);
