@@ -122,6 +122,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success"});
+        fetchSessions().then(setSessions);
     }
   };
   
@@ -137,6 +138,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
         toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success"});
+        fetchSessions().then(setSessions);
      }
   };
   
@@ -147,6 +149,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success"});
+        fetchSessions().then(setSessions);
     }
   };
   
@@ -214,6 +217,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success"});
+        fetchAnnouncements().then(setAnnouncements);
     }
   };
 
@@ -225,6 +229,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success"});
+        fetchAnnouncements().then(setAnnouncements);
     }
   };
 
@@ -235,6 +240,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success"});
+        fetchAnnouncements().then(setAnnouncements);
     }
   };
   
