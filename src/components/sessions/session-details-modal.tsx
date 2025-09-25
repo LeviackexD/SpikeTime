@@ -123,8 +123,8 @@ export default function SessionDetailsModal({
   const renderActionButtons = () => {
     if (isRegistered) {
       return (
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={cancelAction}
           disabled={!canCancel}
           title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
@@ -150,9 +150,15 @@ export default function SessionDetailsModal({
       );
     }
     return (
-      <Button onClick={bookAction}>
-        {t('modals.sessionDetails.bookSpot')}
-      </Button>
+      <>
+        <Button onClick={bookAction}>
+          {t('modals.sessionDetails.bookSpot')}
+        </Button>
+        <Button variant="secondary" onClick={joinWaitlistAction}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          {t('modals.sessionDetails.joinWaitlist')}
+        </Button>
+      </>
     );
   };
 
@@ -258,3 +264,5 @@ export default function SessionDetailsModal({
     </Dialog>
   );
 }
+
+    

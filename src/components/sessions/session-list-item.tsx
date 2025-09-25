@@ -140,7 +140,6 @@ export default function SessionListItem({
         </Button>
       );
     }
-
     if (isOnWaitlist) {
       return (
         <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
@@ -149,7 +148,6 @@ export default function SessionListItem({
         </Button>
       );
     }
-
     if (isFull) {
       return (
         <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
@@ -158,11 +156,16 @@ export default function SessionListItem({
         </Button>
       );
     }
-
     return (
-      <Button className="w-full" onClick={handleBook}>
-        {t('modals.sessionDetails.bookSpot')}
-      </Button>
+      <div className="w-full flex flex-col gap-2">
+        <Button className="w-full" onClick={handleBook}>
+          {t('modals.sessionDetails.bookSpot')}
+        </Button>
+        <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          {t('modals.sessionDetails.joinWaitlist')}
+        </Button>
+      </div>
     );
   };
 
@@ -243,3 +246,5 @@ export default function SessionListItem({
     </Card>
   );
 }
+
+    

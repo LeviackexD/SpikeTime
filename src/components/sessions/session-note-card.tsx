@@ -101,7 +101,6 @@ export default function SessionNoteCard({
         </Button>
       );
     }
-
     if (isOnWaitlist) {
       return (
         <Button size="sm" variant="secondary" onClick={handleLeaveWaitlist}>
@@ -110,7 +109,6 @@ export default function SessionNoteCard({
         </Button>
       );
     }
-
     if (isFull) {
       return (
         <Button
@@ -123,11 +121,16 @@ export default function SessionNoteCard({
         </Button>
       );
     }
-
     return (
-      <Button size="sm" onClick={handleBook} className="bg-brown text-cream button-hover">
-        {t('modals.sessionDetails.bookSpot')}
-      </Button>
+       <>
+        <Button size="sm" onClick={handleBook} className="bg-brown text-cream button-hover">
+          {t('modals.sessionDetails.bookSpot')}
+        </Button>
+         <Button size="sm" variant="outline" className="mt-2" onClick={handleJoinWaitlist}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          {t('modals.sessionDetails.joinWaitlist')}
+        </Button>
+      </>
     );
   };
 
@@ -177,3 +180,5 @@ export default function SessionNoteCard({
     </div>
   );
 }
+
+    
