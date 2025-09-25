@@ -49,7 +49,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const now = new Date();
     const gracePeriodEnd = new Date(now.getTime() - 2 * 60 * 60 * 1000);
   
-    return sessionData.filter(s => {
+    const fetchedSessions = sessionData.filter(s => {
       const sessionEndDate = getSafeDate(s.date);
       const [endHours, endMinutes] = s.endTime.split(':').map(Number);
       sessionEndDate.setUTCHours(endHours, endMinutes, 0, 0);
@@ -59,15 +59,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       date: getSafeDate(s.date),
       messages: [],
     }));
+    setSessions(fetchedSessions);
   }, []);
 
-  const fetchAnnouncements = React.useCallback(async () => {
+  const fetchAnnouncements = React. useCallback(async () => {
       const { data, error } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
       if(error) {
           console.error("Error fetching announcements:", error);
-          return [];
+          setAnnouncements([]);
+          return;
       }
-      return data.map(a => ({...a, date: getSafeDate(a.date)}));
+      setAnnouncements(data.map(a => ({...a, date: getSafeDate(a.date)})));
   }, []);
 
   React.useEffect(() => {
@@ -77,20 +79,23 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     };
     
     setLoading(true);
-    Promise.all([fetchSessions(), fetchAnnouncements()]).then(([sessionRes, announcementRes]) => {
-      setSessions(sessionRes);
-      setAnnouncements(announcementRes);
+    Promise.all([fetchSessions(), fetchAnnouncements()]).finally(() => {
       setLoading(false);
     });
 
+    const handleRealtimeUpdate = (payload: any) => {
+      // console.log("Realtime change detected, refetching sessions:", payload);
+      fetchSessions();
+    };
+
     const sessionChanges = supabase.channel('sessions-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, () => fetchSessions().then(setSessions))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, () => fetchSessions().then(setSessions))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, () => fetchSessions().then(setSessions))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleRealtimeUpdate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, handleRealtimeUpdate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, handleRealtimeUpdate)
       .subscribe();
 
     const announcementChanges = supabase.channel('announcements-channel')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => fetchAnnouncements().then(setAnnouncements))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, fetchAnnouncements)
         .subscribe();
     
     return () => {
@@ -144,33 +149,45 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     const originalSessions = sessions;
+    
+    // Optimistic update
     setSessions(prevSessions => prevSessions.map(s => 
         s.id === sessionId 
           ? { ...s, players: [...s.players, currentUser] } 
           : s
     ));
+    
     const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
+    
     if (error) {
       console.error("Error booking session (RPC):", error);
       toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
+      // Rollback optimistic update on failure
       setSessions(originalSessions);
       return false;
     }
+    
+    // No need to fetch here, realtime will catch it, but optimistic update is faster for the current user.
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     const originalSessions = sessions;
+
+    // Optimistic update
     setSessions(prevSessions => prevSessions.map(s =>
         s.id === sessionId
           ? { ...s, players: s.players.filter(p => p.id !== currentUser.id) }
           : s
     ));
+
     const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
+
     if (error) {
         console.error("Error canceling booking (RPC):", error);
         toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
+        // Rollback optimistic update on failure
         setSessions(originalSessions);
         return false;
     }
@@ -180,18 +197,23 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     const originalSessions = sessions;
+
+    // Optimistic update
     setSessions(prevSessions => prevSessions.map(s =>
         s.id === sessionId
           ? { ...s, waitlist: [...s.waitlist, currentUser] }
           : s
     ));
+
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
         user_id: currentUser.id
     });
+
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
+        // Rollback optimistic update on failure
         setSessions(originalSessions);
         return false;
     }
@@ -201,17 +223,22 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
      const originalSessions = sessions;
+
+     // Optimistic update
      setSessions(prevSessions => prevSessions.map(s =>
          s.id === sessionId
            ? { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) }
            : s
      ));
+     
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
         .eq('user_id', currentUser.id);
+
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Action Failed", description: error.message, variant: "destructive" });
+        // Rollback optimistic update on failure
         setSessions(originalSessions);
         return false;
     }
@@ -283,3 +310,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
