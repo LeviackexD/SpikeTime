@@ -28,7 +28,7 @@ import {
 import type { Session, SkillLevel } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
 import { getSafeDate, toYYYYMMDD, toHHMM } from '@/lib/utils';
-import { zonedTimeToUtc } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 
 type FormData = {
   date: string;
@@ -99,8 +99,8 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
         e.preventDefault();
         
         const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const startUTC = zonedTimeToUtc(`${formData.date}T${formData.startTime}`, userTimeZone);
-        const endUTC = zonedTimeToUtc(`${formData.date}T${formData.endTime}`, userTimeZone);
+        const startUTC = fromZonedTime(`${formData.date}T${formData.startTime}`, userTimeZone);
+        const endUTC = fromZonedTime(`${formData.date}T${formData.endTime}`, userTimeZone);
         
         let dataToSave: any = { 
             location: formData.location,
