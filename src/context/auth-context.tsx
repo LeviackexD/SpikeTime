@@ -48,8 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     avatarUrl: '',
                     skillLevel: 'Beginner',
                     favoritePosition: 'Hitter',
-                    stats: { sessionsPlayed: 0, attendanceRate: 0 },
-                });
+                 });
 
             } else if (profile) {
                 const appUser: User = {
