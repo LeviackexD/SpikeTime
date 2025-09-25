@@ -43,7 +43,7 @@ const ImageViewer = ({ user, onClose }: { user: Partial<User>; onClose: () => vo
       className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center animate-fade-in"
       onClick={onClose}
     >
-      <div className="relative w-80 h-80 sm:w-96 sm:h-96" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-80 h-80 sm:w-96 sm:h-96">
         <Image
           src={user.avatarUrl || '/default-avatar.png'}
           alt={user.name || 'Player avatar'}
@@ -56,7 +56,6 @@ const ImageViewer = ({ user, onClose }: { user: Partial<User>; onClose: () => vo
             variant="ghost"
             size="icon"
             className="absolute top-0 right-0 text-white hover:bg-white/20 hover:text-white"
-            onClick={onClose}
         >
             <X className="h-6 w-6" />
         </Button>
