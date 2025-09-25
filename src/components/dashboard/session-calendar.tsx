@@ -19,7 +19,7 @@ interface SessionCalendarProps {
 export default function SessionCalendar({ sessions, selectedDate, onDateChange }: SessionCalendarProps) {
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
-      const date = getSafeDate(session.date).toISOString().split('T')[0];
+      const date = getSafeDate(session.date).toDateString();
       if (!acc[date]) {
         acc[date] = [];
       }
@@ -38,7 +38,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange }
         className="p-0"
         modifiers={{
             hasSessions: (day) => {
-                const dateString = day.toISOString().split('T')[0];
+                const dateString = day.toDateString();
                 return !!sessionsByDate[dateString];
             }
         }}

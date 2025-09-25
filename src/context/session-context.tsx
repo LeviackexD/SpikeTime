@@ -31,9 +31,10 @@ export const getSafeDate = (date: string | Date): Date => {
         return date;
     }
     // Handle date strings, ensuring they are parsed without timezone shifts.
-    // Replacing dashes with slashes is a common trick to make JS parse it as local time.
+    // The 'T00:00:00' ensures it's parsed as UTC midnight, then the local timezone offset is applied by new Date().
+    // By adding the timezone offset back, we effectively get the correct local date.
     const dateString = String(date).split('T')[0];
-    const d = new Date(dateString.replace(/-/g, '/'));
+    const d = new Date(dateString + 'T00:00:00');
     
     if (!isNaN(d.getTime())) {
         return d;
@@ -58,7 +59,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       .order('date', { ascending: false });
 
     if (sessionError) {
-      console.error('Error fetching sessions:', sessionError);
       return [];
     }
     

@@ -46,7 +46,7 @@ const CalendarPage: NextPage = () => {
     return sessionDate.toDateString() === selectedDate.toDateString();
   }).sort((a,b) => a.startTime.localeCompare(b.startTime));
   
-  const formattedDate = selectedDate.toLocaleDateString(locale, { month: 'long', day: 'numeric' });
+  const formattedDate = selectedDate.toLocaleDateString(locale, { month: 'long', day: 'numeric', timeZone: 'UTC' });
 
   return (
     <div className="space-y-8 animate-fade-in">
