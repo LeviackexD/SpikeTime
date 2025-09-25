@@ -5,10 +5,15 @@
         "calendar": "Calendar",
         "announcements": "Announcements",
         "chat": "Chat",
+        "memories": "Memories",
         "profile": "Profile",
         "adminPanel": "Admin Panel",
         "settings": "Settings",
         "logout": "Log out"
+    },
+    "memoriesPage": {
+        "title": "Memories",
+        "subtitle": "A collection of unique moments from past sessions."
     },
     "dashboard": {
         "welcome": "Welcome back, {name}!",
@@ -256,7 +261,10 @@
             "cancelSpot": "Cancel My Spot",
             "joinWaitlist": "Join Waitlist",
             "leaveWaitlist": "Leave Waitlist",
-            "cancellationTooltip": "Cancellations must be made more than 12 hours in advance."
+            "cancellationTooltip": "Cancellations must be made more than 12 hours in advance.",
+            "uploadMoment": "Upload Moment",
+            "uploadHint": "Only one photo per session. It will be permanent!",
+            "sessionMoment": "Session's Moment"
         },
         "editProfile": {
             "title": "Edit Profile",
@@ -309,5 +317,3 @@
         "es": "Español"
     }
 }
-
-    

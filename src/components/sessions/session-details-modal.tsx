@@ -12,8 +12,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
-import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut } from 'lucide-react';
-import { getSafeDate } from '@/context/session-context';
+import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut, Camera, Loader2 } from 'lucide-react';
+import { getSafeDate, useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import GenerateTeamsButton from './generate-teams-button';
 import { cn, formatTime } from '@/lib/utils';
 import Image from 'next/image';
+import { Input } from '../ui/input';
 
 
 interface SessionDetailsModalProps {
@@ -46,6 +47,9 @@ export default function SessionDetailsModal({
   const { user: currentUser } = useAuth();
   const { t, locale } = useLanguage();
   const { toast } = useToast();
+  const { uploadMoment } = useSessions();
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   if (!session || !currentUser) return null;
 
@@ -58,14 +62,24 @@ export default function SessionDetailsModal({
   const isRegistered = players.some(p => p.id === currentUser.id);
   const isOnWaitlist = waitlist.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
-  const canGenerateTeams = spotsFilled >= 2; // Can generate teams with 2 or more players
+  const canGenerateTeams = spotsFilled >= 2;
+  
+  const sessionDate = getSafeDate(session.date);
+  const endTimeString = `${sessionDate.toISOString().split('T')[0]}T${session.endTime}`;
+  const sessionEndTime = new Date(endTimeString);
+  const now = new Date();
+  const hasSessionEnded = now > sessionEndTime;
+  
+  const timeSinceEnd = now.getTime() - sessionEndTime.getTime();
+  const hoursSinceEnd = timeSinceEnd / (1000 * 60 * 60);
+
+  const canUploadMoment = isRegistered && hasSessionEnded && hoursSinceEnd <= 2 && !session.momentImageUrl;
   
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {
     if (session) {
       const success = await action(session.id);
       if (success) {
         toast({ ...successToast, variant: 'success' });
-        // The modal is no longer closed on success to allow the UI to update via subscription.
       } else {
         toast({ ...failureToast, variant: 'destructive' });
       }
@@ -82,9 +96,7 @@ export default function SessionDetailsModal({
     });
   }
   
-  const sessionDate = getSafeDate(session.date);
   const sessionDateTime = new Date(`${sessionDate.toISOString().split('T')[0]}T${session.startTime}`);
-  const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
 
@@ -121,8 +133,27 @@ export default function SessionDetailsModal({
     );
   }
 
+  const handleMomentFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && session) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: t('toasts.imageTooLargeTitle'),
+          description: t('toasts.imageTooLargeDescription', { maxSize: 5 }),
+          variant: "destructive"
+        });
+        return;
+      }
+      setIsUploading(true);
+      const success = await uploadMoment(session.id, file);
+      setIsUploading(false);
+      if (success) {
+        // The modal will update via real-time subscription
+      }
+    }
+  };
+
   const renderActionButtons = () => {
-    // 1. User is registered for the session
     if (isRegistered) {
       return (
         <Button
@@ -136,7 +167,6 @@ export default function SessionDetailsModal({
       );
     }
   
-    // 2. User is on the waitlist
     if (isOnWaitlist) {
       return (
         <div className="flex items-center gap-2 flex-wrap">
@@ -153,7 +183,6 @@ export default function SessionDetailsModal({
       );
     }
   
-    // 3. User is not registered or on the waitlist
     if (!isFull) {
       return (
         <div className="flex items-center gap-2 flex-wrap">
@@ -167,7 +196,6 @@ export default function SessionDetailsModal({
         </div>
       );
     } else {
-      // Session is full, and user is not involved
       return (
         <Button variant="secondary" onClick={joinWaitlistAction}>
           <UserPlus className="mr-2 h-4 w-4" />
@@ -265,6 +293,33 @@ export default function SessionDetailsModal({
                 </div>
               )}
             </div>
+
+             {canUploadMoment && (
+              <div className="pt-4">
+                <Button variant="special" className="w-full" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                  {isUploading ? <Loader2 className="animate-spin" /> : <Camera />}
+                  {t('modals.sessionDetails.uploadMoment')}
+                </Button>
+                <Input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/png, image/jpeg"
+                  onChange={handleMomentFileChange}
+                  disabled={isUploading}
+                />
+                <p className="text-xs text-muted-foreground text-center mt-2">{t('modals.sessionDetails.uploadHint')}</p>
+              </div>
+            )}
+            
+            {session.momentImageUrl && (
+                <div className="pt-4">
+                    <h3 className="font-semibold text-center mb-2">{t('modals.sessionDetails.sessionMoment')}</h3>
+                    <div className="relative aspect-video w-full rounded-lg overflow-hidden">
+                        <Image src={session.momentImageUrl} alt={t('modals.sessionDetails.sessionMoment')} fill style={{ objectFit: 'cover' }} />
+                    </div>
+                </div>
+            )}
           </TooltipProvider>
 
         </div>

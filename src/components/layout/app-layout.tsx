@@ -21,6 +21,7 @@ import {
   Menu,
   Home,
   MessageCircle,
+  Camera,
 } from 'lucide-react';
 
 // UI Components
@@ -55,6 +56,7 @@ const getNavItems = (t: (key: string) => string) => [
   { href: '/calendar', icon: Calendar, label: t('nav.calendar') },
   { href: '/announcements', icon: Megaphone, label: t('nav.announcements') },
   { href: '/chat', icon: MessageCircle, label: t('nav.chat') },
+  { href: '/memories', icon: Camera, label: t('nav.memories') },
   { href: '/profile', icon: User, label: t('nav.profile') },
   { href: '/admin', icon: Shield, label: t('nav.adminPanel'), adminOnly: true },
 ];
@@ -150,7 +152,7 @@ function DesktopNav() {
           const linkContent = (
             <Link
               key={item.href}
-              href={item.disabled ? '#' : item.href}
+              href={item.href}
               className={cn(
                 'transition-colors',
                 isAnnouncementsPage 
@@ -158,25 +160,12 @@ function DesktopNav() {
                   : 'hover:text-foreground',
                 pathname === item.href 
                   ? (isAnnouncementsPage ? 'text-white' : 'text-foreground') 
-                  : (isAnnouncementsPage ? 'text-cream/70' : 'text-muted-foreground'),
-                item.disabled && 'cursor-not-allowed opacity-50'
+                  : (isAnnouncementsPage ? 'text-cream/70' : 'text-muted-foreground')
               )}
-              onClick={(e) => item.disabled && e.preventDefault()}
             >
               {item.label}
             </Link>
           );
-
-          if (item.disabled) {
-            return (
-              <Tooltip key={item.href}>
-                <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                <TooltipContent>
-                  <p>{t('comingSoon.short')}</p>
-                </TooltipContent>
-              </Tooltip>
-            )
-          }
 
           return linkContent;
         })}
@@ -220,20 +209,15 @@ function MobileNav() {
               return (
                 <Link
                   key={item.href}
-                  href={item.disabled ? '#' : item.href}
-                  onClick={(e) => {
-                    if (item.disabled) e.preventDefault();
-                    else setIsSheetOpen(false);
-                  }}
+                  href={item.href}
+                  onClick={() => setIsSheetOpen(false)}
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-primary-foreground/80 transition-all hover:text-primary-foreground',
-                    pathname === item.href && !item.disabled && 'bg-white/10 text-primary-foreground',
-                    item.disabled && 'opacity-50 cursor-not-allowed'
+                    pathname === item.href && 'bg-white/10 text-primary-foreground'
                   )}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}
-                  {item.disabled && <Badge variant="secondary" className="text-xs ml-auto">Soon</Badge>}
                 </Link>
               );
             })}

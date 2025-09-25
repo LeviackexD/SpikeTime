@@ -50,6 +50,7 @@ export interface Session {
   maxPlayers: number;
   waitlist: Partial<User>[];
   imageUrl?: string;
+  momentImageUrl?: string | null;
   messages: Message[];
   createdBy?: string; // Admin User ID
 }
@@ -67,5 +68,3 @@ export interface DirectChat {
     participants: User[];
     messages: Message[];
 }
-
-    
