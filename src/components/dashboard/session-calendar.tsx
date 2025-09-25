@@ -29,7 +29,6 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange }
   
   return (
       <Calendar
-        key={JSON.stringify(sessions)}
         mode="single"
         selected={selectedDate}
         onSelect={onDateChange}
