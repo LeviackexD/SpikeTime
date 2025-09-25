@@ -128,12 +128,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             
             setIsUploading(false);
 
-            if(success) {
-                toast({
-                    title: t('toasts.avatarUpdatedTitle'),
-                    description: t('toasts.avatarUpdatedDescription'),
-                });
-            } else {
+            if(!success) {
                  toast({
                     title: t('toasts.uploadFailedTitle'),
                     description: t('toasts.uploadFailedDescription'),
@@ -153,6 +148,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                     title: t('toasts.profileUpdatedTitle'),
                     description: t('toasts.profileUpdatedDescription'),
                     variant: "success",
+                    duration: 1500
                 });
                 onClose();
             } else {

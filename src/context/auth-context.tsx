@@ -7,6 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 import { supabase, adminSupabase } from '@/lib/supabase-client';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = React.useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -190,6 +192,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       if (data) {
+        toast({ title: "Avatar updated", description: "Your new avatar has been saved.", variant: "success", duration: 1500 });
         setUser(prevUser => prevUser ? { ...prevUser, ...data } : null);
         return true;
       }

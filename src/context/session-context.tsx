@@ -119,7 +119,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         console.error("Error creating session:", error);
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
-        toast({ title: "Session Created!", description: "The new session has been added.", variant: "success"});
+        toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
     }
   };
   
@@ -134,7 +134,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         console.error("Error updating session:", error);
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
-        toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success"});
+        toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success", duration: 1500});
      }
   };
   
@@ -144,7 +144,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         console.error("Error deleting session:", error);
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
-        toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success"});
+        toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
     }
   };
   
@@ -262,7 +262,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         console.error("Error creating announcement:", error);
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
-        toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success"});
+        toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
     }
   };
 
@@ -273,7 +273,7 @@ if(error) {
         console.error("Error updating announcement:", error);
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
-        toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success"});
+        toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
     }
   };
 
@@ -283,7 +283,7 @@ if(error) {
         console.error("Error deleting announcement:", error);
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
-        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success"});
+        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
     }
   };
   

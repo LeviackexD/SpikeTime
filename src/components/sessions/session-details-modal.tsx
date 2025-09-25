@@ -60,7 +60,7 @@ export default function SessionDetailsModal({
   const isFull = spotsFilled >= session.maxPlayers;
   const canGenerateTeams = spotsFilled >= 2; // Can generate teams with 2 or more players
   
-  const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }, failureToast: { title: string, description: string }) => {
+  const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {
     if (session) {
       const success = await action(session.id);
       if (success) {
@@ -91,7 +91,7 @@ export default function SessionDetailsModal({
   const bookAction = () => {
     handleAction(
       onBook, 
-      { title: t('toasts.bookingConfirmedTitle'), description: t('toasts.bookingConfirmedDescription', { level: t(`skillLevels.${session.level}`) }) },
+      { title: t('toasts.bookingConfirmedTitle'), description: t('toasts.bookingConfirmedDescription', { level: t(`skillLevels.${session.level}`) }), duration: 1500 },
       { title: t('toasts.bookingFailedTitle'), description: t('toasts.bookingFailedDescription') }
     );
   }
@@ -102,21 +102,21 @@ export default function SessionDetailsModal({
     }
     handleAction(
       onCancel, 
-      { title: t('toasts.bookingCanceledTitle'), description: t('toasts.bookingCanceledDescription') },
+      { title: t('toasts.bookingCanceledTitle'), description: t('toasts.bookingCanceledDescription'), duration: 1500 },
       { title: t('toasts.cancellationFailedTitle'), description: t('toasts.cancellationFailedDescription') }
     );
   }
   const joinWaitlistAction = () => {
     handleAction(
       onWaitlist, 
-      { title: t('toasts.waitlistJoinedTitle'), description: t('toasts.waitlistJoinedDescription') },
+      { title: t('toasts.waitlistJoinedTitle'), description: t('toasts.waitlistJoinedDescription'), duration: 1500 },
       { title: t('toasts.waitlistJoinFailedTitle'), description: t('toasts.waitlistJoinFailedDescription') }
     );
   }
   const leaveWaitlistAction = () => {
     handleAction(
       onLeaveWaitlist, 
-      { title: t('toasts.waitlistLeftTitle'), description: t('toasts.waitlistLeftDescription') },
+      { title: t('toasts.waitlistLeftTitle'), description: t('toasts.waitlistLeftDescription'), duration: 1500 },
       { title: t('toasts.waitlistLeaveFailedTitle'), description: t('toasts.waitlistLeaveFailedDescription') }
     );
   }

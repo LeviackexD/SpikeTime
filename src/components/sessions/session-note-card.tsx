@@ -61,28 +61,28 @@ export default function SessionNoteCard({
   const handleBook = async () => {
     const success = await onBook(session.id);
     if (success) {
-      toast({ title: t('toasts.bookingConfirmedTitle'), description: t('toasts.bookingConfirmedDescription', { level: t(`skillLevels.${session.level}`) }), variant: 'success' });
+      toast({ title: t('toasts.bookingConfirmedTitle'), description: t('toasts.bookingConfirmedDescription', { level: t(`skillLevels.${session.level}`) }), variant: 'success', duration: 1500 });
     }
   };
 
   const handleCancel = async () => {
     const success = await onCancel(session.id);
     if (success) {
-      toast({ title: t('toasts.bookingCanceledTitle'), description: t('toasts.bookingCanceledDescription'), variant: 'success' });
+      toast({ title: t('toasts.bookingCanceledTitle'), description: t('toasts.bookingCanceledDescription'), variant: 'success', duration: 1500 });
     }
   };
 
   const handleJoinWaitlist = async () => {
     const success = await onWaitlist(session.id);
     if (success) {
-      toast({ title: t('toasts.waitlistJoinedTitle'), description: t('toasts.waitlistJoinedDescription'), variant: 'success' });
+      toast({ title: t('toasts.waitlistJoinedTitle'), description: t('toasts.waitlistJoinedDescription'), variant: 'success', duration: 1500 });
     }
   };
 
   const handleLeaveWaitlist = async () => {
     const success = await onLeaveWaitlist(session.id);
     if (success) {
-      toast({ title: t('toasts.waitlistLeftTitle'), description: t('toasts.waitlistLeftDescription'), variant: 'success' });
+      toast({ title: t('toasts.waitlistLeftTitle'), description: t('toasts.waitlistLeftDescription'), variant: 'success', duration: 1500 });
     }
   };
 
