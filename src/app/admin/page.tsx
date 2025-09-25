@@ -506,7 +506,3 @@ export default function AdminPage() {
     </>
   );
 }
-
-    
-
-    

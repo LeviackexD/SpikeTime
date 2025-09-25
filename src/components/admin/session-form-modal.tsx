@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import type { Session, SkillLevel, User } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
-import { getSafeDate } from '@/context/session-context';
+import { getSafeDate, toYYYYMMDD } from '@/context/session-context';
 
 // The data shape for the form, using a simple string for the date.
 type SessionFormData = Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date' | 'createdBy'> & { date: string };
@@ -43,7 +43,7 @@ interface SessionFormModalProps {
   session: Session | null;
 }
 
-const getTodayString = () => new Date().toISOString().split('T')[0];
+const getTodayString = () => toYYYYMMDD(new Date());
 
 const emptySession: SessionFormData = {
   startTime: '',
@@ -62,12 +62,9 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     React.useEffect(() => {
         if (isOpen) {
             if (session) {
-                // When editing, get the 'YYYY-MM-DD' part from the date
-                const date = getSafeDate(session.date);
-                const formattedDate = !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : getTodayString();
-                
+                const sessionDate = getSafeDate(session.date);
                 setFormData({
-                    date: formattedDate,
+                    date: toYYYYMMDD(sessionDate),
                     startTime: session.startTime,
                     endTime: session.endTime,
                     location: session.location,
@@ -97,7 +94,14 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        let dataToSave: any = { ...formData };
+        // Combine date and time into a full Date object before saving
+        const combinedDateTime = new Date(`${formData.date}T${formData.startTime}`);
+
+        let dataToSave: any = { 
+            ...formData,
+            // Replace the simple date string with the full Date object
+            date: combinedDateTime 
+        };
         
         if (session) {
             // If editing, include the original session ID and other properties

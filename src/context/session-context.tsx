@@ -11,8 +11,8 @@ interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
   loading: boolean;
-  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date' | 'createdBy'> & { date: string }) => Promise<void>;
-  updateSession: (session: Omit<Session, 'date' | 'messages' | 'createdBy'> & { date: string, id: string }) => Promise<void>;
+  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'createdBy'>) => Promise<void>;
+  updateSession: (session: Omit<Session, 'messages' | 'createdBy'>) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<boolean>;
   cancelBooking: (sessionId: string) => Promise<boolean>;
@@ -30,18 +30,16 @@ export const getSafeDate = (date: string | Date): Date => {
   if (date instanceof Date) {
     return date;
   }
-  // For 'YYYY-MM-DD' strings, we replace dashes with slashes.
-  // This is a common trick to make JavaScript parse the date as local time
-  // instead of UTC, which prevents off-by-one day errors in different timezones.
-  // new Date('2024-10-06') -> Interpreted as UTC midnight.
-  // new Date('2024/10/06') -> Interpreted as local midnight.
-  if (typeof date === 'string' && date.includes('-')) {
-    return new Date(date.replace(/-/g, '/'));
-  }
+  // This correctly parses ISO strings (from DB) into a local Date object.
   return new Date(date);
 };
 
-
+export const toYYYYMMDD = (date: Date): string => {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const [sessions, setSessions] = React.useState<Session[]>([]);
@@ -57,6 +55,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       .order('date', { ascending: false });
 
     if (sessionError) {
+      console.error("Error fetching sessions:", sessionError);
       return [];
     }
     
@@ -108,11 +107,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   }, [currentUser, fetchSessions, fetchAnnouncements]);
 
 
-  const createSession = async (sessionData: Omit<Session, 'id' | 'players'| 'waitlist'|'messages' | 'date' | 'createdBy'> & { date: string }) => {
+  const createSession = async (sessionData: Omit<Session, 'id' | 'players'| 'waitlist'|'messages' | 'createdBy'>) => {
     if (!currentUser) return;
     const { error } = await supabase.from('sessions').insert({
         ...sessionData,
-        date: sessionData.date, // Already a string
+        date: (sessionData.date as Date).toISOString(), // Normaliza a UTC
         createdBy: currentUser.id,
     });
     if(error) {
@@ -124,11 +123,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
   
-  const updateSession = async (sessionData: Omit<Session, 'date' | 'messages' | 'createdBy'> & { date: string, id: string }) => {
-     const { id, players, waitlist, ...updateData } = sessionData as any;
+  const updateSession = async (sessionData: Omit<Session, 'messages' | 'createdBy'>) => {
+     const { id, players, waitlist, ...updateData } = sessionData;
      const { error } = await supabase.from('sessions').update({
          ...updateData,
-         date: sessionData.date,
+         date: (sessionData.date as Date).toISOString(), // Normaliza a UTC
      }).eq('id', id);
 
      if(error) {
@@ -208,7 +207,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
     const { error } = await supabase.from('announcements').insert({
         ...announcementData,
-        date: new Date().toISOString().split('T')[0] // Use current date
+        date: new Date().toISOString()
     });
     if(error) {
         console.error("Error creating announcement:", error);
@@ -222,7 +221,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const updateAnnouncement = async (announcementData: Omit<Announcement, 'date'> & {id: string}) => {
     const { id, ...updateData } = announcementData;
     const { error } = await supabase.from('announcements').update(updateData).eq('id', id);
-    if(error) {
+if(error) {
         console.error("Error updating announcement:", error);
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
@@ -274,3 +273,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    

@@ -11,13 +11,12 @@ import * as React from 'react';
 import type { NextPage } from 'next';
 import dynamic from 'next/dynamic';
 import { ClipboardCheck, Pin } from 'lucide-react';
-import { useSessions, getSafeDate } from '@/context/session-context';
+import { useSessions, getSafeDate, toYYYYMMDD } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import SessionNoteCard from '@/components/sessions/session-note-card';
-import { toYYYYMMDD } from '@/lib/utils';
 
 const SessionCalendar = dynamic(() => import('@/components/dashboard/session-calendar'), {
   ssr: false,

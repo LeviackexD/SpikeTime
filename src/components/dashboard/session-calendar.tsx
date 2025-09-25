@@ -8,8 +8,7 @@
 import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import type { Session } from '@/lib/types';
-import { getSafeDate } from '@/context/session-context';
-import { toYYYYMMDD } from '@/lib/utils';
+import { getSafeDate, toYYYYMMDD } from '@/context/session-context';
 
 interface SessionCalendarProps {
   sessions: Session[];
