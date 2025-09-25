@@ -65,6 +65,7 @@ export default function SessionDetailsModal({
       const success = await action(session.id);
       if (success) {
         toast({ ...successToast, variant: 'success' });
+        onClose(); // Close modal on success
       } else {
         toast({ ...failureToast, variant: 'destructive' });
       }
