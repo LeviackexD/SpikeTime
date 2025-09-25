@@ -68,7 +68,6 @@ export default function SessionListItem({
 
   // --- Swipe Gesture State ---
   const [touchStart, setTouchStart] = React.useState(0);
-  const [touchEnd, setTouchEnd] = React.useState(0);
   const [isSwiping, setIsSwiping] = React.useState(false);
   const [swipeOffset, setSwipeOffset] = React.useState(0);
   const swipeThreshold = 75; // pixels to swipe before action triggers
@@ -139,7 +138,6 @@ export default function SessionListItem({
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isMobile || (!canSwipeLeft && !canSwipeRight)) return;
     setTouchStart(e.targetTouches[0].clientX);
-    setTouchEnd(e.targetTouches[0].clientX); // Reset on new touch
     setIsSwiping(true);
   };
 
@@ -149,11 +147,11 @@ export default function SessionListItem({
     const currentX = e.targetTouches[0].clientX;
     let offset = currentX - touchStart;
 
-    // Restrict swipe direction
-    if (canSwipeRight && offset < 0) { // Should only swipe right
+    // Restrict swipe direction based on available actions
+    if (!canSwipeRight && offset > 0) {
       offset = 0;
     }
-    if (canSwipeLeft && offset > 0) { // Should only swipe left
+    if (!canSwipeLeft && offset < 0) {
       offset = 0;
     }
 
@@ -229,7 +227,7 @@ export default function SessionListItem({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-lg bg-card">
+    <div className="relative overflow-hidden rounded-lg bg-card h-full">
       {isMobile && (
         <>
           {/* Swipe Right to Book Background */}
@@ -249,7 +247,7 @@ export default function SessionListItem({
         </>
       )}
       <div
-        className="relative"
+        className="relative h-full"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -333,3 +331,5 @@ export default function SessionListItem({
     </div>
   );
 }
+
+    
