@@ -75,7 +75,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
 
             // Use a consistent file path for the user's avatar
             const fileExtension = file.name.split('.').pop();
-            const filePath = `${user.id}/avatar.${fileExtension}`;
+            const filePath = `${user.id}-avatar.${fileExtension}`;
             
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
