@@ -30,10 +30,7 @@ import {
   XCircle,
   Eye,
   LogOut,
-  Calendar,
   Check,
-  Camera,
-  Loader2,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
@@ -207,15 +204,9 @@ export default function SessionListItem({
   
     if (!isFull) {
       return (
-        <div className="w-full flex flex-col gap-2">
-          <Button className="w-full" onClick={handleBook}>
+        <Button className="w-full" onClick={handleBook}>
             {t('modals.sessionDetails.bookSpot')}
-          </Button>
-          <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            {t('modals.sessionDetails.joinWaitlist')}
-          </Button>
-        </div>
+        </Button>
       );
     } else {
       return (
@@ -227,6 +218,9 @@ export default function SessionListItem({
     }
   };
 
+  const mainAction = isRegistered ? 'cancel' : isFull ? 'waitlist' : 'book';
+  const swipeActionLabel = mainAction === 'book' ? t('modals.sessionDetails.bookSpot') : t('modals.sessionDetails.cancelSpot');
+
   return (
     <div className="relative overflow-hidden rounded-lg bg-card h-full">
       {isMobile && (
@@ -235,13 +229,13 @@ export default function SessionListItem({
           {canSwipeRight && (
             <div className="absolute inset-0 bg-green-500 flex items-center justify-start px-6 transition-opacity" style={{ opacity: Math.min(1, Math.max(0, swipeOffset / swipeThreshold)) }}>
               <Check className="h-6 w-6 text-white" />
-              <span className="ml-2 font-semibold text-white">{t('modals.sessionDetails.bookSpot')}</span>
+              <span className="ml-2 font-semibold text-white">{swipeActionLabel}</span>
             </div>
           )}
           {/* Swipe Left to Cancel Background */}
           {canSwipeLeft && (
             <div className="absolute inset-0 bg-red-500 flex items-center justify-end px-6 transition-opacity" style={{ opacity: Math.min(1, Math.max(0, -swipeOffset / swipeThreshold)) }}>
-              <span className="mr-2 font-semibold text-white">{t('modals.sessionDetails.cancelSpot')}</span>
+              <span className="mr-2 font-semibold text-white">{swipeActionLabel}</span>
               <XCircle className="h-6 w-6 text-white" />
             </div>
           )}
@@ -326,11 +320,15 @@ export default function SessionListItem({
 
           <CardFooter className="p-4 pt-0 mt-auto flex flex-col gap-2 bg-card">
             {renderActionButtons()}
+            {mainAction === 'book' && !isFull && (
+                <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    {t('modals.sessionDetails.joinWaitlist')}
+                </Button>
+            )}
           </CardFooter>
         </Card>
       </div>
     </div>
   );
 }
-
-    
