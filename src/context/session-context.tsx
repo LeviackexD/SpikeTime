@@ -30,17 +30,12 @@ export const getSafeDate = (date: string | Date): Date => {
     if (date instanceof Date && !isNaN(date.getTime())) {
         return date;
     }
-    // Handle date strings, ensuring they are parsed without timezone shifts.
-    // The 'T00:00:00' ensures it's parsed as UTC midnight, then the local timezone offset is applied by new Date().
-    // By adding the timezone offset back, we effectively get the correct local date.
-    const dateString = String(date).split('T')[0];
-    const d = new Date(dateString + 'T00:00:00');
-    
+    // Handles date strings like '2024-10-02'. The 'T00:00:00' ensures it's parsed as midnight UTC.
+    const d = new Date(String(date) + 'T00:00:00');
     if (!isNaN(d.getTime())) {
         return d;
     }
-    
-    // Fallback for invalid or unparsable dates
+    // Fallback for invalid dates
     return new Date();
 };
 
