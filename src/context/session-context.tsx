@@ -36,29 +36,76 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchSessions = React.useCallback(async () => {
+    // 1. Fetch all sessions
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
-      .select('*, players:profiles!session_players(*), waitlist:profiles!session_waitlist(*)')
+      .select('*')
       .order('start_datetime', { ascending: false });
-  
+
     if (sessionError) {
       console.error("Error fetching sessions:", sessionError);
-      return [];
+      setSessions([]); // Clear sessions on error
+      return;
     }
-  
+
+    if (!sessionData) {
+      setSessions([]);
+      return;
+    }
+    
     const now = new Date();
     // 2-hour grace period after a session ends
     const gracePeriodEnd = new Date(now.getTime() - 2 * 60 * 60 * 1000); 
-  
-    const fetchedSessions = sessionData.filter(s => {
+
+    const activeSessions = sessionData.filter(s => {
       const sessionEndDate = getSafeDate(s.end_datetime);
       return sessionEndDate > gracePeriodEnd;
-    }).map(s => ({
-      ...s,
-      messages: [],
-    }));
-    setSessions(fetchedSessions);
+    });
+    
+    const sessionIds = activeSessions.map(s => s.id);
+
+    if (sessionIds.length === 0) {
+      setSessions([]);
+      return;
+    }
+
+    // 2. Fetch all players for the active sessions
+    const { data: playersData, error: playersError } = await supabase
+      .from('session_players')
+      .select('session_id, profiles(*)')
+      .in('session_id', sessionIds);
+
+    if (playersError) {
+      console.error("Error fetching session players:", playersError);
+      // Continue without player data if this fails
+    }
+
+    // 3. Fetch all waitlisted users for the active sessions
+    const { data: waitlistData, error: waitlistError } = await supabase
+      .from('session_waitlist')
+      .select('session_id, profiles(*)')
+      .in('session_id', sessionIds);
+      
+    if (waitlistError) {
+        console.error("Error fetching session waitlist:", waitlistError);
+        // Continue without waitlist data if this fails
+    }
+
+    // 4. Combine the data on the client side
+    const sessionsWithPlayers = activeSessions.map(session => {
+        const players = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) as User[] || [];
+        const waitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) as User[] || [];
+        return {
+            ...session,
+            players,
+            waitlist,
+            messages: [], // keep messages property
+        };
+    });
+
+    setSessions(sessionsWithPlayers);
   }, []);
+
 
   const fetchAnnouncements = React.useCallback(async () => {
       const { data, error } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
