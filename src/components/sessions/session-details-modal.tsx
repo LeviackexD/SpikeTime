@@ -69,10 +69,11 @@ export default function SessionDetailsModal({
   const sessionEndTime = new Date(endTimeString);
   const now = new Date();
 
-  const hasSessionEnded = now > sessionEndTime;
+  // DEMO MODIFICATION: Force one registered session to be in the "upload moment" state.
+  const hasSessionEnded = now > sessionEndTime || (isRegistered && session.id.endsWith('1')); // Force session 'ses-1' to appear ended
   const hoursSinceEnd = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60 * 60);
 
-  const canUploadMoment = isRegistered && hasSessionEnded && hoursSinceEnd <= 2 && !session.momentImageUrl;
+  const canUploadMoment = isRegistered && hasSessionEnded && (hoursSinceEnd <= 2 || session.id.endsWith('1')) && !session.momentImageUrl;
   
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {
     if (session) {
