@@ -198,50 +198,36 @@ export default function SessionListItem({
 
       <CardFooter className="p-4 pt-0 mt-auto flex flex-col gap-2">
         {isRegistered ? (
-          <Button
-            className="w-full"
-            variant="outline"
-            onClick={handleCancel}
-            disabled={!canCancel}
-            title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
-          >
-            <XCircle className="mr-2 h-4 w-4" />
-            {t('modals.sessionDetails.cancelSpot')}
-          </Button>
+            <Button
+                className="w-full"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={!canCancel}
+                title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
+            >
+                <XCircle className="mr-2 h-4 w-4" />
+                {t('modals.sessionDetails.cancelSpot')}
+            </Button>
         ) : isOnWaitlist ? (
-            <div className='flex gap-2 w-full'>
-                {!isFull && 
-                <Button className="w-full" onClick={handleBook}>
-                    {t('modals.sessionDetails.bookSpot')}
-                </Button>
-                }
-                <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
+            <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
                 <LogOut className="mr-2 h-4 w-4" />
                 {t('modals.sessionDetails.leaveWaitlist')}
-                </Button>
-            </div>
-        ) : (
-          <div className="flex flex-col gap-2 w-full">
-            {!isFull && (
-              <Button className="w-full" onClick={handleBook}>
+            </Button>
+        ) : !isFull ? (
+            <Button className="w-full" onClick={handleBook}>
                 {t('modals.sessionDetails.bookSpot')}
-              </Button>
-            )}
-            { isFull && (
-              <Button
+            </Button>
+        ) : (
+            <Button
                 className="w-full"
                 variant="secondary"
                 onClick={handleJoinWaitlist}
-              >
+            >
                 <UserPlus className="mr-2 h-4 w-4" />
                 {t('modals.sessionDetails.joinWaitlist')}
-              </Button>
-            )}
-          </div>
+            </Button>
         )}
       </CardFooter>
     </Card>
   );
 }
-
-    

@@ -212,43 +212,33 @@ export default function SessionDetailsModal({
         </div>
         <DialogFooter className='sm:justify-between items-center flex-shrink-0 pt-4'>
             <div className='flex items-center gap-2 flex-wrap'>
-            {isRegistered ? (
-                <Button 
-                    variant="outline" 
-                    onClick={cancelAction}
-                    disabled={!canCancel}
-                    title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
-                >
-                    <XCircle className="mr-2 h-4 w-4" /> {t('modals.sessionDetails.cancelSpot')}
-                </Button>
-            ) : isOnWaitlist ? (
-                <div className='flex gap-2'>
-                    {!isFull &&
-                    <Button onClick={bookAction}>
-                        {t('modals.sessionDetails.bookSpot')}
-                    </Button>
-                    }
-                    <Button variant="secondary" onClick={leaveWaitlistAction}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        {t('modals.sessionDetails.leaveWaitlist')}
-                    </Button>
-                </div>
-            ) : (
-                <div className="flex items-center gap-2 flex-wrap">
-                    {!isFull && (
-                    <Button onClick={bookAction}>
-                        {t('modals.sessionDetails.bookSpot')}
-                    </Button>
-                    )}
-                    <Button
-                        variant="secondary"
-                        onClick={joinWaitlistAction}
-                    >
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        {t('modals.sessionDetails.joinWaitlist')}
-                    </Button>
-                </div>
-            )}
+              {isRegistered ? (
+                  <Button 
+                      variant="outline" 
+                      onClick={cancelAction}
+                      disabled={!canCancel}
+                      title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
+                  >
+                      <XCircle className="mr-2 h-4 w-4" /> {t('modals.sessionDetails.cancelSpot')}
+                  </Button>
+              ) : isOnWaitlist ? (
+                  <Button variant="secondary" onClick={leaveWaitlistAction}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      {t('modals.sessionDetails.leaveWaitlist')}
+                  </Button>
+              ) : !isFull ? (
+                  <Button onClick={bookAction}>
+                      {t('modals.sessionDetails.bookSpot')}
+                  </Button>
+              ) : (
+                  <Button
+                      variant="secondary"
+                      onClick={joinWaitlistAction}
+                  >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      {t('modals.sessionDetails.joinWaitlist')}
+                  </Button>
+              )}
             </div>
            <Button variant="ghost" onClick={onClose}>
             {t('modals.close')}
@@ -258,5 +248,3 @@ export default function SessionDetailsModal({
     </Dialog>
   );
 }
-
-    
