@@ -61,8 +61,8 @@ export default function SessionListItem({
 
   if (!currentUser) return null;
 
-  const players = session.players as User[];
-  const waitlist = session.waitlist as User[];
+  const players = session.players || [];
+  const waitlist = session.waitlist || [];
 
   const isFull = players.length >= session.maxPlayers;
   const isRegistered = players.some(p => p.id === currentUser.id);

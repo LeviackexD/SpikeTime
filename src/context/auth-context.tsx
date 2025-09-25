@@ -6,7 +6,7 @@ import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
-import { supabase } from '@/lib/supabase-client';
+import { supabase, adminSupabase } from '@/lib/supabase-client';
 
 interface AuthContextType {
   user: User | null;
@@ -121,10 +121,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // If a user is created but session is null, email confirmation is likely needed.
     const requiresConfirmation = !!(signUpData.user && !signUpData.session);
 
-    // If user creation was successful, regardless of confirmation status.
-    const success = !!signUpData.user;
+    if (requiresConfirmation && signUpData.user) {
+        if (!adminSupabase) {
+             console.log("Admin client not available. Manual confirmation may be needed.");
+        } else {
+            const { data: adminData, error: adminError } = await adminSupabase.auth.admin.updateUserById(
+                signUpData.user.id,
+                { email_confirm: true }
+            );
+            if (adminError) {
+                console.error("Error confirming user email:", adminError);
+                // The signup still succeeded, but auto-confirmation failed.
+            } else {
+                console.log("User email confirmed automatically.");
+            }
+        }
+    }
     
-    return { success, requiresConfirmation };
+    return { success: !!signUpData.user, requiresConfirmation: false };
   };
 
   const logout = async (): Promise<void> => {

@@ -100,8 +100,10 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
         let dataToSave: any = { ...formData };
         
         if (session) {
-            // If editing, include the original session ID
+            // If editing, include the original session ID and other properties
             dataToSave.id = session.id;
+            dataToSave.players = session.players;
+            dataToSave.waitlist = session.waitlist;
         }
         
         onSave(dataToSave);

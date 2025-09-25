@@ -48,13 +48,16 @@ export default function SessionDetailsModal({
   
   if (!session || !currentUser) return null;
 
-  const spotsFilled = session.players.length;
+  const players = session.players || [];
+  const waitlist = session.waitlist || [];
+
+  const spotsFilled = players.length;
   const progressValue = (spotsFilled / session.maxPlayers) * 100;
   
-  const isRegistered = session.players.some(p => p.id === currentUser.id);
-  const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
+  const isRegistered = players.some(p => p.id === currentUser.id);
+  const isOnWaitlist = waitlist.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
-  const canGenerateTeams = spotsFilled === 12;
+  const canGenerateTeams = spotsFilled >= 2; // Can generate teams with 2 or more players
   
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string }, failureToast: { title: string, description: string }) => {
     if (session) {
@@ -154,14 +157,14 @@ export default function SessionDetailsModal({
               <div className="mb-3 flex justify-between items-center">
                 <h3 className="font-semibold flex items-center gap-2">
                     <Users className="h-5 w-5 text-muted-foreground" />
-                    {t('modals.sessionDetails.registeredPlayers', { count: session.players.length })}
+                    {t('modals.sessionDetails.registeredPlayers', { count: players.length })}
                 </h3>
-                 {canGenerateTeams && <GenerateTeamsButton players={session.players as User[]} />}
+                 {canGenerateTeams && <GenerateTeamsButton players={players as User[]} />}
               </div>
-              {session.players.length > 0 ? (
+              {players.length > 0 ? (
                 <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {session.players.map((player) => (
+                      {players.map((player) => (
                         <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
                           <PlayerAvatar player={player as User} className="h-10 w-10 border-2 border-primary/50" />
                           <div className="flex-grow">
@@ -182,12 +185,12 @@ export default function SessionDetailsModal({
             <div>
               <h3 className="mb-3 font-semibold flex items-center gap-2">
                 <Users className="h-5 w-5 text-muted-foreground" />
-                {t('modals.sessionDetails.waitlist', { count: session.waitlist.length })}
+                {t('modals.sessionDetails.waitlist', { count: waitlist.length })}
               </h3>
-              {session.waitlist.length > 0 ? (
+              {waitlist.length > 0 ? (
                 <div className="rounded-lg border max-h-56 overflow-y-auto p-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {session.waitlist.map((player) => (
+                      {waitlist.map((player) => (
                         <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
                           <PlayerAvatar player={player as User} className="h-10 w-10 border-2 border-primary/50" />
                           <div className="flex-grow">
