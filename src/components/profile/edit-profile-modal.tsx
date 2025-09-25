@@ -37,7 +37,7 @@ interface EditProfileModalProps {
 
 export default function EditProfileModal({ isOpen, onClose, user }: EditProfileModalProps) {
     const { t } = useLanguage();
-    const { updateUser, updateAvatarUrl } = useAuth();
+    const { updateUser } = useAuth();
     const [formData, setFormData] = React.useState<User | null>(user);
     const [isUploading, setIsUploading] = React.useState(false);
     const [isSaving, setIsSaving] = React.useState(false);
@@ -60,83 +60,66 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
     };
 
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0] && user) {
-            const file = e.target.files[0];
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                toast({
-                    title: t('toasts.imageTooLargeTitle'),
-                    description: t('toasts.imageTooLargeDescription', {maxSize: 5}),
-                    variant: "destructive"
-                });
-                return;
-            }
-            setIsUploading(true);
+        if (!e.target.files || e.target.files.length === 0 || !user) {
+            return;
+        }
 
+        const file = e.target.files[0];
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            toast({
+                title: t('toasts.imageTooLargeTitle'),
+                description: t('toasts.imageTooLargeDescription', {maxSize: 5}),
+                variant: "destructive"
+            });
+            return;
+        }
+        setIsUploading(true);
+
+        try {
             // --- Logic to delete old files ---
-            const { data: files, error: listError } = await supabase
-                .storage
-                .from('avatars')
-                .list(user.id, {
-                    limit: 10,
-                });
-            
-            if (listError) {
-                console.error('Error listing old avatars:', listError);
-            }
-
+            const { data: files, error: listError } = await supabase.storage.from('avatars').list(user.id);
+            if (listError) console.error('Error listing old avatars:', listError);
             if (files && files.length > 0) {
                 const filesToRemove = files.map((f) => `${user.id}/${f.name}`);
-                const { error: removeError } = await supabase
-                    .storage
-                    .from('avatars')
-                    .remove(filesToRemove);
-                
-                if (removeError) {
-                    console.error('Error removing old avatars:', removeError);
-                }
+                const { error: removeError } = await supabase.storage.from('avatars').remove(filesToRemove);
+                if (removeError) console.error('Error removing old avatars:', removeError);
             }
-            // --- End of delete logic ---
 
+            // --- Upload new file ---
             const fileExtension = file.name.split('.').pop();
             const filePath = `${user.id}/avatar.${fileExtension}`;
             
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
-                .upload(filePath, file, {
-                    cacheControl: '3600',
-                    upsert: true,
-                });
+                .upload(filePath, file, { cacheControl: '3600', upsert: true });
 
-            if (uploadError) {
-                toast({
-                    title: t('toasts.uploadFailedTitle'),
-                    description: uploadError.message || t('toasts.uploadFailedDescription'),
-                    variant: "destructive"
-                });
-                console.error(uploadError);
-                setIsUploading(false);
-                return;
-            }
+            if (uploadError) throw uploadError;
 
-            const { data: publicUrlData } = supabase.storage
-                .from('avatars')
-                .getPublicUrl(filePath);
-
+            // --- Get public URL and update profile ---
+            const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
             const avatarUrlWithCacheBuster = `${publicUrlData.publicUrl}?t=${new Date().getTime()}`;
 
-            const success = await updateAvatarUrl(avatarUrlWithCacheBuster);
-            
-            setIsUploading(false);
+            const success = await updateUser({ ...formData, avatarUrl: avatarUrlWithCacheBuster });
 
-            if(!success) {
-                 toast({
-                    title: t('toasts.uploadFailedTitle'),
-                    description: t('toasts.uploadFailedDescription'),
-                    variant: "destructive"
-                });
+            if(success) {
+                setFormData(prev => prev ? { ...prev, avatarUrl: avatarUrlWithCacheBuster } : null);
+                toast({ title: t('toasts.avatarUpdatedTitle'), description: t('toasts.avatarUpdatedDescription'), variant: "success", duration: 1500 });
+            } else {
+                throw new Error("Failed to update user profile with new avatar URL.");
             }
+
+        } catch (error: any) {
+            toast({
+                title: t('toasts.uploadFailedTitle'),
+                description: error.message || t('toasts.uploadFailedDescription'),
+                variant: "destructive"
+            });
+            console.error(error);
+        } finally {
+            setIsUploading(false);
         }
     };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -229,7 +212,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             </div>
             <DialogFooter>
                 <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>{t('modals.cancel')}</Button>
-                <Button type="submit" disabled={isSaving}>
+                <Button type="submit" disabled={isSaving || isUploading}>
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {t('modals.saveChanges')}
                 </Button>
@@ -239,5 +222,3 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
     </Dialog>
   );
 }
-
-    

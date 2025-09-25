@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -22,6 +23,7 @@ import GenerateTeamsButton from './generate-teams-button';
 import { cn, formatTime, getSafeDate } from '@/lib/utils';
 import Image from 'next/image';
 import { Input } from '../ui/input';
+import CreateMemoryModal from './create-memory-modal';
 
 
 interface SessionDetailsModalProps {
@@ -31,7 +33,7 @@ interface SessionDetailsModalProps {
   onBook: (sessionId: string) => Promise<boolean>;
   onCancel: (sessionId: string) => Promise<boolean>;
   onWaitlist: (sessionId: string) => Promise<boolean>;
-  onLeaveWaitlist: (sessionId: string) => Promise<boolean>;
+  onLeaveWaitlist: (sessionId:string) => Promise<boolean>;
 }
 
 export default function SessionDetailsModal({ 
@@ -46,6 +48,7 @@ export default function SessionDetailsModal({
   const { user: currentUser } = useAuth();
   const { t, locale } = useLanguage();
   const { toast } = useToast();
+  const [isMemoryModalOpen, setIsMemoryModalOpen] = React.useState(false);
   
   if (!session || !currentUser) return null;
 
@@ -59,23 +62,25 @@ export default function SessionDetailsModal({
   const isOnWaitlist = waitlist.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
   const canGenerateTeams = spotsFilled >= 2;
+
+  const sessionEndDateTime = getSafeDate(`${session.date}T${session.endTime}`);
+  const sessionStartDateTime = getSafeDate(`${session.date}T${session.startTime}`);
+  const now = new Date();
+  
+  const hasSessionEnded = now > sessionEndDateTime;
+  const canCancel = (sessionStartDateTime.getTime() - now.getTime()) / (1000 * 60 * 60) > 6;
   
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {
     if (session) {
       const success = await action(session.id);
       if (success) {
         toast({ ...successToast, variant: 'success' });
-        onClose(); // Close modal on success
+        // Do not close modal on success, let the state update reflect the change
       } else {
         toast({ ...failureToast, variant: 'destructive' });
       }
     }
   }
-
-  const sessionDateTime = getSafeDate(`${session.date}T${session.startTime}`);
-  const now = new Date();
-  const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const canCancel = hoursUntilSession > 6;
 
   const bookAction = () => {
     handleAction(
@@ -111,6 +116,17 @@ export default function SessionDetailsModal({
   }
 
   const renderActionButtons = () => {
+    if (hasSessionEnded) {
+        if (!session.momentImageUrl) {
+            return (
+                <Button onClick={() => setIsMemoryModalOpen(true)}>
+                    <Camera className="mr-2 h-4 w-4" /> {t('modals.sessionDetails.uploadMoment')}
+                </Button>
+            );
+        }
+        return null; // Don't show any action buttons if a moment is already uploaded
+    }
+      
     if (isRegistered) {
       return (
         <Button
@@ -272,6 +288,13 @@ export default function SessionDetailsModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+     {isMemoryModalOpen && (
+        <CreateMemoryModal 
+            isOpen={isMemoryModalOpen}
+            onClose={() => setIsMemoryModalOpen(false)}
+            session={session}
+        />
+     )}
     </>
   );
 }

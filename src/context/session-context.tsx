@@ -20,6 +20,7 @@ interface SessionContextType {
   joinWaitlist: (sessionId: string) => Promise<boolean>;
   leaveWaitlist: (sessionId: string) => Promise<boolean>;
   addMessage: (sessionId: string, message: Omit<Message, 'id' | 'sender' | 'timestamp'>) => Promise<void>;
+  addMomentToSession: (sessionId: string, momentImageUrl: string) => Promise<boolean>;
   createAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
   updateAnnouncement: (announcement: Omit<Announcement, 'date'> & { id: string }) => Promise<void>;
   deleteAnnouncement: (announcementId: string) => Promise<void>;
@@ -187,25 +188,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-
-    // Optimistic update
-    setSessions(prevSessions =>
-      prevSessions.map(s => {
-        if (s.id === sessionId) {
-          // Also remove from waitlist if they were on it
-          const newWaitlist = s.waitlist.filter(p => p.id !== currentUser.id);
-          return { ...s, players: [...s.players, currentUser], waitlist: newWaitlist };
-        }
-        return s;
-      })
-    );
-    
     const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
     
     if (error) {
       console.error("Error booking session (RPC):", error);
       toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
-      fetchSessions(); // Re-fetch to correct the optimistic update
       return false;
     }
     return true;
@@ -213,23 +200,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-
-    // Optimistic update
-    setSessions(prevSessions =>
-      prevSessions.map(s => {
-        if (s.id === sessionId) {
-          return { ...s, players: s.players.filter(p => p.id !== currentUser.id) };
-        }
-        return s;
-      })
-    );
-
     const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
 
     if (error) {
         console.error("Error canceling booking (RPC):", error);
         toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
-        fetchSessions(); // Re-fetch to correct the optimistic update
         return false;
     }
     return true;
@@ -237,17 +212,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-
-    // Optimistic update
-    setSessions(prevSessions =>
-      prevSessions.map(s => {
-        if (s.id === sessionId) {
-          return { ...s, waitlist: [...s.waitlist, currentUser] };
-        }
-        return s;
-      })
-    );
-
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
         user_id: currentUser.id
@@ -256,7 +220,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
-        fetchSessions(); // Re-fetch to correct the optimistic update
         return false;
     }
     return true;
@@ -264,17 +227,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
-
-     // Optimistic update
-     setSessions(prevSessions =>
-        prevSessions.map(s => {
-            if (s.id === sessionId) {
-                return { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) };
-            }
-            return s;
-        })
-     );
-     
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
         .eq('user_id', currentUser.id);
@@ -282,7 +234,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Action Failed", description: error.message, variant: "destructive" });
-        fetchSessions(); // Re-fetch to correct the optimistic update
         return false;
     }
     return true;
@@ -321,6 +272,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
     }
   };
+
+  const addMomentToSession = async (sessionId: string, momentImageUrl: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('sessions')
+      .update({ momentImageUrl })
+      .eq('id', sessionId);
+
+    if (error) {
+      console.error('Error adding moment to session:', error);
+      return false;
+    }
+    // The real-time subscription will handle updating the state
+    return true;
+  };
   
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {};
 
@@ -336,6 +301,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         joinWaitlist,
         leaveWaitlist,
         addMessage,
+        addMomentToSession,
         createAnnouncement,
         updateAnnouncement,
         deleteAnnouncement,
