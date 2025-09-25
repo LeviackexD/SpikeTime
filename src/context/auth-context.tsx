@@ -6,7 +6,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 import { supabase } from '@/lib/supabase-client';
-import type { AuthChangeEvent, Session as SupabaseSession, User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -37,8 +36,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             if (error || !profile) {
                 console.error('Error fetching profile or profile not found:', error);
-                // Instead of setting user to null, create a partial user object.
-                // This prevents the user from being logged out if the profile fetch fails temporarily.
+                // Create a partial user object instead of logging them out.
+                // This prevents the user from being logged out if the profile fetch fails.
                  setUser({
                     id: session.user.id,
                     email: session.user.email!,
@@ -93,9 +92,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithEmail = async (email: string, pass: string): Promise<void> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
     if (error) {
+        // Throw the error so the UI can catch it.
         throw error;
     }
-    // onAuthStateChange will handle the rest.
+    // onAuthStateChange will handle setting the user and redirecting.
   };
 
   const signUpWithEmail = async (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<{success: boolean, requiresConfirmation: boolean}> => {
@@ -111,8 +111,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     });
 
-    const success = !error && !!signUpData.user;
-    const requiresConfirmation = success && !!signUpData.user && !signUpData.session;
+    if (error) {
+        console.error("Sign up error:", error);
+        return { success: false, requiresConfirmation: false };
+    }
+
+    const success = !!signUpData.user;
+    // A user is returned, but a session is null if email confirmation is required.
+    const requiresConfirmation = !!(signUpData.user && !signUpData.session);
     
     return { success, requiresConfirmation };
   };
@@ -144,7 +150,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (data) {
-        setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
+        setUser(prevUser => prevUser ? { ...prevUser, ...data } : null);
         return true;
       }
       return false;

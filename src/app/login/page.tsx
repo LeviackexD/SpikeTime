@@ -47,10 +47,10 @@ export default function LoginPage() {
       await signInWithEmail(email, password);
       // The redirection is now handled by the AuthContext's useEffect,
       // which is a more robust pattern.
-    } catch (error) {
+    } catch (error: any) {
        toast({
         title: t('toasts.authFailedTitle'),
-        description: t('toasts.authFailedDescription'),
+        description: error.message || t('toasts.authFailedDescription'),
         variant: 'destructive',
       });
     } finally {
