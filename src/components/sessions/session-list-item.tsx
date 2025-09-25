@@ -30,6 +30,7 @@ import {
   XCircle,
   Eye,
   LogOut,
+  Calendar,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
@@ -118,22 +119,6 @@ export default function SessionListItem({
     }
   };
 
-  const formatDate = (date: Date) => {
-    // This is the robust way to get date parts without timezone issues.
-    const day = date.getUTCDate();
-    const monthIndex = date.getUTCMonth();
-    
-    const monthNames = locale === 'es' 
-      ? ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']
-      : ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-
-    const month = monthNames[monthIndex];
-
-    return { day: day.toString().padStart(2, '0'), month };
-  };
-  
-  const { day, month } = formatDate(sessionDate);
-
   const renderActionButtons = () => {
     // 1. User is registered for the session
     if (isRegistered) {
@@ -204,10 +189,6 @@ export default function SessionListItem({
         >
           {isFull ? t('components.sessionListItem.full') : t('components.sessionListItem.spotsLeft', { count: spotsLeft })}
         </Badge>
-        <div className="absolute top-2 left-2 z-10 bg-background/80 text-foreground rounded-md text-center p-2 flex flex-col items-center justify-center w-12 h-12 font-bold backdrop-blur-sm">
-           <span className="text-lg leading-none">{day}</span>
-           <span className="text-xs uppercase">{month}</span>
-        </div>
         <div className="relative h-40 w-full">
           <Image
             src={session.imageUrl || `https://picsum.photos/seed/${session.id}/400/300`}
@@ -230,6 +211,7 @@ export default function SessionListItem({
 
       <CardContent className="p-4 flex-grow space-y-4">
           <div className="space-y-1 text-sm text-muted-foreground">
+             <p className="font-medium text-foreground">{sessionDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}</p>
              <p>{formatTime(session.startTime)} - {formatTime(session.endTime)}</p>
              <p>{session.location}</p>
           </div>
@@ -269,3 +251,5 @@ export default function SessionListItem({
     </Card>
   );
 }
+
+    
