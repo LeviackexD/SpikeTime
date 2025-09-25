@@ -73,7 +73,33 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             }
             setIsUploading(true);
 
-            // Use a consistent file path for the user's avatar, inside a folder named with their ID
+            // --- New logic to delete old files ---
+            const { data: files, error: listError } = await supabase
+                .storage
+                .from('avatars')
+                .list(user.id, {
+                    limit: 10,
+                });
+            
+            if (listError) {
+                console.error('Error listing old avatars:', listError);
+                // We can still proceed with the upload
+            }
+
+            if (files && files.length > 0) {
+                const filesToRemove = files.map((f) => `${user.id}/${f.name}`);
+                const { error: removeError } = await supabase
+                    .storage
+                    .from('avatars')
+                    .remove(filesToRemove);
+                
+                if (removeError) {
+                    console.error('Error removing old avatars:', removeError);
+                    // Non-critical error, so we still proceed
+                }
+            }
+            // --- End of delete logic ---
+
             const fileExtension = file.name.split('.').pop();
             const filePath = `${user.id}/avatar.${fileExtension}`;
             
@@ -81,7 +107,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                 .from('avatars')
                 .upload(filePath, file, {
                     cacheControl: '3600',
-                    upsert: true, // Overwrite existing file for the user
+                    upsert: true,
                 });
 
             if (uploadError) {
@@ -99,7 +125,6 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                 .from('avatars')
                 .getPublicUrl(filePath);
             
-             // Add a timestamp to the URL to bypass browser cache
             const avatarUrlWithCacheBuster = `${publicUrlData.publicUrl}?t=${new Date().getTime()}`;
             
             setFormData(prev => prev ? { ...prev, avatarUrl: avatarUrlWithCacheBuster } : null);
