@@ -113,7 +113,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (!currentUser) return;
     const { error } = await supabase.from('sessions').insert({
         ...sessionData,
-        date: (sessionData.date as Date).toISOString(), // Normaliza a UTC
+        date: (sessionData.date as Date).toISOString(), // Ensure date is in ISO format
         createdBy: currentUser.id,
     });
     if(error) {
@@ -128,7 +128,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      const { id, players, waitlist, ...updateData } = sessionData;
      const { error } = await supabase.from('sessions').update({
          ...updateData,
-         date: (sessionData.date as Date).toISOString(), // Normaliza a UTC
+         date: (sessionData.date as Date).toISOString(), // Ensure date is in ISO format
      }).eq('id', id);
 
      if(error) {

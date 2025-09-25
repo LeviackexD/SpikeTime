@@ -94,12 +94,13 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Combine date and time into a full Date object before saving
-        const combinedDateTime = new Date(`${formData.date}T${formData.startTime}`);
+        // IMPORTANT: Create a UTC date string to avoid timezone issues.
+        // '2024-05-21' and '09:00' becomes '2024-05-21T09:00:00.000Z'
+        const combinedDateTime = new Date(`${formData.date}T${formData.startTime}:00.000Z`);
 
         let dataToSave: any = { 
             ...formData,
-            // Replace the simple date string with the full Date object
+            // Replace the simple date string with the full Date object in UTC
             date: combinedDateTime 
         };
         
