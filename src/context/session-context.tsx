@@ -85,7 +85,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     initialFetch();
 
     const handleRealtimeUpdate = (payload: any) => {
-      // console.log("Realtime change detected, refetching sessions:", payload);
       fetchSessions();
     };
     
@@ -123,6 +122,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
+        fetchSessions(); // Refetch after creation
     }
   };
   
@@ -175,12 +175,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
       console.error("Error booking session (RPC):", error);
       toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
-      // Rollback optimistic update on failure
       setSessions(originalSessions);
       return false;
     }
     
-    // Manually trigger a refetch for others after success, as a fallback for realtime
     fetchSessions();
     return true;
   };
@@ -201,12 +199,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error canceling booking (RPC):", error);
         toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
-        // Rollback optimistic update on failure
         setSessions(originalSessions);
         return false;
     }
     
-    // Manually trigger a refetch for others after success, as a fallback for realtime
     fetchSessions();
     return true;
   };
@@ -230,12 +226,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
-        // Rollback optimistic update on failure
         setSessions(originalSessions);
         return false;
     }
 
-    fetchSessions(); // Refetch to ensure consistency
+    fetchSessions();
     return true;
   };
   
@@ -243,7 +238,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (!currentUser) return false;
      const originalSessions = sessions;
 
-     // Optimistic update
      setSessions(prevSessions => prevSessions.map(s =>
          s.id === sessionId
            ? { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) }
@@ -257,12 +251,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Action Failed", description: error.message, variant: "destructive" });
-        // Rollback optimistic update on failure
         setSessions(originalSessions);
         return false;
     }
     
-    fetchSessions(); // Refetch to ensure consistency
+    fetchSessions();
     return true;
   };
 
@@ -276,30 +269,30 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
+        fetchAnnouncements(); // Refetch after creation
     }
   };
 
   const updateAnnouncement = async (announcementData: Omit<Announcement, 'date'> & {id: string}) => {
     const { id, ...updateData } = announcementData;
     const { error } = await supabase.from('announcements').update(updateData).eq('id', id);
-if(error) {
+    if(error) {
         console.error("Error updating announcement:", error);
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
+        fetchAnnouncements(); // Refetch after update
     }
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
     const originalAnnouncements = announcements;
-    // Optimistic update
     setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
 
     const { error } = await supabase.from('announcements').delete().eq('id', announcementId);
      if(error) {
         console.error("Error deleting announcement:", error);
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
-        // Rollback
         setAnnouncements(originalAnnouncements);
     } else {
         toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
@@ -338,4 +331,6 @@ export const useSessions = () => {
   return context;
 };
     
+    
+
     
