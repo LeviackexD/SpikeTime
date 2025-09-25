@@ -70,6 +70,7 @@ export default function SessionListItem({
   const [touchStart, setTouchStart] = React.useState(0);
   const [touchEnd, setTouchEnd] = React.useState(0);
   const [isSwiping, setIsSwiping] = React.useState(false);
+  const [swipeOffset, setSwipeOffset] = React.useState(0);
   const swipeThreshold = 75; // pixels to swipe before action triggers
 
 
@@ -131,9 +132,12 @@ export default function SessionListItem({
     { title: t('toasts.waitlistLeaveFailedTitle'), description: t('toasts.waitlistLeaveFailedDescription') }
   );
   
+  const canSwipeRight = !isRegistered && !isFull;
+  const canSwipeLeft = isRegistered && canCancel;
+
   // --- Swipe Handlers ---
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isMobile) return;
+    if (!isMobile || (!canSwipeLeft && !canSwipeRight)) return;
     setTouchStart(e.targetTouches[0].clientX);
     setTouchEnd(e.targetTouches[0].clientX); // Reset on new touch
     setIsSwiping(true);
@@ -141,31 +145,36 @@ export default function SessionListItem({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isMobile || !isSwiping) return;
-    setTouchEnd(e.targetTouches[0].clientX);
+
+    const currentX = e.targetTouches[0].clientX;
+    const offset = currentX - touchStart;
+
+    // Restrict swipe direction
+    if (canSwipeRight && offset < 0) { // Should only swipe right
+      setSwipeOffset(0);
+      return;
+    }
+    if (canSwipeLeft && offset > 0) { // Should only swipe left
+      setSwipeOffset(0);
+      return;
+    }
+
+    setSwipeOffset(offset);
   };
 
   const handleTouchEnd = () => {
     if (!isMobile || !isSwiping) return;
-    const swipeDistance = touchStart - touchEnd;
-    const canSwipeRight = !isRegistered && !isFull;
-    const canSwipeLeft = isRegistered && canCancel;
 
-    if (canSwipeRight && swipeDistance < -swipeThreshold) {
+    if (canSwipeRight && swipeOffset > swipeThreshold) {
       handleBook();
-    } else if (canSwipeLeft && swipeDistance > swipeThreshold) {
+    } else if (canSwipeLeft && swipeOffset < -swipeThreshold) {
       handleCancel();
     }
     
     // Reset positions
-    setTouchStart(0);
-    setTouchEnd(0);
+    setSwipeOffset(0);
     setIsSwiping(false);
   };
-  
-  const swipeOffset = isSwiping ? touchEnd - touchStart : 0;
-  
-  const canSwipeRight = !isRegistered && !isFull;
-  const canSwipeLeft = isRegistered && canCancel;
 
   const renderActionButtons = () => {
     if (isRegistered) {
@@ -222,19 +231,19 @@ export default function SessionListItem({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-lg">
+    <div className="relative overflow-hidden rounded-lg bg-card">
       {isMobile && (
         <>
           {/* Swipe Right to Book Background */}
           {canSwipeRight && (
-            <div className="absolute inset-0 bg-green-500 flex items-center justify-start px-6 transition-opacity" style={{ opacity: Math.max(0, swipeOffset / swipeThreshold) }}>
+            <div className="absolute inset-0 bg-green-500 flex items-center justify-start px-6 transition-opacity" style={{ opacity: Math.min(1, Math.max(0, swipeOffset / swipeThreshold)) }}>
               <Check className="h-6 w-6 text-white" />
               <span className="ml-2 font-semibold text-white">{t('modals.sessionDetails.bookSpot')}</span>
             </div>
           )}
           {/* Swipe Left to Cancel Background */}
           {canSwipeLeft && (
-            <div className="absolute inset-0 bg-red-500 flex items-center justify-end px-6 transition-opacity" style={{ opacity: Math.max(0, -swipeOffset / swipeThreshold) }}>
+            <div className="absolute inset-0 bg-red-500 flex items-center justify-end px-6 transition-opacity" style={{ opacity: Math.min(1, Math.max(0, -swipeOffset / swipeThreshold)) }}>
               <span className="mr-2 font-semibold text-white">{t('modals.sessionDetails.cancelSpot')}</span>
               <XCircle className="h-6 w-6 text-white" />
             </div>
@@ -247,12 +256,12 @@ export default function SessionListItem({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{ 
-          transform: isMobile ? `translateX(${swipeOffset}px)` : 'none',
+          transform: `translateX(${swipeOffset}px)`,
           transition: isSwiping ? 'none' : 'transform 0.3s ease',
         }}
       >
         <Card 
-          className="flex flex-col overflow-hidden transition-shadow hover:shadow-xl h-full animate-slide-up-and-fade w-full"
+          className="flex flex-col overflow-hidden transition-shadow hover:shadow-xl h-full animate-slide-up-and-fade w-full rounded-lg"
           style={{ animationDelay: `${animationDelay}ms`, animationFillMode: 'backwards' }}
         >
           <CardHeader className="p-0 relative">
@@ -326,4 +335,3 @@ export default function SessionListItem({
     </div>
   );
 }
-
