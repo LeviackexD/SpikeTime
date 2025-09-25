@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -119,7 +120,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success"});
-        fetchSessions().then(setSessions);
     }
   };
   
@@ -135,7 +135,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
         toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success"});
-        fetchSessions().then(setSessions);
      }
   };
   
@@ -146,61 +145,111 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success"});
-        fetchSessions().then(setSessions);
     }
   };
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
+    const originalSessions = sessions;
+    
+    // Optimistic UI update
+    setSessions(prevSessions => prevSessions.map(s => {
+        if (s.id === sessionId) {
+            // Move from waitlist to players if on waitlist
+            const newWaitlist = s.waitlist.filter(p => p.id !== currentUser.id);
+            const playerExists = s.players.some(p => p.id === currentUser.id);
+            const newPlayers = playerExists ? s.players : [...s.players, currentUser];
+            return { ...s, players: newPlayers, waitlist: newWaitlist };
+        }
+        return s;
+    }));
+
     const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
 
     if (error) {
         console.error("Error booking session (RPC):", error);
+        setSessions(originalSessions); // Revert on error
         return false;
     }
-    fetchSessions().then(setSessions);
+    // No need to re-fetch, real-time will sync if needed, but optimistic update handles the immediate UI change.
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
+    const originalSessions = sessions;
+
+    // Optimistic UI update
+    setSessions(prevSessions => prevSessions.map(s => {
+        if (s.id === sessionId) {
+            return { ...s, players: s.players.filter(p => p.id !== currentUser.id) };
+        }
+        return s;
+    }));
+
     const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
     
     if (error) {
         console.error("Error canceling booking (RPC):", error);
+        setSessions(originalSessions); // Revert on error
         return false;
     }
-    fetchSessions().then(setSessions);
+    // Real-time will handle promoting from waitlist if applicable
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+
+    const originalSessions = sessions;
+
+    // Optimistic UI update
+    setSessions(prevSessions => prevSessions.map(s => {
+        if (s.id === sessionId) {
+            const waitlistExists = s.waitlist.some(p => p.id === currentUser.id);
+            if (waitlistExists) return s; // Already on waitlist
+            return { ...s, waitlist: [...s.waitlist, currentUser] };
+        }
+        return s;
+    }));
+    
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
         user_id: currentUser.id
     });
+
     if (error) {
         console.error("Error joining waitlist:", error);
+        setSessions(originalSessions); // Revert on error
         return false;
     }
-    fetchSessions().then(setSessions);
     return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
+
+     const originalSessions = sessions;
+
+     // Optimistic UI update
+     setSessions(prevSessions => prevSessions.map(s => {
+        if (s.id === sessionId) {
+            return { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) };
+        }
+        return s;
+    }));
+
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
         .eq('user_id', currentUser.id);
      
      if (error) {
         console.error("Error leaving waitlist:", error);
+        setSessions(originalSessions); // Revert on error
         return false;
     }
-    fetchSessions().then(setSessions);
     return true;
   };
 
@@ -214,7 +263,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success"});
-        fetchAnnouncements().then(setAnnouncements);
     }
   };
 
@@ -226,7 +274,6 @@ if(error) {
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success"});
-        fetchAnnouncements().then(setAnnouncements);
     }
   };
 
@@ -237,7 +284,6 @@ if(error) {
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success"});
-        fetchAnnouncements().then(setAnnouncements);
     }
   };
   
