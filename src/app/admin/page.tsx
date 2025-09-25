@@ -8,6 +8,7 @@
 'use client';
 
 import * as React from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, PlusCircle, Users } from 'lucide-react';
 import {
@@ -27,12 +28,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import SessionFormModal from '@/components/admin/session-form-modal';
-import DeleteSessionDialog from '@/components/admin/delete-session-dialog';
-import SessionDetailsModal from '@/components/sessions/session-details-modal';
-import AnnouncementFormModal from '@/components/admin/announcement-form-modal';
-import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
@@ -41,6 +36,13 @@ import type { Session, Announcement } from '@/lib/types';
 import { cn, formatTime } from '@/lib/utils';
 import PlayerAvatar from '@/components/sessions/player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+
+const SessionFormModal = dynamic(() => import('@/components/admin/session-form-modal'));
+const DeleteSessionDialog = dynamic(() => import('@/components/admin/delete-session-dialog'));
+const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'));
+const AnnouncementFormModal = dynamic(() => import('@/components/admin/announcement-form-modal'));
+const DeleteAnnouncementDialog = dynamic(() => import('@/components/admin/delete-announcement-dialog'));
+
 
 // --- Helper Functions ---
 
@@ -468,20 +470,20 @@ export default function AdminPage() {
 
       {/* --- Modals and Dialogs --- */}
 
-      <SessionFormModal
+      {isSessionModalOpen && <SessionFormModal
         isOpen={isSessionModalOpen}
         onClose={() => setIsSessionModalOpen(false)}
         onSave={handleSaveSession}
         session={selectedSession}
-      />
+      />}
 
-      <DeleteSessionDialog
+      {isDeleteSessionDialogOpen && <DeleteSessionDialog
         isOpen={isDeleteSessionDialogOpen}
         onClose={() => setIsDeleteSessionDialogOpen(false)}
         onConfirm={confirmDeleteSession}
-      />
+      />}
 
-      <SessionDetailsModal
+      {isViewModalOpen && <SessionDetailsModal
         session={sessionToView}
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
@@ -489,20 +491,20 @@ export default function AdminPage() {
         onCancel={cancelBooking}
         onWaitlist={joinWaitlist}
         onLeaveWaitlist={leaveWaitlist}
-      />
+      />}
 
-      <AnnouncementFormModal
+      {isAnnouncementModalOpen && <AnnouncementFormModal
         isOpen={isAnnouncementModalOpen}
         onClose={() => setIsAnnouncementModalOpen(false)}
         onSave={handleSaveAnnouncement}
         announcement={selectedAnnouncement}
-      />
+      />}
 
-      <DeleteAnnouncementDialog
+      {isDeleteAnnouncementDialogOpen && <DeleteAnnouncementDialog
         isOpen={isDeleteAnnouncementDialogOpen}
         onClose={() => setIsDeleteAnnouncementDialogOpen(false)}
         onConfirm={confirmDeleteAnnouncement}
-      />
+      />}
     </>
   );
 }

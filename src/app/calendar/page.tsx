@@ -9,13 +9,19 @@
 
 import * as React from 'react';
 import type { NextPage } from 'next';
+import dynamic from 'next/dynamic';
 import { ClipboardCheck, Pin } from 'lucide-react';
 import { useSessions, getSafeDate, toYYYYMMDD } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { Separator } from '@/components/ui/separator';
-import SessionCalendar from '@/components/dashboard/session-calendar';
 import SessionNoteCard from '@/components/sessions/session-note-card';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const SessionCalendar = dynamic(() => import('@/components/dashboard/session-calendar'), {
+  loading: () => <Skeleton className="w-full h-[300px]" />,
+  ssr: false,
+});
 
 
 const CalendarPage: NextPage = () => {
