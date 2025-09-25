@@ -12,7 +12,7 @@ interface SessionContextType {
   announcements: Announcement[];
   loading: boolean;
   createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date' | 'createdBy'> & { date: string }) => Promise<void>;
-  updateSession: (session: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages' | 'createdBy'> & { date: string, id: string, players: User[], waitlist: User[] }) => Promise<void>;
+  updateSession: (session: Omit<Session, 'date' | 'messages' | 'createdBy'> & { date: string, id: string, players: Partial<User>[], waitlist: Partial<User>[] }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<boolean>;
   cancelBooking: (sessionId: string) => Promise<boolean>;
@@ -27,22 +27,30 @@ interface SessionContextType {
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
 export const getSafeDate = (date: string | Date): Date => {
-  // Handles date strings like '2024-10-02'. Replacing dashes with slashes
-  // makes JavaScript treat it as a local date, not UTC, preventing timezone shifts.
-  if (typeof date === 'string') {
-    const dateString = date.includes('T') ? date : date.replace(/-/g, '/');
-    const d = new Date(dateString);
-    if (!isNaN(d.getTime())) {
-      return d;
-    }
-  }
-  // If it's already a valid Date object, return it.
   if (date instanceof Date && !isNaN(date.getTime())) {
     return date;
+  }
+  if (typeof date === 'string') {
+    // For 'YYYY-MM-DDTHH:mm:ss.sssZ' or 'YYYY-MM-DD HH:mm:ss' formats
+    if (date.includes('T') || date.includes(' ')) {
+        const d = new Date(date);
+        if (!isNaN(d.getTime())) return d;
+    }
+    // For 'YYYY-MM-DD' format, treat as UTC to avoid timezone shifts
+    const parts = date.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+      const day = parseInt(parts[2], 10);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        return new Date(Date.UTC(year, month, day));
+      }
+    }
   }
   // Fallback for invalid dates
   return new Date();
 };
+
 
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
@@ -126,8 +134,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
   
-  const updateSession = async (sessionData: Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'| 'createdBy'> & { date: string, id: string, players: User[], waitlist: User[] }) => {
-     const { id, ...updateData } = sessionData;
+  const updateSession = async (sessionData: Omit<Session, 'date' | 'messages' | 'createdBy'> & { date: string, id: string, players: Partial<User>[], waitlist: Partial<User>[] }) => {
+     const { id, players, waitlist, ...updateData } = sessionData;
      const { error } = await supabase.from('sessions').update({
          ...updateData,
          date: sessionData.date,

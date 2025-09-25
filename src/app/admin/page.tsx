@@ -258,9 +258,9 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date' | 'createdBy'> & { date: string } & Partial<Pick<Session, 'id' | 'players' | 'waitlist'>>) => {
+  const handleSaveSession = async (sessionData: any) => {
     if (sessionData.id) {
-        await updateSession(sessionData as Omit<Session, 'date' | 'messages' | 'createdBy'> & { date: string });
+        await updateSession(sessionData);
     } else {
         await createSession(sessionData);
     }
@@ -506,5 +506,3 @@ export default function AdminPage() {
     </>
   );
 }
-
-    
