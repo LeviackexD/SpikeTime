@@ -120,6 +120,42 @@ export default function SessionDetailsModal({
     );
   }
 
+  const renderActionButtons = () => {
+    if (isRegistered) {
+      return (
+        <Button 
+          variant="outline" 
+          onClick={cancelAction}
+          disabled={!canCancel}
+          title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
+        >
+          <XCircle className="mr-2 h-4 w-4" /> {t('modals.sessionDetails.cancelSpot')}
+        </Button>
+      );
+    }
+    if (isOnWaitlist) {
+      return (
+        <Button variant="secondary" onClick={leaveWaitlistAction}>
+          <LogOut className="mr-2 h-4 w-4" />
+          {t('modals.sessionDetails.leaveWaitlist')}
+        </Button>
+      );
+    }
+    if (isFull) {
+      return (
+        <Button variant="secondary" onClick={joinWaitlistAction}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          {t('modals.sessionDetails.joinWaitlist')}
+        </Button>
+      );
+    }
+    return (
+      <Button onClick={bookAction}>
+        {t('modals.sessionDetails.bookSpot')}
+      </Button>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px] flex flex-col max-h-[90vh]">
@@ -212,33 +248,7 @@ export default function SessionDetailsModal({
         </div>
         <DialogFooter className='sm:justify-between items-center flex-shrink-0 pt-4'>
             <div className='flex items-center gap-2 flex-wrap'>
-              {isRegistered ? (
-                  <Button 
-                      variant="outline" 
-                      onClick={cancelAction}
-                      disabled={!canCancel}
-                      title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
-                  >
-                      <XCircle className="mr-2 h-4 w-4" /> {t('modals.sessionDetails.cancelSpot')}
-                  </Button>
-              ) : isOnWaitlist ? (
-                  <Button variant="secondary" onClick={leaveWaitlistAction}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      {t('modals.sessionDetails.leaveWaitlist')}
-                  </Button>
-              ) : !isFull ? (
-                  <Button onClick={bookAction}>
-                      {t('modals.sessionDetails.bookSpot')}
-                  </Button>
-              ) : (
-                  <Button
-                      variant="secondary"
-                      onClick={joinWaitlistAction}
-                  >
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      {t('modals.sessionDetails.joinWaitlist')}
-                  </Button>
-              )}
+              {renderActionButtons()}
             </div>
            <Button variant="ghost" onClick={onClose}>
             {t('modals.close')}

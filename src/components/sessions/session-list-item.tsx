@@ -125,6 +125,47 @@ export default function SessionListItem({
   
   const { day, month } = formatDate(sessionDate);
 
+  const renderActionButtons = () => {
+    if (isRegistered) {
+      return (
+        <Button
+          className="w-full"
+          variant="outline"
+          onClick={handleCancel}
+          disabled={!canCancel}
+          title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
+        >
+          <XCircle className="mr-2 h-4 w-4" />
+          {t('modals.sessionDetails.cancelSpot')}
+        </Button>
+      );
+    }
+
+    if (isOnWaitlist) {
+      return (
+        <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
+          <LogOut className="mr-2 h-4 w-4" />
+          {t('modals.sessionDetails.leaveWaitlist')}
+        </Button>
+      );
+    }
+
+    if (isFull) {
+      return (
+        <Button className="w-full" variant="secondary" onClick={handleJoinWaitlist}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          {t('modals.sessionDetails.joinWaitlist')}
+        </Button>
+      );
+    }
+
+    return (
+      <Button className="w-full" onClick={handleBook}>
+        {t('modals.sessionDetails.bookSpot')}
+      </Button>
+    );
+  };
+
   return (
     <Card 
       className="flex flex-col overflow-hidden transition-all hover:shadow-xl h-full animate-slide-up-and-fade"
@@ -197,36 +238,7 @@ export default function SessionListItem({
       </CardContent>
 
       <CardFooter className="p-4 pt-0 mt-auto flex flex-col gap-2">
-        {isRegistered ? (
-            <Button
-                className="w-full"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={!canCancel}
-                title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
-            >
-                <XCircle className="mr-2 h-4 w-4" />
-                {t('modals.sessionDetails.cancelSpot')}
-            </Button>
-        ) : isOnWaitlist ? (
-            <Button className="w-full" variant="secondary" onClick={handleLeaveWaitlist}>
-                <LogOut className="mr-2 h-4 w-4" />
-                {t('modals.sessionDetails.leaveWaitlist')}
-            </Button>
-        ) : !isFull ? (
-            <Button className="w-full" onClick={handleBook}>
-                {t('modals.sessionDetails.bookSpot')}
-            </Button>
-        ) : (
-            <Button
-                className="w-full"
-                variant="secondary"
-                onClick={handleJoinWaitlist}
-            >
-                <UserPlus className="mr-2 h-4 w-4" />
-                {t('modals.sessionDetails.joinWaitlist')}
-            </Button>
-        )}
+        {renderActionButtons()}
       </CardFooter>
     </Card>
   );
