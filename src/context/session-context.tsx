@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -196,8 +197,25 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+
+    // Optimistic UI update
+    setSessions(prevSessions =>
+      prevSessions.map(s => {
+        if (s.id === sessionId) {
+          return {
+            ...s,
+            players: [...s.players, currentUser],
+            waitlist: s.waitlist.filter(p => p.id !== currentUser.id),
+          };
+        }
+        return s;
+      })
+    );
+
+    // Remove from waitlist first
     await supabase.from('session_waitlist').delete().match({ session_id: sessionId, user_id: currentUser.id });
 
+    // Insert into players
     const { error } = await supabase.from('session_players').insert({
         session_id: sessionId,
         user_id: currentUser.id
@@ -205,6 +223,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     
     if (error) {
       console.error("Error booking session:", error);
+      // Revert UI on error
+      fetchSessions();
       return false;
     }
     return true;
@@ -212,20 +232,43 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+
+    // Optimistic UI update
+    setSessions(prevSessions =>
+        prevSessions.map(s =>
+            s.id === sessionId
+                ? { ...s, players: s.players.filter(p => p.id !== currentUser!.id) }
+                : s
+        )
+    );
+
     const { error } = await supabase.from('session_players').delete()
         .eq('session_id', sessionId)
         .eq('user_id', currentUser.id);
 
     if (error) {
         console.error("Error canceling booking:", error);
+        // Revert UI on error
+        fetchSessions();
         return false;
     }
+    // After successfully cancelling, call the RPC to promote from waitlist
     await supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId });
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+
+    // Optimistic UI update
+    setSessions(prevSessions =>
+        prevSessions.map(s =>
+            s.id === sessionId
+                ? { ...s, waitlist: [...s.waitlist, currentUser] }
+                : s
+        )
+    );
+
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
         user_id: currentUser.id
@@ -233,6 +276,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     if (error) {
         console.error("Error joining waitlist:", error);
+        // Revert UI on error
+        fetchSessions();
         return false;
     }
     return true;
@@ -240,12 +285,24 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
+
+     // Optimistic UI update
+     setSessions(prevSessions =>
+        prevSessions.map(s =>
+            s.id === sessionId
+                ? { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser!.id) }
+                : s
+        )
+    );
+
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
         .eq('user_id', currentUser.id);
 
      if (error) {
         console.error("Error leaving waitlist:", error);
+        // Revert UI on error
+        fetchSessions();
         return false;
     }
     return true;
