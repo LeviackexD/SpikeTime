@@ -30,9 +30,15 @@ export const getSafeDate = (date: string | Date): Date => {
   if (date instanceof Date) {
     return date;
   }
-  // For 'YYYY-MM-DD', treat as UTC to avoid timezone shifts.
-  const d = new Date(date);
-  return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  // For 'YYYY-MM-DD' strings, we replace dashes with slashes.
+  // This is a common trick to make JavaScript parse the date as local time
+  // instead of UTC, which prevents off-by-one day errors in different timezones.
+  // new Date('2024-10-06') -> Interpreted as UTC midnight.
+  // new Date('2024/10/06') -> Interpreted as local midnight.
+  if (typeof date === 'string' && date.includes('-')) {
+    return new Date(date.replace(/-/g, '/'));
+  }
+  return new Date(date);
 };
 
 
