@@ -58,6 +58,11 @@
         "newChatModalDescription": "Selecciona un usuario para iniciar una conversación de mensajes directos.",
         "searchUserPlaceholder": "Buscar un usuario..."
     },
+    "comingSoon": {
+        "title": "¡Próximamente!",
+        "subtitle": "Esta función está actualmente en construcción. ¡Por favor, vuelve más tarde!",
+        "short": "Próximamente"
+    },
     "profilePage": {
         "editProfile": "Editar Perfil",
         "playerDetails": "Detalles del Jugador",

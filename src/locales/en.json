@@ -58,6 +58,11 @@
         "newChatModalDescription": "Select a user to start a direct message conversation.",
         "searchUserPlaceholder": "Search for a user..."
     },
+    "comingSoon": {
+        "title": "Coming Soon!",
+        "subtitle": "This feature is currently under construction. Please check back later!",
+        "short": "Coming soon"
+    },
     "profilePage": {
         "editProfile": "Edit Profile",
         "playerDetails": "Player Details",

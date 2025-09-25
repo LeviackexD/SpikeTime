@@ -47,13 +47,14 @@ import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 import { VolleyballIcon } from '../icons/volleyball-icon';
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 // --- NAVIGATION ---
 const getNavItems = (t: (key: string) => string) => [
   { href: '/', icon: Home, label: t('nav.dashboard') },
   { href: '/calendar', icon: Calendar, label: t('nav.calendar') },
   { href: '/announcements', icon: Megaphone, label: t('nav.announcements') },
-  { href: '/chat', icon: MessageCircle, label: t('nav.chat') },
+  { href: '/chat', icon: MessageCircle, label: t('nav.chat'), disabled: true },
   { href: '/profile', icon: User, label: t('nav.profile') },
   { href: '/admin', icon: Shield, label: t('nav.adminPanel'), adminOnly: true },
 ];
@@ -140,28 +141,46 @@ function DesktopNav() {
 
   return (
     <nav className="hidden md:flex flex-1 justify-center md:items-center md:gap-5 lg:gap-6 text-sm lg:text-base font-medium">
-      {navItems.map((item) => {
-        if (item.adminOnly && user?.role !== 'admin') {
-          return null;
-        }
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'transition-colors',
-              isAnnouncementsPage 
-                ? 'hover:text-white'
-                : 'hover:text-foreground',
-              pathname === item.href 
-                ? (isAnnouncementsPage ? 'text-white' : 'text-foreground') 
-                : (isAnnouncementsPage ? 'text-cream/70' : 'text-muted-foreground')
-            )}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
+      <TooltipProvider>
+        {navItems.map((item) => {
+          if (item.adminOnly && user?.role !== 'admin') {
+            return null;
+          }
+          
+          const linkContent = (
+            <Link
+              key={item.href}
+              href={item.disabled ? '#' : item.href}
+              className={cn(
+                'transition-colors',
+                isAnnouncementsPage 
+                  ? 'hover:text-white'
+                  : 'hover:text-foreground',
+                pathname === item.href 
+                  ? (isAnnouncementsPage ? 'text-white' : 'text-foreground') 
+                  : (isAnnouncementsPage ? 'text-cream/70' : 'text-muted-foreground'),
+                item.disabled && 'cursor-not-allowed opacity-50'
+              )}
+              onClick={(e) => item.disabled && e.preventDefault()}
+            >
+              {item.label}
+            </Link>
+          );
+
+          if (item.disabled) {
+            return (
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('comingSoon.short')}</p>
+                </TooltipContent>
+              </Tooltip>
+            )
+          }
+
+          return linkContent;
+        })}
+      </TooltipProvider>
     </nav>
   );
 }
@@ -201,15 +220,20 @@ function MobileNav() {
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
-                  onClick={() => setIsSheetOpen(false)}
+                  href={item.disabled ? '#' : item.href}
+                  onClick={(e) => {
+                    if (item.disabled) e.preventDefault();
+                    else setIsSheetOpen(false);
+                  }}
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-primary-foreground/80 transition-all hover:text-primary-foreground',
-                    pathname === item.href && 'bg-white/10 text-primary-foreground'
+                    pathname === item.href && !item.disabled && 'bg-white/10 text-primary-foreground',
+                    item.disabled && 'opacity-50 cursor-not-allowed'
                   )}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}
+                  {item.disabled && <Badge variant="secondary" className="text-xs ml-auto">Soon</Badge>}
                 </Link>
               );
             })}
