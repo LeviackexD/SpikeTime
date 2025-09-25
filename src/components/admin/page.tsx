@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
 import { MoreHorizontal, PlusCircle, Users } from 'lucide-react';
 import {
   Table,
@@ -180,7 +179,6 @@ const AnnouncementCards = ({
 export default function AdminPage() {
   // --- HOOKS ---
   const { user } = useAuth();
-  const router = useRouter();
   const { t, locale } = useLanguage();
   const {
     sessions,
@@ -214,15 +212,6 @@ export default function AdminPage() {
   const [selectedAnnouncement, setSelectedAnnouncement] = React.useState<Announcement | null>(null);
   const [isDeleteAnnouncementDialogOpen, setIsDeleteAnnouncementDialogOpen] = React.useState(false);
   const [announcementToDelete, setAnnouncementToDelete] = React.useState<Announcement | null>(null);
-
-  // --- EFFECTS ---
-
-  // Redirect non-admin users
-  React.useEffect(() => {
-    if (user?.role !== 'admin') {
-      router.push('/');
-    }
-  }, [user, router]);
 
   // --- EVENT HANDLERS ---
 
