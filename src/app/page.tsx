@@ -10,7 +10,6 @@
 import * as React from 'react';
 import type { NextPage } from 'next';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { Volleyball, Megaphone, Loader2 } from 'lucide-react';
 
 // UI Components
@@ -22,12 +21,12 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 
 // Custom Components
 import SectionHeader from '@/components/layout/section-header';
 import AnnouncementDetailsModal from '@/components/announcements/announcement-details-modal';
 import SessionListItem from '@/components/sessions/session-list-item';
+import SessionDetailsModal from '@/components/sessions/session-details-modal';
 
 // Context and Hooks
 import { useSessions, getSafeDate } from '@/context/session-context';
@@ -37,11 +36,6 @@ import { useUpcomingSessions, useAvailableSessions } from '@/hooks/use-session-f
 
 // Types
 import type { Session, Announcement } from '@/lib/types';
-
-const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'), {
-  loading: () => <div className="p-6"><Skeleton className="h-96 w-full" /></div>,
-  ssr: false
-});
 
 
 const DashboardPage: NextPage = () => {
@@ -202,17 +196,15 @@ const DashboardPage: NextPage = () => {
       </div>
 
       {/* --- MODALS --- */}
-      {isViewModalOpen && (
-        <SessionDetailsModal
-          session={sessionToView}
-          isOpen={isViewModalOpen}
-          onClose={() => setIsViewModalOpen(false)}
-          onBook={bookSession}
-          onCancel={cancelBooking}
-          onWaitlist={joinWaitlist}
-          onLeaveWaitlist={leaveWaitlist}
-        />
-      )}
+      <SessionDetailsModal
+        session={sessionToView}
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        onBook={bookSession}
+        onCancel={cancelBooking}
+        onWaitlist={joinWaitlist}
+        onLeaveWaitlist={leaveWaitlist}
+      />
 
       <AnnouncementDetailsModal
         isOpen={!!selectedAnnouncement}
@@ -224,5 +216,3 @@ const DashboardPage: NextPage = () => {
 };
 
 export default DashboardPage;
-
-    

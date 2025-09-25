@@ -9,7 +9,6 @@
 'use client';
 
 import * as React from 'react';
-import dynamic from 'next/dynamic';
 import {
   Avatar,
   AvatarFallback,
@@ -28,12 +27,7 @@ import { BarChart, Edit, Star, Target, CheckCircle, LineChart } from 'lucide-rea
 import type { User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import { Skeleton } from '@/components/ui/skeleton';
-
-const EditProfileModal = dynamic(() => import('@/components/profile/edit-profile-modal'), {
-  loading: () => <Skeleton className="h-96 w-full" />,
-  ssr: false
-});
+import EditProfileModal from '@/components/profile/edit-profile-modal';
 
 const StatCard = ({ icon: Icon, label, value, badge }: { icon: React.ElementType, label: string, value: string | React.ReactNode, badge?: boolean }) => (
     <Card className="flex flex-col items-center justify-center p-4 text-center transition-all hover:shadow-lg hover:-translate-y-1">
@@ -118,5 +112,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    

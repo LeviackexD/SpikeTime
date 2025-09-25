@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 import type { NextPage } from 'next';
-import dynamic from 'next/dynamic';
 import { Plus, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,12 +16,7 @@ import type { Announcement, AnnouncementCategory } from '@/lib/types';
 import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import { Skeleton } from '@/components/ui/skeleton';
-
-const AnnouncementFormModal = dynamic(() => import('@/components/admin/announcement-form-modal'), {
-  loading: () => <div className="p-6"><Skeleton className="h-80 w-full" /></div>,
-  ssr: false,
-});
+import AnnouncementFormModal from '@/components/admin/announcement-form-modal';
 
 
 const getCategoryFilters = (t: (key: string) => string) => [
