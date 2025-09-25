@@ -103,6 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email, 
         password: pass,
         options: {
+            channel: 'email', // Explicitly set channel
             data: {
                 name: data.name,
                 skillLevel: data.skillLevel,
@@ -115,10 +116,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error("Sign up error:", error);
         return { success: false, requiresConfirmation: false };
     }
-
-    const success = !!signUpData.user;
-    // A user is returned, but a session is null if email confirmation is required.
+    
+    // If a user is created but session is null, email confirmation is likely needed.
     const requiresConfirmation = !!(signUpData.user && !signUpData.session);
+
+    // If user creation was successful, regardless of confirmation status.
+    const success = !!signUpData.user;
     
     return { success, requiresConfirmation };
   };
