@@ -30,15 +30,15 @@ export const getSafeDate = (date: string | Date): Date => {
     if (date instanceof Date && !isNaN(date.getTime())) {
         return date;
     }
-    const d = new Date(date);
+    // Handle date strings, ensuring they are parsed without timezone shifts.
+    // Replacing dashes with slashes is a common trick to make JS parse it as local time.
+    const dateString = String(date).split('T')[0];
+    const d = new Date(dateString.replace(/-/g, '/'));
+    
     if (!isNaN(d.getTime())) {
-        // It's a valid date string, but might be off by timezone.
-        // Let's parse it as UTC.
-        const [year, month, day] = String(date).split('T')[0].split('-').map(Number);
-        if (year && month && day) {
-            return new Date(Date.UTC(year, month - 1, day));
-        }
+        return d;
     }
+    
     // Fallback for invalid or unparsable dates
     return new Date();
 };
