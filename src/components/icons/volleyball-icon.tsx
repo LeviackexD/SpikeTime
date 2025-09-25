@@ -14,9 +14,10 @@ export function VolleyballIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
       {...props}
     >
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2z" />
-      <path d="M12 2c0 0-4.48 4.48-4.48 10S12 22 12 22" />
-      <path d="M22 12c0 0-4.48-4.48-10-4.48S2 12 2 12" />
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 12a10 10 0 0 0-8.66-5" />
+      <path d="M12 12a10 10 0 0 1 8.66-5" />
+      <path d="M12 12a10 10 0 0 0 0 10" />
     </svg>
   );
 }
