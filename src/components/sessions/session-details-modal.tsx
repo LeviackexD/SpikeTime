@@ -21,7 +21,8 @@ import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import GenerateTeamsButton from './generate-teams-button';
-import { formatTime } from '@/lib/utils';
+import { cn, formatTime } from '@/lib/utils';
+import Image from 'next/image';
 
 
 interface SessionDetailsModalProps {
@@ -33,6 +34,37 @@ interface SessionDetailsModalProps {
   onWaitlist: (sessionId: string) => Promise<boolean>;
   onLeaveWaitlist: (sessionId: string) => Promise<boolean>;
 }
+
+const ImageViewer = ({ user, onClose }: { user: Partial<User>; onClose: () => void }) => {
+  if (!user) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center animate-fade-in"
+      onClick={onClose}
+    >
+      <div className="relative w-80 h-80 sm:w-96 sm:h-96" onClick={(e) => e.stopPropagation()}>
+        <Image
+          src={user.avatarUrl || '/default-avatar.png'}
+          alt={user.name || 'Player avatar'}
+          fill
+          className="rounded-full object-cover border-4 border-white shadow-2xl"
+          sizes="(max-width: 768px) 80vw, 33vw"
+        />
+        <p className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-white text-lg font-bold">{user.name}</p>
+        <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-0 right-0 text-white hover:bg-white/20 hover:text-white"
+            onClick={onClose}
+        >
+            <X className="h-6 w-6" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 
 export default function SessionDetailsModal({ 
   session, 
@@ -46,6 +78,7 @@ export default function SessionDetailsModal({
   const { user: currentUser } = useAuth();
   const { t, locale } = useLanguage();
   const { toast } = useToast();
+  const [zoomedPlayer, setZoomedPlayer] = React.useState<Partial<User> | null>(null);
   
   if (!session || !currentUser) return null;
 
@@ -178,6 +211,8 @@ export default function SessionDetailsModal({
   };
 
   return (
+    <>
+    {zoomedPlayer && <ImageViewer user={zoomedPlayer} onClose={() => setZoomedPlayer(null)} />}
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px] flex flex-col max-h-[90vh]">
         <DialogHeader className="flex-shrink-0">
@@ -223,7 +258,9 @@ export default function SessionDetailsModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {players.map((player) => (
                         <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                          <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                          <button onClick={() => setZoomedPlayer(player)} className="focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
+                            <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                          </button>
                           <div className="flex-grow">
                               <p className="font-semibold text-sm">{player.name}</p>
                               <p className="text-xs text-muted-foreground">{player.skillLevel ? t(`skillLevels.${player.skillLevel}`) : ''}</p>
@@ -249,7 +286,9 @@ export default function SessionDetailsModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {waitlist.map((player) => (
                         <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                          <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                          <button onClick={() => setZoomedPlayer(player)} className="focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
+                            <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
+                          </button>
                           <div className="flex-grow">
                               <p className="font-semibold text-sm">{player.name}</p>
                                <p className="text-xs text-muted-foreground">{player.skillLevel ? t(`skillLevels.${player.skillLevel}`) : ''}</p>
@@ -277,7 +316,10 @@ export default function SessionDetailsModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
+
+    
 
     
