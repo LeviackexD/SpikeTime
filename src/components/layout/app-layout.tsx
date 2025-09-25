@@ -54,7 +54,7 @@ const getNavItems = (t: (key: string) => string) => [
   { href: '/', icon: Home, label: t('nav.dashboard') },
   { href: '/calendar', icon: Calendar, label: t('nav.calendar') },
   { href: '/announcements', icon: Megaphone, label: t('nav.announcements') },
-  { href: '/chat', icon: MessageCircle, label: t('nav.chat'), disabled: true },
+  { href: '/chat', icon: MessageCircle, label: t('nav.chat') },
   { href: '/profile', icon: User, label: t('nav.profile') },
   { href: '/admin', icon: Shield, label: t('nav.adminPanel'), adminOnly: true },
 ];
