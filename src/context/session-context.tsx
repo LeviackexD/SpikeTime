@@ -13,7 +13,7 @@ interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
   loading: boolean;
-  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'createdBy'>) => Promise<void>;
+  createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'createdBy' | 'start_datetime' | 'end_datetime'> & { date: string, startTime: string, endTime: string }) => Promise<void>;
   updateSession: (session: Partial<Session> & { id: string }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<boolean>;
@@ -40,7 +40,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
       .select('*')
-      .order('start_datetime', { ascending: false });
+      .order('date', { ascending: false });
 
     if (sessionError) {
       console.error("Error fetching sessions:", sessionError);
@@ -58,7 +58,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const gracePeriodEnd = new Date(now.getTime() - 2 * 60 * 60 * 1000); 
 
     const activeSessions = sessionData.filter(s => {
-      const sessionEndDate = getSafeDate(s.end_datetime);
+      const sessionEndDate = getSafeDate(`${s.date}T${s.endTime}`);
       return sessionEndDate > gracePeriodEnd;
     });
     
@@ -296,8 +296,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {};
 
-  return (
-    <SessionContext.Provider value={{ 
+  const contextValue = { 
         sessions, 
         announcements,
         loading,
@@ -312,7 +311,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         createAnnouncement,
         updateAnnouncement,
         deleteAnnouncement,
-     }}>
+     };
+
+  return (
+    <SessionContext.Provider value={contextValue}>
       {children}
     </SessionContext.Provider>
   );
