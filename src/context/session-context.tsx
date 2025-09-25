@@ -55,9 +55,18 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
       .select(`
-        *,
-        players:profiles(*),
-        waitlist:profiles(*)
+        id,
+        created_at,
+        date,
+        startTime,
+        endTime,
+        location,
+        level,
+        maxPlayers,
+        imageUrl,
+        createdBy,
+        players:profiles!session_players(*),
+        waitlist:profiles!session_waitlist(*)
       `)
       .order('date', { ascending: false });
 
@@ -65,8 +74,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       console.error('Error fetching sessions:', sessionError);
       return [];
     }
-    
-    // Supabase returns the related data directly, so we just need to format the date.
+
     return sessionData.map(s => ({
       ...s,
       date: getSafeDate(s.date),
@@ -299,3 +307,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
