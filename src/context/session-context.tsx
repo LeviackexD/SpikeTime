@@ -65,16 +65,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       console.error('Error fetching sessions:', sessionError);
       return [];
     }
-
-    const transformedSessions = sessionData.map(s => ({
+    
+    // Supabase returns the related data directly, so we just need to format the date.
+    return sessionData.map(s => ({
       ...s,
       date: getSafeDate(s.date),
-      players: s.players, // Directly use the profiles array
-      waitlist: s.waitlist, // Directy use the profiles array
       messages: [], // Chat messages not implemented in DB yet
     }));
-    
-    return transformedSessions;
   }, []);
 
   const fetchAnnouncements = React.useCallback(async () => {
@@ -302,5 +299,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
