@@ -8,7 +8,7 @@
 import type { User, Session, Announcement, DirectChat, Message } from './types';
 
 // --- USERS ---
-
+// This data is now only used for filling sessions, not for authentication.
 export const mockUsers: User[] = [
   {
     id: 'user-1',
@@ -89,9 +89,8 @@ export const mockUsers: User[] = [
   { id: 'user-12', name: 'Isabella Wong', username: 'isabellaw', email: 'isabella@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=user-12', role: 'user', skillLevel: 'Intermediate', favoritePosition: 'Hitter', stats: { sessionsPlayed: 41, attendanceRate: 94 } },
 ];
 
-// --- CURRENT USER ---
-// Change the index to test different users. 0 is admin, 1-4 are regular users.
-export const currentUser: User = mockUsers[0]; 
+// --- CURRENT USER (DEPRECATED, AuthContext now handles the user) ---
+export const currentUser: User | null = null; 
 
 // --- SESSIONS ---
 
@@ -202,23 +201,6 @@ export const mockAnnouncements: Announcement[] = [
 ];
 
 
-// --- DIRECT CHATS ---
+// --- DIRECT CHATS (DEPRECATED) ---
 
-export const mockDirectChats: DirectChat[] = [
-    {
-        id: 'dm-1',
-        participants: [mockUsers[0], mockUsers[1]],
-        messages: [
-            { id: 'dm-1-1', sender: mockUsers[0], content: 'Hey Maria, are you going to the advanced session on Friday?', timestamp: new Date() },
-            { id: 'dm-1-2', sender: mockUsers[1], content: 'Hey Manu! I was thinking about it. You think I can handle it?', timestamp: new Date() },
-            { id: 'dm-1-3', sender: mockUsers[0], content: 'For sure, you\'ll be great!', timestamp: new Date() },
-        ],
-    },
-    {
-        id: 'dm-2',
-        participants: [mockUsers[0], mockUsers[2]],
-        messages: [
-             { id: 'dm-2-1', sender: mockUsers[2], content: 'Hi Manu, just wanted to say thanks for the pointers in the last beginner session!', timestamp: new Date() },
-        ]
-    }
-]
+export const mockDirectChats: DirectChat[] = [];

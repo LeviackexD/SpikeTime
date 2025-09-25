@@ -3,16 +3,16 @@
 
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import type { User } from '@/lib/types';
+import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 import { supabase } from '@/lib/supabase-client';
-import { AuthChangeEvent, Session as SupabaseSession } from '@supabase/supabase-js';
+import type { AuthChangeEvent, Session as SupabaseSession, User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithEmail: (email: string, pass: string) => Promise<boolean>;
-  signUpWithEmail: (email: string, pass: string, data: Omit<User, 'id' | 'email' | 'role' | 'avatarUrl' | 'username' | 'stats'>) => Promise<boolean>;
+  signUpWithEmail: (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }) => Promise<boolean>;
   logout: () => Promise<void>;
   updateUser: (updatedData: Partial<User>) => Promise<boolean>;
 }
@@ -26,10 +26,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
   React.useEffect(() => {
-    setLoading(true);
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: SupabaseSession | null) => {
-        if (session && session.user) {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+        setLoading(true);
+        if (session?.user) {
             const { data: profile, error } = await supabase
                 .from('profiles')
                 .select('*')
@@ -39,20 +38,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (error) {
                 console.error('Error fetching profile:', error);
                 setUser(null);
-            } else {
-                 // Map Supabase profile to app's User type
+            } else if (profile) {
+                // Map Supabase profile to our app's User type
                 const appUser: User = {
                     id: profile.id,
                     name: profile.name,
                     username: profile.username,
                     email: session.user.email!,
-                    avatarUrl: profile.avatar_url,
+                    avatarUrl: profile.avatarUrl,
                     role: profile.role,
-                    skillLevel: profile.skill_level,
-                    favoritePosition: profile.favorite_position,
-                    stats: { // Mock stats for now
-                        sessionsPlayed: profile.sessions_played || 0,
-                        attendanceRate: profile.attendance_rate || 90,
+                    skillLevel: profile.skillLevel,
+                    favoritePosition: profile.favoritePosition,
+                    // Stats will be static for now
+                    stats: {
+                        sessionsPlayed: 0,
+                        attendanceRate: 0,
                     }
                 };
                 setUser(appUser);
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => {
-        subscription.unsubscribe();
+        authListener.subscription.unsubscribe();
     };
 }, []);
 
@@ -80,49 +80,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user, loading, pathname, router]);
 
   const signInWithEmail = async (email: string, pass: string): Promise<boolean> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
     return !error;
   };
 
-  const signUpWithEmail = async (email: string, pass: string, data: Omit<User, 'id' | 'email' | 'role' | 'avatarUrl' | 'username' | 'stats'>): Promise<boolean> => {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+  const signUpWithEmail = async (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<boolean> => {
+    const { error } = await supabase.auth.signUp({ 
+        email, 
+        password: pass,
         options: {
             data: {
                 name: data.name,
-                avatar_url: `https://i.pravatar.cc/150?u=${email}`, // default avatar
-                skill_level: data.skillLevel,
-                favorite_position: data.favoritePosition,
+                skillLevel: data.skillLevel,
+                favoritePosition: data.favoritePosition
             }
         }
     });
-
-    if (authError || !authData.user) {
-        console.error("Supabase sign up error:", authError);
-        return false;
-    }
-
-    // Supabase automatically creates the user in `auth.users`, but we need to create the profile in `public.profiles`.
-    // A Supabase Function (Trigger) is the best way to do this automatically. For now, we are doing it on the client.
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-            id: authData.user.id,
-            name: data.name,
-            username: email.split('@')[0],
-            avatar_url: `https://i.pravatar.cc/150?u=${email}`,
-            skill_level: data.skillLevel,
-            favorite_position: data.favoritePosition,
-        });
-
-    if (profileError) {
-        console.error("Error creating profile:", profileError);
-        // Here you might want to delete the created user if profile creation fails.
-        return false;
-    }
-
-    return true;
+    return !error;
   };
 
   const logout = async (): Promise<void> => {
@@ -132,21 +106,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
   
   const updateUser = async (updatedData: Partial<User>): Promise<boolean> => {
-      if (user) {
-        const { error } = await supabase
-            .from('profiles')
-            .update({
-                name: updatedData.name,
-                skill_level: updatedData.skillLevel,
-                favorite_position: updatedData.favoritePosition,
-                avatar_url: updatedData.avatarUrl,
-            })
-            .eq('id', user.id);
+      if (!user) return false;
 
-        if (!error) {
-             setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
-        }
-        return !error;
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+            name: updatedData.name,
+            skillLevel: updatedData.skillLevel,
+            favoritePosition: updatedData.favoritePosition,
+            avatarUrl: updatedData.avatarUrl
+        })
+        .eq('id', user.id)
+        .select()
+        .single();
+      
+      if (error) {
+          console.error("Error updating profile:", error);
+          return false;
+      }
+
+      if (data) {
+        setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
+        return true;
       }
       return false;
   };
@@ -176,5 +157,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    

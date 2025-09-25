@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import type { Session, Message, User, Announcement, DirectChat } from '@/lib/types';
-import { mockSessions, mockAnnouncements, mockUsers, mockDirectChats } from '@/lib/mock-data';
+import { mockSessions, mockAnnouncements } from '@/lib/mock-data';
 import { useAuth } from './auth-context';
 
 interface SessionContextType {
@@ -43,10 +43,11 @@ export const getSafeDate = (date: string | Date): Date => {
 
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
+  // Data is now mocked and static. In a real app, this would come from a database.
   const [sessions, setSessions] = React.useState<Session[]>(mockSessions);
   const [announcements, setAnnouncements] = React.useState<Announcement[]>(mockAnnouncements);
-  const [directChats, setDirectChats] = React.useState<DirectChat[]>(mockDirectChats);
-  const [users, setUsers] = React.useState<User[]>(mockUsers);
+  const [directChats, setDirectChats] = React.useState<DirectChat[]>([]);
+  const [users, setUsers] = React.useState<User[]>([]);
   const { user: currentUser } = useAuth();
 
 
@@ -166,34 +167,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
   
   const createDirectChat = async (otherUser: User): Promise<string> => {
-    if(!currentUser) return '';
-    // Check if a chat already exists
-    const existingChat = directChats.find(c => c.participants.some(p => p.id === otherUser.id));
-    if (existingChat) {
-      return existingChat.id;
-    }
-
-    const newChatId = `dm-${Date.now()}`;
-    const newChat: DirectChat = {
-        id: newChatId,
-        participants: [currentUser, otherUser],
-        messages: [],
-    };
-    setDirectChats(prev => [...prev, newChat]);
-    return newChatId;
+    // This is a mock implementation
+    return '';
   };
 
   const addDirectMessage = async (chatId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {
-    if (!currentUser) return;
-    const newMessage: Message = {
-      id: `dm-msg-${Date.now()}`,
-      sender: currentUser,
-      content: messageContent.content,
-      timestamp: new Date(),
-    };
-    setDirectChats(prev => prev.map(c => 
-        c.id === chatId ? { ...c, messages: [...c.messages, newMessage] } : c
-    ));
+    // This is a mock implementation
   };
 
   return (

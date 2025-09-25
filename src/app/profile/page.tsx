@@ -90,11 +90,12 @@ export default function ProfilePage() {
                   {t('profilePage.playerDetails')}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <CardContent className="grid grid-cols-2 lg:grid-cols-2 gap-4">
                   <StatCard icon={Star} label={t('profilePage.skillLevel')} value={t(`skillLevels.${currentUser.skillLevel}`)} badge />
                   <StatCard icon={Target} label={t('profilePage.favoritePosition')} value={t(`positions.${currentUser.favoritePosition}`)} badge />
-                  <StatCard icon={BarChart} label={t('profilePage.sessionsPlayed')} value={currentUser.stats.sessionsPlayed} />
-                  <StatCard icon={CheckCircle} label={t('profilePage.attendanceRate')} value={`${currentUser.stats.attendanceRate}%`} />
+                  {/* The following stats are commented out as they rely on mock data not available with Supabase yet */}
+                  {/* <StatCard icon={BarChart} label={t('profilePage.sessionsPlayed')} value={currentUser.stats.sessionsPlayed} /> */}
+                  {/* <StatCard icon={CheckCircle} label={t('profilePage.attendanceRate')} value={`${currentUser.stats.attendanceRate}%`} /> */}
               </CardContent>
             </Card>
           </div>

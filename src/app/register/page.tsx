@@ -69,7 +69,6 @@ export default function RegisterPage() {
         favoritePosition,
     };
 
-    // This is now a mock function
     const success = await signUpWithEmail(email, password, userData);
     setIsLoading(false);
     if (success) {
