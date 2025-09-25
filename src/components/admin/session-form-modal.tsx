@@ -25,16 +25,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Session, SkillLevel, User } from '@/lib/types';
+import type { Session, SkillLevel } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
-import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
+import { getSafeDate, toYYYYMMDD, toHHMM } from '@/lib/utils';
+import { zonedTimeToUtc } from 'date-fns-tz';
 
-// The data shape for the form, using a simple string for the date.
-type SessionFormData = Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date' | 'createdBy'> & { date: string };
+type FormData = {
+  date: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  level: SkillLevel;
+  maxPlayers: number;
+  imageUrl: string;
+};
 
-// The shape for saving, which might include the ID for updates.
-type SaveSessionData = SessionFormData | (SessionFormData & { id: string, players: User[], waitlist: User[] });
+const getTodayString = () => toYYYYMMDD(new Date());
 
+const emptyFormData: FormData = {
+  date: getTodayString(),
+  startTime: '18:00',
+  endTime: '20:00',
+  location: '',
+  level: 'Intermediate',
+  maxPlayers: 12,
+  imageUrl: '',
+};
 
 interface SessionFormModalProps {
   isOpen: boolean;
@@ -43,38 +59,26 @@ interface SessionFormModalProps {
   session: Session | null;
 }
 
-const getTodayString = () => toYYYYMMDD(new Date());
-
-const emptySession: SessionFormData = {
-  startTime: '',
-  endTime: '',
-  location: '',
-  level: 'Intermediate',
-  maxPlayers: 12,
-  imageUrl: '',
-  date: getTodayString(),
-};
-
 export default function SessionFormModal({ isOpen, onClose, onSave, session }: SessionFormModalProps) {
     const { t } = useLanguage();
-    const [formData, setFormData] = React.useState<SessionFormData>(emptySession);
+    const [formData, setFormData] = React.useState<FormData>(emptyFormData);
     
     React.useEffect(() => {
         if (isOpen) {
             if (session) {
-                const sessionDate = getSafeDate(session.date);
+                const startDate = getSafeDate(session.start_datetime);
+                const endDate = getSafeDate(session.end_datetime);
                 setFormData({
-                    date: toYYYYMMDD(sessionDate),
-                    startTime: session.startTime,
-                    endTime: session.endTime,
+                    date: toYYYYMMDD(startDate),
+                    startTime: toHHMM(startDate),
+                    endTime: toHHMM(endDate),
                     location: session.location,
                     level: session.level,
                     maxPlayers: session.maxPlayers,
                     imageUrl: session.imageUrl || '',
                 });
             } else {
-                // For new sessions, use today's date
-                setFormData({ ...emptySession, date: getTodayString() });
+                setFormData(emptyFormData);
             }
         }
     }, [session, isOpen]);
@@ -94,17 +98,21 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        const combinedDateTime = new Date(`${formData.date}T00:00:00.000Z`);
-
+        const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const startUTC = zonedTimeToUtc(`${formData.date}T${formData.startTime}`, userTimeZone);
+        const endUTC = zonedTimeToUtc(`${formData.date}T${formData.endTime}`, userTimeZone);
+        
         let dataToSave: any = { 
-            ...formData,
-            date: combinedDateTime 
+            location: formData.location,
+            level: formData.level,
+            maxPlayers: formData.maxPlayers,
+            imageUrl: formData.imageUrl,
+            start_datetime: startUTC.toISOString(),
+            end_datetime: endUTC.toISOString(),
         };
         
         if (session) {
             dataToSave.id = session.id;
-            dataToSave.players = session.players;
-            dataToSave.waitlist = session.waitlist;
         }
         
         onSave(dataToSave);

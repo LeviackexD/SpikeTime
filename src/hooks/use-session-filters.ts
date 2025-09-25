@@ -1,5 +1,4 @@
 
-
 /**
  * @fileoverview Custom hooks for filtering and sorting volleyball sessions.
  * This separates the logic from the presentation components.
@@ -21,17 +20,14 @@ export function useUpcomingSessions(currentUser: User | null, sessions: Session[
 
     return sessions
       .filter(session => {
-        const sessionDate = getSafeDate(session.date);
-        const [endHours, endMinutes] = session.endTime.split(':').map(Number);
-        sessionDate.setHours(endHours, endMinutes, 0, 0);
-
+        const sessionEndDate = getSafeDate(session.end_datetime);
         const players = session.players as User[];
         const waitlist = session.waitlist as User[];
         const isUserInvolved = currentUser && (players.some(p => p.id === currentUser.id) || waitlist.some(w => w.id === currentUser.id));
         
-        return isUserInvolved && sessionDate > now;
+        return isUserInvolved && sessionEndDate > now;
       })
-      .sort((a, b) => getSafeDate(a.date).getTime() - getSafeDate(b.date).getTime());
+      .sort((a, b) => getSafeDate(a.start_datetime).getTime() - getSafeDate(b.start_datetime).getTime());
   }, [currentUser, sessions]);
 }
 
@@ -48,16 +44,14 @@ export function useAvailableSessions(currentUser: User | null, sessions: Session
 
     return sessions
       .filter(session => {
-        const sessionDate = getSafeDate(session.date);
-        const [endHours, endMinutes] = session.endTime.split(':').map(Number);
-        sessionDate.setHours(endHours, endMinutes, 0, 0);
+        const sessionEndDate = getSafeDate(session.end_datetime);
 
         const players = session.players as User[];
         const waitlist = session.waitlist as User[];
         const isUserInvolved = currentUser && (players.some(p => p.id === currentUser?.id) || waitlist.some(w => w.id === currentUser?.id));
         
-        return !isUserInvolved && sessionDate > now;
+        return !isUserInvolved && sessionEndDate > now;
       })
-      .sort((a, b) => getSafeDate(a.date).getTime() - getSafeDate(b.date).getTime());
+      .sort((a, b) => getSafeDate(a.start_datetime).getTime() - getSafeDate(b.start_datetime).getTime());
   }, [currentUser, sessions]);
 }

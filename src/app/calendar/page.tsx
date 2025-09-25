@@ -17,7 +17,8 @@ import { useLanguage } from '@/context/language-context';
 import { Separator } from '@/components/ui/separator';
 import SessionNoteCard from '@/components/sessions/session-note-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
+import { getSafeDate, toYYYYMMDD, formatDateTimeLocal } from '@/lib/utils';
+import { isSameDay } from 'date-fns';
 
 const SessionCalendar = dynamic(() => import('@/components/dashboard/session-calendar'), {
   loading: () => <Skeleton className="w-full h-[300px]" />,
@@ -42,12 +43,11 @@ const CalendarPage: NextPage = () => {
   }
 
   const filteredSessions = sessions.filter(session => {
-    const selectedDateString = toYYYYMMDD(selectedDate);
-    const sessionDateString = toYYYYMMDD(getSafeDate(session.date));
-    return sessionDateString === selectedDateString;
-  }).sort((a,b) => a.startTime.localeCompare(b.startTime));
+    const sessionDate = getSafeDate(session.start_datetime);
+    return isSameDay(sessionDate, selectedDate);
+  }).sort((a,b) => getSafeDate(a.start_datetime).getTime() - getSafeDate(b.start_datetime).getTime());
   
-  const formattedDate = selectedDate.toLocaleDateString(locale, { month: 'long', day: 'numeric' });
+  const formattedDate = formatDateTimeLocal(selectedDate, 'PPP');
 
   return (
     <div className="space-y-8 animate-fade-in">

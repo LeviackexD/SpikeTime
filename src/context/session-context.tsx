@@ -2,18 +2,19 @@
 'use client';
 
 import * as React from 'react';
-import type { Session, Message, User, Announcement, DirectChat } from '@/lib/types';
+import type { Session, Message, User, Announcement } from '@/lib/types';
 import { useAuth } from './auth-context';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
-import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
+import { getSafeDate } from '@/lib/utils';
+import { fromZonedTime } from 'date-fns-tz';
 
 interface SessionContextType {
   sessions: Session[];
   announcements: Announcement[];
   loading: boolean;
   createSession: (session: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'createdBy'>) => Promise<void>;
-  updateSession: (session: Omit<Session, 'messages' | 'createdBy'>) => Promise<void>;
+  updateSession: (session: Partial<Session> & { id: string }) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   bookSession: (sessionId: string) => Promise<boolean>;
   cancelBooking: (sessionId: string) => Promise<boolean>;
@@ -38,7 +39,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
       .select('*, players:profiles!session_players(*), waitlist:profiles!session_waitlist(*)')
-      .order('date', { ascending: false });
+      .order('start_datetime', { ascending: false });
   
     if (sessionError) {
       console.error("Error fetching sessions:", sessionError);
@@ -46,22 +47,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   
     const now = new Date();
-    const gracePeriodEnd = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+    // 2-hour grace period after a session ends
+    const gracePeriodEnd = new Date(now.getTime() - 2 * 60 * 60 * 1000); 
   
     const fetchedSessions = sessionData.filter(s => {
-      const sessionEndDate = getSafeDate(s.date);
-      const [endHours, endMinutes] = s.endTime.split(':').map(Number);
-      sessionEndDate.setUTCHours(endHours, endMinutes, 0, 0);
+      const sessionEndDate = getSafeDate(s.end_datetime);
       return sessionEndDate > gracePeriodEnd;
     }).map(s => ({
       ...s,
-      date: getSafeDate(s.date),
       messages: [],
     }));
     setSessions(fetchedSessions);
   }, []);
 
-  const fetchAnnouncements = React. useCallback(async () => {
+  const fetchAnnouncements = React.useCallback(async () => {
       const { data, error } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
       if(error) {
           console.error("Error fetching announcements:", error);
@@ -102,11 +101,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   }, [currentUser, fetchSessions, fetchAnnouncements]);
 
 
-  const createSession = async (sessionData: Omit<Session, 'id' | 'players'| 'waitlist'|'messages' | 'createdBy'>) => {
+  const createSession = async (sessionData: any) => {
     if (!currentUser) return;
     const { error } = await supabase.from('sessions').insert({
         ...sessionData,
-        date: (sessionData.date as Date).toISOString(),
         createdBy: currentUser.id,
     });
     if(error) {
@@ -114,15 +112,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
+        fetchSessions();
     }
   };
   
-  const updateSession = async (sessionData: Omit<Session, 'messages' | 'createdBy'>) => {
-     const { id, players, waitlist, ...updateData } = sessionData;
-     const { error } = await supabase.from('sessions').update({
-         ...updateData,
-         date: (sessionData.date as Date).toISOString(),
-     }).eq('id', id);
+  const updateSession = async (sessionData: Partial<Session> & { id: string }) => {
+     const { id, ...updateData } = sessionData;
+     const { error } = await supabase.from('sessions').update(updateData).eq('id', id);
 
      if(error) {
         console.error("Error updating session:", error);
@@ -150,59 +146,35 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
-    // Optimistic update
-    setSessions(prevSessions => prevSessions.map(s => {
-      if (s.id === sessionId && !s.players.some(p => p.id === currentUser.id)) {
-        return { ...s, players: [...s.players, currentUser] };
-      }
-      return s;
-    }));
-
     const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
     
     if (error) {
       console.error("Error booking session (RPC):", error);
       toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
-      fetchSessions(); // Rollback on error
+      fetchSessions();
       return false;
     }
-
+    fetchSessions();
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
-    // Optimistic update
-    setSessions(prevSessions => prevSessions.map(s => {
-        if (s.id === sessionId) {
-            return { ...s, players: s.players.filter(p => p.id !== currentUser.id) };
-        }
-        return s;
-    }));
-
     const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
 
     if (error) {
         console.error("Error canceling booking (RPC):", error);
         toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
-        fetchSessions(); // Rollback on error
+        fetchSessions();
         return false;
     }
-    
+    fetchSessions();
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-
-    // Optimistic update
-    setSessions(prevSessions => prevSessions.map(s => {
-        if (s.id === sessionId && !s.waitlist.some(p => p.id === currentUser.id)) {
-            return { ...s, waitlist: [...s.waitlist, currentUser] };
-        }
-        return s;
-    }));
 
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
@@ -212,24 +184,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
-        fetchSessions(); // Rollback on error
+        fetchSessions();
         return false;
     }
-
+    fetchSessions();
     return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
      
-     // Optimistic update
-     setSessions(prevSessions => prevSessions.map(s => {
-        if (s.id === sessionId) {
-            return { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) };
-        }
-        return s;
-    }));
-
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
         .eq('user_id', currentUser.id);
@@ -237,10 +201,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Action Failed", description: error.message, variant: "destructive" });
-        fetchSessions(); // Rollback on error
+        fetchSessions();
         return false;
     }
-    
+    fetchSessions();
     return true;
   };
 
@@ -254,6 +218,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
+        fetchAnnouncements();
     }
   };
 
@@ -313,10 +278,3 @@ export const useSessions = () => {
   }
   return context;
 };
-    
-    
-
-    
-
-    
-

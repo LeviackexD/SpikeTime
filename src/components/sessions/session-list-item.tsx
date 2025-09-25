@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { formatTime, cn, getSafeDate, toYYYYMMDD } from '@/lib/utils';
+import { formatDateTimeLocal, cn, getSafeDate } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 
@@ -84,8 +84,7 @@ export default function SessionListItem({
   const spotsLeft = session.maxPlayers - players.length;
   const progressValue = (players.length / session.maxPlayers) * 100;
 
-  const sessionDate = getSafeDate(session.date);
-  const sessionDateTime = new Date(`${toYYYYMMDD(sessionDate)}T${session.startTime}`);
+  const sessionDateTime = getSafeDate(session.start_datetime);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
@@ -295,8 +294,8 @@ export default function SessionListItem({
 
           <CardContent className="p-4 flex-grow space-y-4 bg-card">
               <div className="space-y-1 text-base text-muted-foreground">
-                 <p className="font-medium text-foreground">{sessionDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                 <p>{formatTime(session.startTime)} - {formatTime(session.endTime)}</p>
+                 <p className="font-medium text-foreground">{formatDateTimeLocal(session.start_datetime, 'eeee, dd MMMM')}</p>
+                 <p>{formatDateTimeLocal(session.start_datetime, 'p')} - {formatDateTimeLocal(session.end_datetime, 'p')}</p>
                  <p>{session.location}</p>
               </div>
             

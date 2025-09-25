@@ -33,7 +33,7 @@ import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import type { Session, Announcement } from '@/lib/types';
-import { cn, formatTime, getSafeDate } from '@/lib/utils';
+import { cn, formatDateTimeLocal, getSafeDate } from '@/lib/utils';
 import PlayerAvatar from '@/components/sessions/player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
@@ -84,7 +84,7 @@ const SessionCards = ({
             <div>
               <h3 className="handwriting text-xl font-bold text-brown mb-1">{t(`skillLevels.${session.level}`)}</h3>
               <div className="text-xs text-brown-light">
-                {formatDate(session.date, locale)} - {formatTime(session.startTime)}
+                {formatDateTimeLocal(session.start_datetime, 'PPP')} - {formatDateTimeLocal(session.start_datetime, 'p')}
               </div>
             </div>
             <DropdownMenu>
@@ -320,9 +320,9 @@ export default function AdminPage() {
             return (
             <TableRow key={session.id} className="border-b-chalk/10 hover:bg-white/5">
               <TableCell className="text-chalk/90">
-                <div className="font-medium">{formatDate(session.date, locale)}</div>
+                <div className="font-medium">{formatDateTimeLocal(session.start_datetime, 'PPP')}</div>
                 <div className="text-sm text-chalk/60">
-                  {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                  {formatDateTimeLocal(session.start_datetime, 'p')} - {formatDateTimeLocal(session.end_datetime, 'p')}
                 </div>
               </TableCell>
               <TableCell className="text-chalk/90">{t(`skillLevels.${session.level}`)}</TableCell>

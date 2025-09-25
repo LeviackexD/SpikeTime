@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import GenerateTeamsButton from './generate-teams-button';
-import { cn, formatTime, getSafeDate, toYYYYMMDD } from '@/lib/utils';
+import { cn, formatDateTimeLocal, getSafeDate } from '@/lib/utils';
 import Image from 'next/image';
 import { Input } from '../ui/input';
 
@@ -72,18 +72,7 @@ export default function SessionDetailsModal({
     }
   }
 
-  const formatDate = (date: string | Date) => {
-    return getSafeDate(date).toLocaleDateString(locale, {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      timeZone: 'UTC',
-    });
-  }
-  
-  const sessionDate = getSafeDate(session.date);
-  const sessionDateTime = new Date(`${toYYYYMMDD(sessionDate)}T${session.startTime}`);
+  const sessionDateTime = getSafeDate(session.start_datetime);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
@@ -187,11 +176,11 @@ export default function SessionDetailsModal({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>{formatDate(session.date)}</span>
+              <span>{formatDateTimeLocal(session.start_datetime, 'PPP')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
+              <span>{formatDateTimeLocal(session.start_datetime, 'p')} - {formatDateTimeLocal(session.end_datetime, 'p')}</span>
             </div>
           </div>
           
