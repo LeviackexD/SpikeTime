@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import type { Session, User } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import { getSafeDate } from '@/context/session-context';
+import { getSafeDate, toYYYYMMDD } from '@/context/session-context';
 import PlayerAvatar from './player-avatar';
 import {
   CheckCircle,
@@ -33,11 +33,15 @@ import {
   LogOut,
   Calendar,
   Check,
+  Camera,
+  Loader2,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { formatTime, cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Input } from '../ui/input';
+import { useSessions } from '@/context/session-context';
 
 
 interface SessionListItemProps {
@@ -62,6 +66,7 @@ export default function SessionListItem({
   animationDelay = 0,
 }: SessionListItemProps) {
   const { user: currentUser } = useAuth();
+  const { uploadMoment } = useSessions();
   const { t, locale } = useLanguage();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -71,6 +76,10 @@ export default function SessionListItem({
   const [isSwiping, setIsSwiping] = React.useState(false);
   const [swipeOffset, setSwipeOffset] = React.useState(0);
   const swipeThreshold = 75; // pixels to swipe before action triggers
+  
+  // --- Upload Moment State ---
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
 
   if (!currentUser) return null;
@@ -86,10 +95,17 @@ export default function SessionListItem({
   const progressValue = (players.length / session.maxPlayers) * 100;
 
   const sessionDate = getSafeDate(session.date);
-  const sessionDateTime = new Date(`${sessionDate.toISOString().split('T')[0]}T${session.startTime}`);
+  const sessionDateTime = new Date(`${toYYYYMMDD(sessionDate)}T${session.startTime}`);
+  const endTimeString = `${toYYYYMMDD(sessionDate)}T${session.endTime}`;
+  const sessionEndTime = new Date(endTimeString);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
+
+  const hasSessionEnded = now > sessionEndTime;
+  const hoursSinceEnd = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60 * 60);
+
+  const canUploadMoment = isRegistered && hasSessionEnded && hoursSinceEnd <= 2 && !session.momentImageUrl;
   
   // --- Action Handlers ---
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {
@@ -130,6 +146,26 @@ export default function SessionListItem({
     { title: t('toasts.waitlistLeftTitle'), description: t('toasts.waitlistLeftDescription'), duration: 1500 },
     { title: t('toasts.waitlistLeaveFailedTitle'), description: t('toasts.waitlistLeaveFailedDescription') }
   );
+
+  const handleMomentFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && session) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: t('toasts.imageTooLargeTitle'),
+          description: t('toasts.imageTooLargeDescription', { maxSize: 5 }),
+          variant: "destructive"
+        });
+        return;
+      }
+      setIsUploading(true);
+      const success = await uploadMoment(session.id, file);
+      setIsUploading(false);
+      if (!success) {
+        toast({ title: t('toasts.uploadFailedTitle'), description: t('toasts.uploadFailedDescription'), variant: 'destructive' });
+      }
+    }
+  };
   
   const canSwipeRight = !isRegistered && !isFull;
   const canSwipeLeft = isRegistered && canCancel;
@@ -173,6 +209,25 @@ export default function SessionListItem({
   };
 
   const renderActionButtons = () => {
+    if (canUploadMoment) {
+        return (
+            <>
+                <Button variant="special" className="w-full" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                    {isUploading ? <Loader2 className="animate-spin" /> : <Camera />}
+                    {t('modals.sessionDetails.uploadMoment')}
+                </Button>
+                <Input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/png, image/jpeg"
+                  onChange={handleMomentFileChange}
+                  disabled={isUploading}
+                />
+            </>
+        );
+    }
+    
     if (isRegistered) {
       return (
         <Button

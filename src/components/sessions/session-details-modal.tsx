@@ -69,11 +69,8 @@ export default function SessionDetailsModal({
   const sessionEndTime = new Date(endTimeString);
   const now = new Date();
 
-  // --- Start Temporary Change for Testing ---
-  // Let's pretend the session just ended to show the button
-  const hasSessionEnded = true; 
-  const hoursSinceEnd = 1; 
-  // --- End Temporary Change for Testing ---
+  const hasSessionEnded = now > sessionEndTime;
+  const hoursSinceEnd = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60 * 60);
 
   const canUploadMoment = isRegistered && hasSessionEnded && hoursSinceEnd <= 2 && !session.momentImageUrl;
   
@@ -156,6 +153,25 @@ export default function SessionDetailsModal({
   };
 
   const renderActionButtons = () => {
+    if (canUploadMoment) {
+        return (
+            <>
+                <Button variant="special" className="w-full" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                    {isUploading ? <Loader2 className="animate-spin" /> : <Camera />}
+                    {t('modals.sessionDetails.uploadMoment')}
+                </Button>
+                <Input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/png, image/jpeg"
+                  onChange={handleMomentFileChange}
+                  disabled={isUploading}
+                />
+            </>
+        );
+    }
+    
     if (isRegistered) {
       return (
         <Button
@@ -295,24 +311,6 @@ export default function SessionDetailsModal({
                 </div>
               )}
             </div>
-
-             {canUploadMoment && (
-              <div className="pt-4">
-                <Button variant="special" className="w-full" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                  {isUploading ? <Loader2 className="animate-spin" /> : <Camera />}
-                  {t('modals.sessionDetails.uploadMoment')}
-                </Button>
-                <Input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/png, image/jpeg"
-                  onChange={handleMomentFileChange}
-                  disabled={isUploading}
-                />
-                <p className="text-xs text-muted-foreground text-center mt-2">{t('modals.sessionDetails.uploadHint')}</p>
-              </div>
-            )}
             
             {session.momentImageUrl && (
                 <div className="pt-4">
