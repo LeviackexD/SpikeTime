@@ -54,20 +54,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const fetchSessions = React.useCallback(async () => {
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
-      .select(`
-        id,
-        created_at,
-        date,
-        startTime,
-        endTime,
-        location,
-        level,
-        maxPlayers,
-        imageUrl,
-        createdBy,
-        players:profiles!session_players(*),
-        waitlist:profiles!session_waitlist(*)
-      `)
+      .select('*, players:profiles!session_players(*), waitlist:profiles!session_waitlist(*)')
       .order('date', { ascending: false });
 
     if (sessionError) {
@@ -172,7 +159,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         console.error("Error booking session (RPC):", error);
         return false;
     }
-    
+    fetchSessions().then(setSessions);
     return true;
   };
   
@@ -185,7 +172,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         console.error("Error canceling booking (RPC):", error);
         return false;
     }
-
+    fetchSessions().then(setSessions);
     return true;
   };
 
@@ -199,6 +186,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         console.error("Error joining waitlist:", error);
         return false;
     }
+    fetchSessions().then(setSessions);
     return true;
   };
   
@@ -212,6 +200,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         console.error("Error leaving waitlist:", error);
         return false;
     }
+    fetchSessions().then(setSessions);
     return true;
   };
 
