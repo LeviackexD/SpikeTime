@@ -102,10 +102,10 @@ export default function SessionListItem({
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
 
-  const hasSessionEnded = now > sessionEndTime;
+  // **DEMO MODIFICATION**: Force one registered session to be in the "upload moment" state.
+  const hasSessionEnded = now > sessionEndTime || (isRegistered && session.id.endsWith('1')); // Force session 'ses-1' to appear ended
   const hoursSinceEnd = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60 * 60);
-
-  const canUploadMoment = isRegistered && hasSessionEnded && hoursSinceEnd <= 2 && !session.momentImageUrl;
+  const canUploadMoment = isRegistered && hasSessionEnded && (hoursSinceEnd <= 2 || session.id.endsWith('1')) && !session.momentImageUrl;
   
   // --- Action Handlers ---
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {
@@ -168,7 +168,7 @@ export default function SessionListItem({
   };
   
   const canSwipeRight = !isRegistered && !isFull;
-  const canSwipeLeft = isRegistered && canCancel;
+  const canSwipeLeft = isRegistered && canCancel && !canUploadMoment;
 
   // --- Swipe Handlers ---
   const handleTouchStart = (e: React.TouchEvent) => {
