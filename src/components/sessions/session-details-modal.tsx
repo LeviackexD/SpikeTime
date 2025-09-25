@@ -47,9 +47,6 @@ export default function SessionDetailsModal({
   const { user: currentUser } = useAuth();
   const { t, locale } = useLanguage();
   const { toast } = useToast();
-  const { uploadMoment } = useSessions();
-  const [isUploading, setIsUploading] = React.useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   if (!session || !currentUser) return null;
 
@@ -63,17 +60,6 @@ export default function SessionDetailsModal({
   const isOnWaitlist = waitlist.some(p => p.id === currentUser.id);
   const isFull = spotsFilled >= session.maxPlayers;
   const canGenerateTeams = spotsFilled >= 2;
-  
-  const sessionDate = getSafeDate(session.date);
-  const endTimeString = `${toYYYYMMDD(sessionDate)}T${session.endTime}`;
-  const sessionEndTime = new Date(endTimeString);
-  const now = new Date();
-
-  // DEMO MODIFICATION: Force one registered session to be in the "upload moment" state.
-  const hasSessionEnded = now > sessionEndTime || (isRegistered && session.id.endsWith('1')); // Force session 'ses-1' to appear ended
-  const hoursSinceEnd = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60 * 60);
-
-  const canUploadMoment = isRegistered && hasSessionEnded && (hoursSinceEnd <= 2 || session.id.endsWith('1')) && !session.momentImageUrl;
   
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {
     if (session) {
@@ -96,7 +82,9 @@ export default function SessionDetailsModal({
     });
   }
   
+  const sessionDate = getSafeDate(session.date);
   const sessionDateTime = new Date(`${toYYYYMMDD(sessionDate)}T${session.startTime}`);
+  const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
 
@@ -133,46 +121,7 @@ export default function SessionDetailsModal({
     );
   }
 
-  const handleMomentFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0] && session) {
-      const file = e.target.files[0];
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({
-          title: t('toasts.imageTooLargeTitle'),
-          description: t('toasts.imageTooLargeDescription', { maxSize: 5 }),
-          variant: "destructive"
-        });
-        return;
-      }
-      setIsUploading(true);
-      const success = await uploadMoment(session.id, file);
-      setIsUploading(false);
-      if (success) {
-        // The modal will update via real-time subscription
-      }
-    }
-  };
-
   const renderActionButtons = () => {
-    if (canUploadMoment) {
-        return (
-            <>
-                <Button variant="special" className="w-full" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                    {isUploading ? <Loader2 className="animate-spin" /> : <Camera />}
-                    {t('modals.sessionDetails.uploadMoment')}
-                </Button>
-                <Input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/png, image/jpeg"
-                  onChange={handleMomentFileChange}
-                  disabled={isUploading}
-                />
-            </>
-        );
-    }
-    
     if (isRegistered) {
       return (
         <Button

@@ -19,7 +19,6 @@ interface SessionContextType {
   cancelBooking: (sessionId: string) => Promise<boolean>;
   joinWaitlist: (sessionId: string) => Promise<boolean>;
   leaveWaitlist: (sessionId: string) => Promise<boolean>;
-  uploadMoment: (sessionId: string, file: File) => Promise<boolean>;
   addMessage: (sessionId: string, message: Omit<Message, 'id' | 'sender' | 'timestamp'>) => Promise<void>;
   createAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
   updateAnnouncement: (announcement: Omit<Announcement, 'date'> & { id: string }) => Promise<void>;
@@ -55,13 +54,24 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       .from('sessions')
       .select('*, players:profiles!session_players(*), waitlist:profiles!session_waitlist(*)')
       .order('date', { ascending: false });
-
+  
     if (sessionError) {
       console.error("Error fetching sessions:", sessionError);
       return [];
     }
-    
-    return sessionData.map(s => ({
+  
+    const now = new Date();
+    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+  
+    return sessionData.filter(s => {
+      // Keep sessions that have a moment image, regardless of time
+      if (s.momentImageUrl) {
+        return true;
+      }
+      // Otherwise, only keep sessions that ended less than 2 hours ago or are in the future
+      const endTime = new Date(`${toYYYYMMDD(getSafeDate(s.date))}T${s.endTime}`);
+      return endTime > twoHoursAgo;
+    }).map(s => ({
       ...s,
       date: getSafeDate(s.date),
       messages: [], // Chat messages not implemented in DB yet
@@ -259,42 +269,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     return true;
   };
 
-  const uploadMoment = async (sessionId: string, file: File): Promise<boolean> => {
-    const fileExtension = file.name.split('.').pop();
-    const filePath = `moments/${sessionId}.${fileExtension}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('sessions')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: true,
-      });
-
-    if (uploadError) {
-      console.error('Error uploading moment:', uploadError);
-      toast({ title: "Upload Failed", description: uploadError.message, variant: "destructive" });
-      return false;
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from('sessions')
-      .getPublicUrl(filePath);
-
-    const { error: dbError } = await supabase
-      .from('sessions')
-      .update({ momentImageUrl: publicUrlData.publicUrl })
-      .eq('id', sessionId);
-
-    if (dbError) {
-      console.error('Error saving moment URL:', dbError);
-      toast({ title: "Save Failed", description: "Could not save the moment to the session.", variant: "destructive" });
-      return false;
-    }
-    
-    toast({ title: "Moment captured!", description: "Your photo has been added to the session's memories.", variant: "success", duration: 1500 });
-    return true;
-  };
-
   const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
     const { error } = await supabase.from('announcements').insert({
         ...announcementData,
@@ -344,7 +318,6 @@ if(error) {
         cancelBooking,
         joinWaitlist,
         leaveWaitlist,
-        uploadMoment,
         addMessage,
         createAnnouncement,
         updateAnnouncement,
