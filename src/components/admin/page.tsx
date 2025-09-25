@@ -8,6 +8,7 @@
 'use client';
 
 import * as React from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, PlusCircle, Users } from 'lucide-react';
 import {
@@ -27,20 +28,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import SessionFormModal from '@/components/admin/session-form-modal';
-import DeleteSessionDialog from '@/components/admin/delete-session-dialog';
-import SessionDetailsModal from '@/components/sessions/session-details-modal';
-import AnnouncementFormModal from '@/components/admin/announcement-form-modal';
-import DeleteAnnouncementDialog from '@/components/admin/delete-announcement-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import type { Session, Announcement, User } from '@/lib/types';
-import { cn, getSafeDate } from '@/lib/utils';
+import type { Session, Announcement } from '@/lib/types';
+import { cn, formatTime, getSafeDate } from '@/lib/utils';
 import PlayerAvatar from '@/components/sessions/player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+
+const SessionFormModal = dynamic(() => import('@/components/admin/session-form-modal'));
+const DeleteSessionDialog = dynamic(() => import('@/components/admin/delete-session-dialog'));
+const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'));
+const AnnouncementFormModal = dynamic(() => import('@/components/admin/announcement-form-modal'));
+const DeleteAnnouncementDialog = dynamic(() => import('@/components/admin/delete-announcement-dialog'));
+
 
 // --- Helper Functions ---
 
@@ -49,9 +51,9 @@ const formatDate = (date: string | Date, locale: string) => {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    timeZone: 'UTC',
   });
 };
+
 
 // --- Sub-components for Mobile View ---
 
@@ -73,6 +75,8 @@ const SessionCards = ({
   <div className="space-y-4">
     {sessions.map((session, index) => {
       const rotationClass = `note-${(index % 4) + 1}`;
+      const players = session.players || [];
+      const waitlist = session.waitlist || [];
       return (
       <div key={session.id} className={cn('note bg-paper-yellow p-4 rounded-lg shadow-lg relative', rotationClass)}>
          <div className={cn('pushpin bg-red-500')}></div>
@@ -80,7 +84,7 @@ const SessionCards = ({
             <div>
               <h3 className="handwriting text-xl font-bold text-brown mb-1">{t(`skillLevels.${session.level}`)}</h3>
               <div className="text-xs text-brown-light">
-                {formatDate(session.date, locale)} - {session.startTime}
+                {formatDate(session.date, locale)} - {formatTime(session.startTime)}
               </div>
             </div>
             <DropdownMenu>
@@ -108,14 +112,14 @@ const SessionCards = ({
           <div className="space-y-3 text-sm border-t border-dashed border-brown-light/30 pt-3">
              <div className="flex items-center gap-2 text-brown-dark">
                 <Users className="h-4 w-4" />
-                <span className="font-semibold">{session.players.length} / {session.maxPlayers} {t('adminPage.sessionTable.players')}</span>
-                 {session.waitlist.length > 0 && <span className="text-xs">({t('adminPage.statusValues.waitlist', {count: session.waitlist.length})})</span>}
+                <span className="font-semibold">{players.length} / {session.maxPlayers} {t('adminPage.sessionTable.players')}</span>
+                 {waitlist.length > 0 && <span className="text-xs">({t('adminPage.statusValues.waitlist', {count: waitlist.length})})</span>}
             </div>
             <div className="flex items-center gap-2">
                 <Badge
-                  variant={(session.players as User[]).length >= session.maxPlayers ? 'destructive' : 'secondary'}
+                  variant={players.length >= session.maxPlayers ? 'destructive' : 'secondary'}
                 >
-                  {(session.players as User[]).length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
+                  {players.length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
                 </Badge>
             </div>
           </div>
@@ -248,16 +252,16 @@ export default function AdminPage() {
     setIsViewModalOpen(true);
   };
 
-  const confirmDeleteSession = () => {
+  const confirmDeleteSession = async () => {
     if (sessionToDelete) {
-      deleteSession(sessionToDelete.id);
+      await deleteSession(sessionToDelete.id);
       setSessionToDelete(null);
       setIsDeleteSessionDialogOpen(false);
     }
   };
 
-  const handleSaveSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string } | (Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string, id: string, players: User[], waitlist: User[] })) => {
-    if ('id' in sessionData) {
+  const handleSaveSession = async (sessionData: any) => {
+    if (sessionData.id) {
         await updateSession(sessionData);
     } else {
         await createSession(sessionData);
@@ -277,9 +281,9 @@ export default function AdminPage() {
     setIsDeleteAnnouncementDialogOpen(true);
   };
 
-  const confirmDeleteAnnouncement = () => {
+  const confirmDeleteAnnouncement = async () => {
     if (announcementToDelete) {
-      deleteAnnouncement(announcementToDelete.id);
+      await deleteAnnouncement(announcementToDelete.id);
       setAnnouncementToDelete(null);
       setIsDeleteAnnouncementDialogOpen(false);
     }
@@ -310,35 +314,38 @@ export default function AdminPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sessions.map((session) => (
+          {sessions.map((session) => {
+            const players = session.players || [];
+            const waitlist = session.waitlist || [];
+            return (
             <TableRow key={session.id} className="border-b-chalk/10 hover:bg-white/5">
               <TableCell className="text-chalk/90">
                 <div className="font-medium">{formatDate(session.date, locale)}</div>
                 <div className="text-sm text-chalk/60">
-                  {session.startTime} - {session.endTime}
+                  {formatTime(session.startTime)} - {formatTime(session.endTime)}
                 </div>
               </TableCell>
               <TableCell className="text-chalk/90">{t(`skillLevels.${session.level}`)}</TableCell>
               <TableCell className="text-chalk/90">
                 <TooltipProvider>
                   <div className="flex items-center gap-2">
-                    <span>{session.players.length} / {session.maxPlayers}</span>
+                    <span>{players.length} / {session.maxPlayers}</span>
                     <div className="flex -space-x-2 overflow-hidden">
-                      {session.players.slice(0, 3).map(player => (
-                        <PlayerAvatar key={player.id} player={player as User} className="h-6 w-6 border-2 border-chalkboard" />
+                      {players.slice(0, 3).map(player => (
+                        <PlayerAvatar key={player.id} player={player} className="h-6 w-6 border-2 border-chalkboard" />
                       ))}
                     </div>
                   </div>
                   </TooltipProvider>
-                  {session.waitlist.length > 0 && <div className="text-xs text-chalk/60 mt-1">{t('adminPage.statusValues.waitlist', {count: session.waitlist.length})}</div>}
+                  {waitlist.length > 0 && <div className="text-xs text-chalk/60 mt-1">{t('adminPage.statusValues.waitlist', {count: waitlist.length})}</div>}
               </TableCell>
               <TableCell>
                 <Badge
                   variant={
-                    session.players.length >= session.maxPlayers ? 'destructive' : 'secondary'
+                    players.length >= session.maxPlayers ? 'destructive' : 'secondary'
                   }
                 >
-                  {session.players.length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
+                  {players.length >= session.maxPlayers ? t('adminPage.statusValues.full') : t('adminPage.statusValues.open')}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
@@ -365,7 +372,7 @@ export default function AdminPage() {
                 </DropdownMenu>
               </TableCell>
             </TableRow>
-          ))}
+          )})}
         </TableBody>
       </Table>
     </div>
@@ -463,20 +470,20 @@ export default function AdminPage() {
 
       {/* --- Modals and Dialogs --- */}
 
-      <SessionFormModal
+      {isSessionModalOpen && <SessionFormModal
         isOpen={isSessionModalOpen}
         onClose={() => setIsSessionModalOpen(false)}
         onSave={handleSaveSession}
         session={selectedSession}
-      />
+      />}
 
-      <DeleteSessionDialog
+      {isDeleteSessionDialogOpen && <DeleteSessionDialog
         isOpen={isDeleteSessionDialogOpen}
         onClose={() => setIsDeleteSessionDialogOpen(false)}
         onConfirm={confirmDeleteSession}
-      />
+      />}
 
-      <SessionDetailsModal
+      {isViewModalOpen && <SessionDetailsModal
         session={sessionToView}
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
@@ -484,20 +491,22 @@ export default function AdminPage() {
         onCancel={cancelBooking}
         onWaitlist={joinWaitlist}
         onLeaveWaitlist={leaveWaitlist}
-      />
+      />}
 
-      <AnnouncementFormModal
+      {isAnnouncementModalOpen && <AnnouncementFormModal
         isOpen={isAnnouncementModalOpen}
         onClose={() => setIsAnnouncementModalOpen(false)}
         onSave={handleSaveAnnouncement}
         announcement={selectedAnnouncement}
-      />
+      />}
 
-      <DeleteAnnouncementDialog
+      {isDeleteAnnouncementDialogOpen && <DeleteAnnouncementDialog
         isOpen={isDeleteAnnouncementDialogOpen}
         onClose={() => setIsDeleteAnnouncementDialogOpen(false)}
         onConfirm={confirmDeleteAnnouncement}
-      />
+      />}
     </>
   );
 }
+
+    

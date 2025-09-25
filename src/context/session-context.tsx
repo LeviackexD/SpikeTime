@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -79,14 +78,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     };
     
     setLoading(true);
-    Promise.all([fetchSessions(), fetchAnnouncements()]).finally(() => {
+    const initialFetch = async () => {
+      await Promise.all([fetchSessions(), fetchAnnouncements()]);
       setLoading(false);
-    });
+    }
+    initialFetch();
 
     const handleRealtimeUpdate = (payload: any) => {
       // console.log("Realtime change detected, refetching sessions:", payload);
       fetchSessions();
     };
+    
+    const handleAnnouncementUpdate = (payload: any) => {
+        fetchAnnouncements();
+    }
 
     const sessionChanges = supabase.channel('sessions-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleRealtimeUpdate)
@@ -95,7 +100,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       .subscribe();
 
     const announcementChanges = supabase.channel('announcements-channel')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, fetchAnnouncements)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleAnnouncementUpdate)
         .subscribe();
     
     return () => {
@@ -137,10 +142,18 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
   
   const deleteSession = async (sessionId: string) => {
+    if (!currentUser) return;
+    const originalSessions = sessions;
+
+    // Optimistic update
+    setSessions(prevSessions => prevSessions.filter(s => s.id !== sessionId));
+
     const { error } = await supabase.from('sessions').delete().eq('id', sessionId);
     if(error) {
         console.error("Error deleting session:", error);
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
+        // Rollback
+        setSessions(originalSessions);
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
     }
@@ -167,7 +180,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       return false;
     }
     
-    // No need to fetch here, realtime will catch it, but optimistic update is faster for the current user.
+    // Manually trigger a refetch for others after success, as a fallback for realtime
+    fetchSessions();
     return true;
   };
   
@@ -191,6 +205,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         setSessions(originalSessions);
         return false;
     }
+    
+    // Manually trigger a refetch for others after success, as a fallback for realtime
+    fetchSessions();
     return true;
   };
 
@@ -217,6 +234,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         setSessions(originalSessions);
         return false;
     }
+
+    fetchSessions(); // Refetch to ensure consistency
     return true;
   };
   
@@ -242,6 +261,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         setSessions(originalSessions);
         return false;
     }
+    
+    fetchSessions(); // Refetch to ensure consistency
     return true;
   };
 
@@ -270,10 +291,16 @@ if(error) {
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
+    const originalAnnouncements = announcements;
+    // Optimistic update
+    setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
+
     const { error } = await supabase.from('announcements').delete().eq('id', announcementId);
      if(error) {
         console.error("Error deleting announcement:", error);
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
+        // Rollback
+        setAnnouncements(originalAnnouncements);
     } else {
         toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
     }
@@ -310,5 +337,5 @@ export const useSessions = () => {
   }
   return context;
 };
-
+    
     
