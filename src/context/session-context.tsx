@@ -47,21 +47,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   
     const now = new Date();
-    // Grace period of 2 hours after a session ends
     const gracePeriodEnd = new Date(now.getTime() - 2 * 60 * 60 * 1000);
   
     return sessionData.filter(s => {
-      // The session end time in UTC
       const sessionEndDate = getSafeDate(s.date);
       const [endHours, endMinutes] = s.endTime.split(':').map(Number);
       sessionEndDate.setUTCHours(endHours, endMinutes, 0, 0);
-
-      // Keep the session if it ended within the grace period or is in the future
       return sessionEndDate > gracePeriodEnd;
     }).map(s => ({
       ...s,
       date: getSafeDate(s.date),
-      messages: [], // Chat messages not implemented in DB yet
+      messages: [],
     }));
   }, []);
 
@@ -74,7 +70,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       return data.map(a => ({...a, date: getSafeDate(a.date)}));
   }, []);
 
-  // Initial fetch and real-time subscriptions
   React.useEffect(() => {
     if (!currentUser) {
       setLoading(false);
@@ -110,7 +105,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (!currentUser) return;
     const { error } = await supabase.from('sessions').insert({
         ...sessionData,
-        date: (sessionData.date as Date).toISOString(), // Ensure date is in ISO format
+        date: (sessionData.date as Date).toISOString(),
         createdBy: currentUser.id,
     });
     if(error) {
@@ -125,7 +120,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      const { id, players, waitlist, ...updateData } = sessionData;
      const { error } = await supabase.from('sessions').update({
          ...updateData,
-         date: (sessionData.date as Date).toISOString(), // Ensure date is in ISO format
+         date: (sessionData.date as Date).toISOString(),
      }).eq('id', id);
 
      if(error) {
@@ -148,76 +143,78 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-
-    // We no longer need optimistic updates, as Supabase Realtime will handle it.
-    // const originalSessions = sessions;
-    // setSessions(prevSessions => ... );
-
+    const originalSessions = sessions;
+    setSessions(prevSessions => prevSessions.map(s => 
+        s.id === sessionId 
+          ? { ...s, players: [...s.players, currentUser] } 
+          : s
+    ));
     const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
-
     if (error) {
       console.error("Error booking session (RPC):", error);
       toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
-      // setSessions(originalSessions); // No need to revert with realtime
+      setSessions(originalSessions);
       return false;
     }
-    // The realtime subscription will trigger a re-fetch, so no manual state update is needed.
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    
-    // We no longer need optimistic updates, as Supabase Realtime will handle it.
-    // const originalSessions = sessions;
-    // setSessions(prevSessions => ... );
-
+    const originalSessions = sessions;
+    setSessions(prevSessions => prevSessions.map(s =>
+        s.id === sessionId
+          ? { ...s, players: s.players.filter(p => p.id !== currentUser.id) }
+          : s
+    ));
     const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
-    
     if (error) {
         console.error("Error canceling booking (RPC):", error);
         toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
-        // setSessions(originalSessions); // No need to revert with realtime
+        setSessions(originalSessions);
         return false;
     }
-    // The realtime subscription will trigger a re-fetch, so no manual state update is needed.
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-
-    // We no longer need optimistic updates, as Supabase Realtime will handle it.
-    
+    const originalSessions = sessions;
+    setSessions(prevSessions => prevSessions.map(s =>
+        s.id === sessionId
+          ? { ...s, waitlist: [...s.waitlist, currentUser] }
+          : s
+    ));
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
         user_id: currentUser.id
     });
-
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
+        setSessions(originalSessions);
         return false;
     }
-    // The realtime subscription will trigger a re-fetch, so no manual state update is needed.
     return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
-
-     // We no longer need optimistic updates, as Supabase Realtime will handle it.
-
+     const originalSessions = sessions;
+     setSessions(prevSessions => prevSessions.map(s =>
+         s.id === sessionId
+           ? { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) }
+           : s
+     ));
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
         .eq('user_id', currentUser.id);
-     
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Action Failed", description: error.message, variant: "destructive" });
+        setSessions(originalSessions);
         return false;
     }
-    // The realtime subscription will trigger a re-fetch, so no manual state update is needed.
     return true;
   };
 
@@ -255,7 +252,6 @@ if(error) {
     }
   };
   
-  // The following functions are placeholders and not connected to DB yet.
   const addMessage = async (sessionId: string, messageContent: Omit<Message, 'id' | 'sender' | 'timestamp'>) => {};
 
   return (
@@ -287,5 +283,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
