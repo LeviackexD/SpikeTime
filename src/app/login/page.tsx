@@ -45,9 +45,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmail(email, password);
-      // The redirection will be handled by the AuthContext's useEffect
-      // We can show a success toast optimistically here if needed, 
-      // but it's better to let the context handle the state change.
+      // The redirection is now handled by the AuthContext's useEffect,
+      // which is a more robust pattern.
     } catch (error) {
        toast({
         title: t('toasts.authFailedTitle'),

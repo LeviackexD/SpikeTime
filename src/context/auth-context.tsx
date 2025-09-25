@@ -35,11 +35,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 .eq('id', session.user.id)
                 .single();
 
-            if (error) {
-                console.error('Error fetching profile:', error);
-                setUser(null);
+            if (error || !profile) {
+                console.error('Error fetching profile or profile not found:', error);
+                // Instead of setting user to null, create a partial user object.
+                // This prevents the user from being logged out if the profile fetch fails temporarily.
+                 setUser({
+                    id: session.user.id,
+                    email: session.user.email!,
+                    name: session.user.email!,
+                    username: session.user.email!,
+                    role: 'user',
+                    avatarUrl: '',
+                    skillLevel: 'Beginner',
+                    favoritePosition: 'Hitter',
+                    stats: { sessionsPlayed: 0, attendanceRate: 0 },
+                });
+
             } else if (profile) {
-                // Map Supabase profile to our app's User type
                 const appUser: User = {
                     id: profile.id,
                     name: profile.name,
@@ -49,7 +61,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     role: profile.role,
                     skillLevel: profile.skillLevel,
                     favoritePosition: profile.favoritePosition,
-                    // Stats will be static for now
                     stats: {
                         sessionsPlayed: 0,
                         attendanceRate: 0,
@@ -82,10 +93,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithEmail = async (email: string, pass: string): Promise<void> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
     if (error) {
-        // El error se manejará en la página de login a través del toast
         throw error;
     }
-    // No es necesario devolver nada, el onAuthStateChange se encargará del resto
+    // onAuthStateChange will handle the rest.
   };
 
   const signUpWithEmail = async (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<{success: boolean, requiresConfirmation: boolean}> => {
@@ -101,8 +111,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     });
 
-    const success = !error;
-    // A user exists but a session is null, this means email confirmation is required.
+    const success = !error && !!signUpData.user;
     const requiresConfirmation = success && !!signUpData.user && !signUpData.session;
     
     return { success, requiresConfirmation };
@@ -110,14 +119,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async (): Promise<void> => {
     await supabase.auth.signOut();
-    setUser(null); // Esto también lo hará el listener, pero es bueno ser explícito
+    setUser(null);
     router.push('/login');
   };
   
   const updateUser = async (updatedData: Partial<User>): Promise<boolean> => {
       if (!user) return false;
 
-      // Make sure column names match the SQL script (e.g., "skillLevel")
       const { data, error } = await supabase
         .from('profiles')
         .update({
