@@ -74,7 +74,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       console.error('Error fetching sessions:', sessionError);
       return [];
     }
-
+    
     return sessionData.map(s => ({
       ...s,
       date: getSafeDate(s.date),
@@ -165,51 +165,25 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    // We must handle the waitlist logic here
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return false;
     
-    // If user is on waitlist, they might be automatically promoted
-    const isOnWaitlist = (session.waitlist as User[]).some(p => p.id === currentUser.id);
-
-    const { error } = await supabase.from('session_players').insert({
-        session_id: sessionId,
-        user_id: currentUser.id,
-    });
+    const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
 
     if (error) {
-        console.error("Error booking session:", error);
+        console.error("Error booking session (RPC):", error);
         return false;
     }
     
-    // If user was on waitlist, remove them from it
-    if(isOnWaitlist){
-        await leaveWaitlist(sessionId);
-    }
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
-    // First, remove the player
-    const { error: cancelError } = await supabase.from('session_players').delete()
-        .eq('session_id', sessionId)
-        .eq('user_id', currentUser.id);
+    const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
     
-    if (cancelError) {
-        console.error("Error canceling booking:", cancelError);
+    if (error) {
+        console.error("Error canceling booking (RPC):", error);
         return false;
-    }
-
-    // Now, check if there's someone on the waitlist to promote
-    const session = sessions.find(s => s.id === sessionId);
-    if (session && (session.waitlist as User[]).length > 0) {
-        const nextPlayer = (session.waitlist as User[])[0];
-        // Promote nextPlayer (book them and remove from waitlist)
-        await supabase.from('session_players').insert({ session_id: sessionId, user_id: nextPlayer.id });
-        await supabase.from('session_waitlist').delete().eq('session_id', sessionId).eq('user_id', nextPlayer.id);
-        // TODO: In a real app, you would send a notification to `nextPlayer` here.
     }
 
     return true;
@@ -307,5 +281,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
