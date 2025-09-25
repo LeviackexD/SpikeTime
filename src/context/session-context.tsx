@@ -149,74 +149,45 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
-    const originalSessions = sessions;
-
-    // Optimistic UI update
-    setSessions(prevSessions =>
-      prevSessions.map(s => {
-        if (s.id === sessionId) {
-          const newWaitlist = s.waitlist.filter(p => p.id !== currentUser.id);
-          const playerExists = s.players.some(p => p.id === currentUser.id);
-          const newPlayers = playerExists ? s.players : [...s.players, currentUser];
-          return { ...s, players: newPlayers, waitlist: newWaitlist };
-        }
-        return s;
-      })
-    );
+    // We no longer need optimistic updates, as Supabase Realtime will handle it.
+    // const originalSessions = sessions;
+    // setSessions(prevSessions => ... );
 
     const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
 
     if (error) {
       console.error("Error booking session (RPC):", error);
       toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
-      setSessions(originalSessions); // Revert on error
+      // setSessions(originalSessions); // No need to revert with realtime
       return false;
     }
+    // The realtime subscription will trigger a re-fetch, so no manual state update is needed.
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-
-    const originalSessions = sessions;
-
-    // Optimistic UI update
-    setSessions(prevSessions =>
-      prevSessions.map(s => {
-        if (s.id === sessionId) {
-          return { ...s, players: s.players.filter(p => p.id !== currentUser.id) };
-        }
-        return s;
-      })
-    );
+    
+    // We no longer need optimistic updates, as Supabase Realtime will handle it.
+    // const originalSessions = sessions;
+    // setSessions(prevSessions => ... );
 
     const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
     
     if (error) {
         console.error("Error canceling booking (RPC):", error);
         toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
-        setSessions(originalSessions); // Revert on error
+        // setSessions(originalSessions); // No need to revert with realtime
         return false;
     }
+    // The realtime subscription will trigger a re-fetch, so no manual state update is needed.
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
-    const originalSessions = sessions;
-
-    // Optimistic UI update
-    setSessions(prevSessions =>
-      prevSessions.map(s => {
-        if (s.id === sessionId) {
-          const waitlistExists = s.waitlist.some(p => p.id === currentUser.id);
-          if (waitlistExists) return s;
-          return { ...s, waitlist: [...s.waitlist, currentUser] };
-        }
-        return s;
-      })
-    );
+    // We no longer need optimistic updates, as Supabase Realtime will handle it.
     
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
@@ -226,26 +197,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
-        setSessions(originalSessions); // Revert on error
         return false;
     }
+    // The realtime subscription will trigger a re-fetch, so no manual state update is needed.
     return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
 
-     const originalSessions = sessions;
-
-     // Optimistic UI update
-     setSessions(prevSessions =>
-       prevSessions.map(s => {
-         if (s.id === sessionId) {
-           return { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) };
-         }
-         return s;
-       })
-     );
+     // We no longer need optimistic updates, as Supabase Realtime will handle it.
 
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
@@ -254,9 +215,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Action Failed", description: error.message, variant: "destructive" });
-        setSessions(originalSessions); // Revert on error
         return false;
     }
+    // The realtime subscription will trigger a re-fetch, so no manual state update is needed.
     return true;
   };
 
@@ -326,3 +287,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
