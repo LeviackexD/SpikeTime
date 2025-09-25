@@ -9,6 +9,7 @@ import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import type { Session } from '@/lib/types';
 import { getSafeDate } from '@/context/session-context';
+import { toYYYYMMDD } from '@/lib/utils';
 
 interface SessionCalendarProps {
   sessions: Session[];
@@ -16,27 +17,14 @@ interface SessionCalendarProps {
   onDateChange: (date: Date | undefined) => void;
 }
 
-/**
- * Converts a Date object to a 'YYYY-MM-DD' string, ignoring timezone.
- */
-const toDateString = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
 
 export default function SessionCalendar({ sessions, selectedDate, onDateChange }: SessionCalendarProps) {
   const sessionsByDate = React.useMemo(() => {
-    return sessions.reduce((acc, session) => {
-      const dateKey = toDateString(getSafeDate(session.date));
-      if (!acc[dateKey]) {
-        acc[dateKey] = [];
-      }
-      acc[dateKey].push(session);
-      return acc;
-    }, {} as Record<string, Session[]>);
+    const dateSet = new Set<string>();
+    sessions.forEach(session => {
+        dateSet.add(toYYYYMMDD(getSafeDate(session.date)));
+    });
+    return dateSet;
   }, [sessions]);
   
   
@@ -49,8 +37,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange }
         className="p-0"
         modifiers={{
             hasSessions: (day) => {
-                const dayKey = toDateString(day);
-                return !!sessionsByDate[dayKey];
+                return sessionsByDate.has(toYYYYMMDD(day));
             }
         }}
         modifiersClassNames={{

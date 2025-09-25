@@ -15,4 +15,13 @@ export function formatTime(timeString: string) {
   return `${h}:${m}`;
 }
 
-    
+/**
+ * Converts a Date object to a 'YYYY-MM-DD' string, ignoring timezone effects.
+ * This is the safest way to compare dates without timezone-related issues.
+ */
+export const toYYYYMMDD = (date: Date): string => {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
