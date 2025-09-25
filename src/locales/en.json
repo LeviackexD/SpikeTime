@@ -196,7 +196,7 @@
         "bookingCanceledDescription": "Your spot has been successfully canceled.",
         "cancellationFailedTitle": "Cancellation Failed",
         "cancellationFailedDescription": "Could not cancel your booking.",
-        "cancellationFailedTime": "You can only cancel more than 12 hours in advance.",
+        "cancellationFailedTime": "You can only cancel more than 6 hours in advance.",
         "waitlistJoinedTitle": "You are on the waitlist!",
         "waitlistJoinedDescription": "We'll notify you if a spot opens up.",
         "waitlistJoinFailedTitle": "Could not join waitlist",
@@ -261,7 +261,7 @@
             "cancelSpot": "Cancel My Spot",
             "joinWaitlist": "Join Waitlist",
             "leaveWaitlist": "Leave Waitlist",
-            "cancellationTooltip": "Cancellations must be made more than 12 hours in advance.",
+            "cancellationTooltip": "Cancellations must be made more than 6 hours in advance.",
             "uploadMoment": "Upload Moment",
             "uploadHint": "Only one photo per session. It will be permanent!",
             "sessionMoment": "Session's Moment"

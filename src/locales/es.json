@@ -196,7 +196,7 @@
         "bookingCanceledDescription": "Tu plaza ha sido cancelada correctamente.",
         "cancellationFailedTitle": "Fallo en la Cancelación",
         "cancellationFailedDescription": "No se pudo cancelar tu reserva.",
-        "cancellationFailedTime": "Solo puedes cancelar con más de 12 horas de antelación.",
+        "cancellationFailedTime": "Solo puedes cancelar con más de 6 horas de antelación.",
         "waitlistJoinedTitle": "¡Estás en la lista de espera!",
         "waitlistJoinedDescription": "Te notificaremos si se libera una plaza.",
         "waitlistJoinFailedTitle": "No se pudo unir a la lista de espera",
@@ -261,7 +261,7 @@
             "cancelSpot": "Cancelar Mi Plaza",
             "joinWaitlist": "Unirme a la Lista de Espera",
             "leaveWaitlist": "Salir de la Lista de Espera",
-            "cancellationTooltip": "Las cancelaciones deben hacerse con más de 12 horas de antelación.",
+            "cancellationTooltip": "Las cancelaciones deben hacerse con más de 6 horas de antelación.",
             "uploadMoment": "Subir Momento",
             "uploadHint": "Solo una foto por sesión. ¡Será permanente!",
             "sessionMoment": "El Momento de la Sesión"

@@ -1,4 +1,5 @@
 
+
 /**
  * @fileoverview A card component that displays session details as a pinned note.
  * Used on the calendar page to list sessions for a selected day on a corkboard.
@@ -54,7 +55,7 @@ export default function SessionNoteCard({
   const sessionDateTime = getSafeDate(`${session.date}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const canCancel = hoursUntilSession > 12;
+  const canCancel = hoursUntilSession > 6;
 
   const handleBook = async () => {
     const success = await onBook(session.id);

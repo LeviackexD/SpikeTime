@@ -87,7 +87,7 @@ export default function SessionListItem({
   const sessionDateTime = getSafeDate(`${session.date}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const canCancel = hoursUntilSession > 12;
+  const canCancel = hoursUntilSession > 6;
 
   // --- Action Handlers ---
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {

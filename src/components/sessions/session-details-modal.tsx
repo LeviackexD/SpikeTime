@@ -75,7 +75,7 @@ export default function SessionDetailsModal({
   const sessionDateTime = getSafeDate(`${session.date}T${session.startTime}`);
   const now = new Date();
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const canCancel = hoursUntilSession > 12;
+  const canCancel = hoursUntilSession > 6;
 
   const bookAction = () => {
     handleAction(
