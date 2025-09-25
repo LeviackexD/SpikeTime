@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -163,62 +164,36 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const originalSessions = sessions;
-    
-    // Optimistic update
-    setSessions(prevSessions => prevSessions.map(s => 
-        s.id === sessionId 
-          ? { ...s, players: [...s.players, currentUser] } 
-          : s
-    ));
     
     const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
     
     if (error) {
       console.error("Error booking session (RPC):", error);
       toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
-      setSessions(originalSessions);
       return false;
     }
     
-    fetchSessions();
+    // No optimistic update here, rely on realtime to sync
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const originalSessions = sessions;
-
-    // Optimistic update
-    setSessions(prevSessions => prevSessions.map(s =>
-        s.id === sessionId
-          ? { ...s, players: s.players.filter(p => p.id !== currentUser.id) }
-          : s
-    ));
 
     const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
 
     if (error) {
         console.error("Error canceling booking (RPC):", error);
         toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
-        setSessions(originalSessions);
         return false;
     }
     
-    fetchSessions();
+    // No optimistic update here, rely on realtime to sync
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const originalSessions = sessions;
-
-    // Optimistic update
-    setSessions(prevSessions => prevSessions.map(s =>
-        s.id === sessionId
-          ? { ...s, waitlist: [...s.waitlist, currentUser] }
-          : s
-    ));
 
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
@@ -228,23 +203,15 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
-        setSessions(originalSessions);
         return false;
     }
 
-    fetchSessions();
+    // No optimistic update here, rely on realtime to sync
     return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
-     const originalSessions = sessions;
-
-     setSessions(prevSessions => prevSessions.map(s =>
-         s.id === sessionId
-           ? { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) }
-           : s
-     ));
      
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
@@ -253,11 +220,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Action Failed", description: error.message, variant: "destructive" });
-        setSessions(originalSessions);
         return false;
     }
     
-    fetchSessions();
+    // No optimistic update here, rely on realtime to sync
     return true;
   };
 
