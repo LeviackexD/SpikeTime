@@ -1,4 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'user' | 'admin';
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced';
@@ -37,12 +36,12 @@ export interface Message {
   id: string;
   sender: User;
   content: string;
-  timestamp: Timestamp;
+  timestamp: Date;
 }
 
 export interface Session {
   id: string;
-  date: Timestamp;
+  date: Date;
   startTime: string;
   endTime: string;
   location: string;
@@ -59,7 +58,7 @@ export interface Announcement {
   id: string;
   title: LocalizedString;
   content: LocalizedString;
-  date: Timestamp;
+  date: Date;
   category: AnnouncementCategory;
 }
 

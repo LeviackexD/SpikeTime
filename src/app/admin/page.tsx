@@ -38,14 +38,13 @@ import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import type { Session, Announcement } from '@/lib/types';
-import { Timestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import PlayerAvatar from '@/components/sessions/player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 // --- Helper Functions ---
 
-const formatDate = (date: string | Timestamp, locale: string) => {
+const formatDate = (date: string | Date, locale: string) => {
   return getSafeDate(date).toLocaleDateString(locale, {
     year: 'numeric',
     month: 'long',

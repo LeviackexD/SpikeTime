@@ -43,6 +43,7 @@ export default function LoginPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    // In mock mode, this will find the user in mock-data.ts
     const success = await signInWithEmail(email, password);
     setIsLoading(false);
     if (success) {

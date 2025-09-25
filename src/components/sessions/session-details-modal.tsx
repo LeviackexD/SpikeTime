@@ -17,7 +17,6 @@ import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut } fro
 import { getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import type { Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -69,7 +68,7 @@ export default function SessionDetailsModal({
     }
   }
 
-  const formatDate = (date: string | Timestamp) => {
+  const formatDate = (date: string | Date) => {
     return getSafeDate(date).toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',

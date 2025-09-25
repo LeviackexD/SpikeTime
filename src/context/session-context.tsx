@@ -5,7 +5,6 @@ import * as React from 'react';
 import type { Session, Message, User, Announcement, DirectChat } from '@/lib/types';
 import { mockSessions, mockAnnouncements, mockUsers, mockDirectChats } from '@/lib/mock-data';
 import { useAuth } from './auth-context';
-import { Timestamp } from 'firebase/firestore';
 
 interface SessionContextType {
   sessions: Session[];
@@ -29,10 +28,7 @@ interface SessionContextType {
 
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
-export const getSafeDate = (date: string | Date | Timestamp): Date => {
-    if (date instanceof Timestamp) {
-      return date.toDate();
-    }
+export const getSafeDate = (date: string | Date): Date => {
     const d = new Date(date);
     if (isNaN(d.getTime())) {
         // Handle 'YYYY-MM-DD' format which Date constructor can misinterpret
@@ -59,7 +55,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const newSession: Session = {
       ...sessionData,
       id: `session-${Date.now()}`,
-      date: Timestamp.fromDate(getSafeDate(sessionData.date)),
+      date: getSafeDate(sessionData.date),
       createdBy: currentUser.id,
       players: [],
       waitlist: [],
@@ -72,7 +68,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      setSessions(prev => prev.map(s => s.id === sessionData.id ? {
         ...s,
         ...sessionData,
-        date: Timestamp.fromDate(getSafeDate(sessionData.date)),
+        date: getSafeDate(sessionData.date),
      } : s));
   };
   
@@ -145,7 +141,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       id: `msg-${Date.now()}`,
       sender: currentUser,
       content: messageContent.content,
-      timestamp: Timestamp.now(),
+      timestamp: new Date(),
     };
     setSessions(prev => prev.map(s => 
         s.id === sessionId ? { ...s, messages: [...s.messages, newMessage] } : s
@@ -156,13 +152,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     const newAnnouncement: Announcement = {
       ...announcementData,
       id: `ann-${Date.now()}`,
-      date: Timestamp.now(),
+      date: new Date(),
     };
     setAnnouncements(prev => [newAnnouncement, ...prev].sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime()));
   };
 
   const updateAnnouncement = async (announcementData: Omit<Announcement, 'date'> & {id: string}) => {
-    setAnnouncements(prev => prev.map(a => a.id === announcementData.id ? { ...a, ...announcementData, date: Timestamp.now() } : a));
+    setAnnouncements(prev => prev.map(a => a.id === announcementData.id ? { ...a, ...announcementData, date: new Date() } : a));
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
@@ -193,7 +189,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       id: `dm-msg-${Date.now()}`,
       sender: currentUser,
       content: messageContent.content,
-      timestamp: Timestamp.now(),
+      timestamp: new Date(),
     };
     setDirectChats(prev => prev.map(c => 
         c.id === chatId ? { ...c, messages: [...c.messages, newMessage] } : c
