@@ -172,7 +172,7 @@
         "avatarUpdatedTitle": "Avatar updated",
         "avatarUpdatedDescription": "Your new avatar is ready. Save your profile to keep the changes.",
         "imageTooLargeTitle": "Image too large",
-        "imageTooLargeDescription": "Please select an image smaller than 2MB.",
+        "imageTooLargeDescription": "Please select an image smaller than {maxSize}MB.",
         "sessionCreatedTitle": "Session Created!",
         "sessionCreatedDescription": "The new session has been successfully added.",
         "sessionUpdatedTitle": "Session Updated",
@@ -199,7 +199,7 @@
         "announcementCreatedTitle": "Announcement Created!",
         "announcementCreatedDescription": "The new announcement is now live.",
         "announcementUpdatedTitle": "Announcement Updated",
-        "announcementUpdatedDescription": "The announcement has been successfully updated.",
+        "announcementUpdatedDescription": "The announcement has been saved.",
         "announcementDeletedTitle": "Announcement Deleted",
         "announcementDeletedDescription": "The announcement has been removed.",
         "aiSuggestionError": "Sorry, we couldn't generate a suggestion at this time."

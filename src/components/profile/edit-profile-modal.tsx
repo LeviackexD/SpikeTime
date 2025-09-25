@@ -66,26 +66,28 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             if (file.size > 5 * 1024 * 1024) { // 5MB limit
                 toast({
                     title: t('toasts.imageTooLargeTitle'),
-                    description: t('toasts.imageTooLargeDescription'),
+                    description: t('toasts.imageTooLargeDescription', {maxSize: 5}),
                     variant: "destructive"
                 });
                 return;
             }
             setIsUploading(true);
 
-            const filePath = `public/${user.id}-${Date.now()}`;
+            // Use a consistent file path for the user's avatar
+            const fileExtension = file.name.split('.').pop();
+            const filePath = `${user.id}/avatar.${fileExtension}`;
             
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
                 .upload(filePath, file, {
                     cacheControl: '3600',
-                    upsert: true, // Overwrite existing file with the same name
+                    upsert: true, // Overwrite existing file for the user
                 });
 
             if (uploadError) {
                 toast({
                     title: "Upload Failed",
-                    description: "Could not upload your new avatar.",
+                    description: uploadError.message || "Could not upload your new avatar.",
                     variant: "destructive"
                 });
                 console.error(uploadError);
@@ -97,17 +99,10 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                 .from('avatars')
                 .getPublicUrl(filePath);
             
-            if (!publicUrlData) {
-                 toast({
-                    title: "Upload Failed",
-                    description: "Could not get the public URL for the avatar.",
-                    variant: "destructive"
-                });
-                setIsUploading(false);
-                return;
-            }
+             // Add a timestamp to the URL to bypass browser cache
+            const avatarUrlWithCacheBuster = `${publicUrlData.publicUrl}?t=${new Date().getTime()}`;
             
-            setFormData(prev => prev ? { ...prev, avatarUrl: publicUrlData.publicUrl } : null);
+            setFormData(prev => prev ? { ...prev, avatarUrl: avatarUrlWithCacheBuster } : null);
             setIsUploading(false);
             toast({
                 title: t('toasts.avatarUpdatedTitle'),

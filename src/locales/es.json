@@ -172,7 +172,7 @@
         "avatarUpdatedTitle": "Avatar actualizado",
         "avatarUpdatedDescription": "Tu nuevo avatar está listo. Guarda tu perfil para mantener los cambios.",
         "imageTooLargeTitle": "Imagen demasiado grande",
-        "imageTooLargeDescription": "Por favor, selecciona una imagen de menos de 2MB.",
+        "imageTooLargeDescription": "Por favor, selecciona una imagen de menos de {maxSize}MB.",
         "sessionCreatedTitle": "¡Sesión Creada!",
         "sessionCreatedDescription": "La nueva sesión ha sido añadida correctamente.",
         "sessionUpdatedTitle": "Sesión Actualizada",
