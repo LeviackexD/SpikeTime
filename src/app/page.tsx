@@ -39,8 +39,12 @@ import { useUpcomingSessions, useAvailableSessions } from '@/hooks/use-session-f
 import type { Session, Announcement } from '@/lib/types';
 import { getSafeDate } from '@/lib/utils';
 
-const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'));
-const AnnouncementDetailsModal = dynamic(() => import('@/components/announcements/announcement-details-modal'));
+const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'), {
+  loading: () => <Skeleton className="h-[600px] w-full max-w-xl" />,
+});
+const AnnouncementDetailsModal = dynamic(() => import('@/components/announcements/announcement-details-modal'), {
+  loading: () => <Skeleton className="h-[300px] w-full max-w-lg" />,
+});
 
 const DashboardPage: NextPage = () => {
   // --- STATE MANAGEMENT ---
@@ -220,3 +224,5 @@ const DashboardPage: NextPage = () => {
 };
 
 export default DashboardPage;
+
+    

@@ -20,7 +20,7 @@ import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 
 const AnnouncementFormModal = dynamic(() => import('@/components/admin/announcement-form-modal'), {
-  loading: () => <Skeleton className="h-[400px] w-full" />,
+  loading: () => <Skeleton className="h-[400px] w-full max-w-md" />,
 });
 
 
@@ -146,3 +146,5 @@ const AnnouncementsPage: NextPage = () => {
 };
 
 export default AnnouncementsPage;
+
+    

@@ -31,7 +31,7 @@ import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 
 const EditProfileModal = dynamic(() => import('@/components/profile/edit-profile-modal'), {
-  loading: () => <Skeleton className="h-[500px] w-full" />,
+  loading: () => <Skeleton className="h-[500px] w-full max-w-[425px]" />,
 });
 
 const StatCard = ({ icon: Icon, label, value, badge }: { icon: React.ElementType, label: string, value: string | React.ReactNode, badge?: boolean }) => (
@@ -139,3 +139,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    

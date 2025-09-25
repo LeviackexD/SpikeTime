@@ -36,11 +36,18 @@ import type { Session, Announcement } from '@/lib/types';
 import { cn, formatTime, getSafeDate } from '@/lib/utils';
 import PlayerAvatar from '@/components/sessions/player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const SessionFormModal = dynamic(() => import('@/components/admin/session-form-modal'));
+const SessionFormModal = dynamic(() => import('@/components/admin/session-form-modal'), {
+  loading: () => <Skeleton className="h-[500px] w-full max-w-lg" />,
+});
 const DeleteSessionDialog = dynamic(() => import('@/components/admin/delete-session-dialog'));
-const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'));
-const AnnouncementFormModal = dynamic(() => import('@/components/admin/announcement-form-modal'));
+const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'), {
+  loading: () => <Skeleton className="h-[600px] w-full max-w-xl" />,
+});
+const AnnouncementFormModal = dynamic(() => import('@/components/admin/announcement-form-modal'), {
+  loading: () => <Skeleton className="h-[400px] w-full max-w-md" />,
+});
 const DeleteAnnouncementDialog = dynamic(() => import('@/components/admin/delete-announcement-dialog'));
 
 
@@ -508,3 +515,5 @@ export default function AdminPage() {
     </>
   );
 }
+
+    
