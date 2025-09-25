@@ -158,7 +158,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
-        fetchSessions();
     }
   };
   
@@ -176,14 +175,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const deleteSession = async (sessionId: string) => {
     if (!currentUser) return;
-    const originalSessions = sessions;
-    setSessions(prevSessions => prevSessions.filter(s => s.id !== sessionId));
 
     const { error } = await supabase.from('sessions').delete().eq('id', sessionId);
     if(error) {
         console.error("Error deleting session:", error);
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
-        setSessions(originalSessions);
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
     }
@@ -191,36 +187,66 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+
+    // Optimistic update
+    setSessions(prevSessions =>
+      prevSessions.map(s => {
+        if (s.id === sessionId) {
+          // Also remove from waitlist if they were on it
+          const newWaitlist = s.waitlist.filter(p => p.id !== currentUser.id);
+          return { ...s, players: [...s.players, currentUser], waitlist: newWaitlist };
+        }
+        return s;
+      })
+    );
     
     const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
     
     if (error) {
       console.error("Error booking session (RPC):", error);
       toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
-      fetchSessions();
+      fetchSessions(); // Re-fetch to correct the optimistic update
       return false;
     }
-    fetchSessions();
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
+    // Optimistic update
+    setSessions(prevSessions =>
+      prevSessions.map(s => {
+        if (s.id === sessionId) {
+          return { ...s, players: s.players.filter(p => p.id !== currentUser.id) };
+        }
+        return s;
+      })
+    );
+
     const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
 
     if (error) {
         console.error("Error canceling booking (RPC):", error);
         toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
-        fetchSessions();
+        fetchSessions(); // Re-fetch to correct the optimistic update
         return false;
     }
-    fetchSessions();
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+
+    // Optimistic update
+    setSessions(prevSessions =>
+      prevSessions.map(s => {
+        if (s.id === sessionId) {
+          return { ...s, waitlist: [...s.waitlist, currentUser] };
+        }
+        return s;
+      })
+    );
 
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
@@ -230,15 +256,24 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
-        fetchSessions();
+        fetchSessions(); // Re-fetch to correct the optimistic update
         return false;
     }
-    fetchSessions();
     return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
+
+     // Optimistic update
+     setSessions(prevSessions =>
+        prevSessions.map(s => {
+            if (s.id === sessionId) {
+                return { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) };
+            }
+            return s;
+        })
+     );
      
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
@@ -247,10 +282,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Action Failed", description: error.message, variant: "destructive" });
-        fetchSessions();
+        fetchSessions(); // Re-fetch to correct the optimistic update
         return false;
     }
-    fetchSessions();
     return true;
   };
 
@@ -264,7 +298,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
-        fetchAnnouncements();
     }
   };
 
@@ -280,14 +313,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
-    const originalAnnouncements = announcements;
-    setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
-
     const { error } = await supabase.from('announcements').delete().eq('id', announcementId);
      if(error) {
         console.error("Error deleting announcement:", error);
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
-        setAnnouncements(originalAnnouncements);
     } else {
         toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
     }
@@ -326,5 +355,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
