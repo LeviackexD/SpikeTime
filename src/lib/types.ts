@@ -26,7 +26,7 @@ export interface User {
   role: UserRole;
   skillLevel: SkillLevel;
   favoritePosition: PlayerPosition;
-  stats: {
+  stats?: {
     sessionsPlayed: number;
     attendanceRate: number;
   };
@@ -46,9 +46,9 @@ export interface Session {
   endTime: string;
   location: string;
   level: SkillLevel;
-  players: Pick<User, 'id' | 'name' | 'avatarUrl' | 'skillLevel'>[];
+  players: Partial<User>[];
   maxPlayers: number;
-  waitlist: Pick<User, 'id' | 'name' | 'avatarUrl' | 'skillLevel'>[];
+  waitlist: Partial<User>[];
   imageUrl?: string;
   messages: Message[];
   createdBy?: string; // Admin User ID
@@ -67,3 +67,5 @@ export interface DirectChat {
     participants: User[];
     messages: Message[];
 }
+
+    

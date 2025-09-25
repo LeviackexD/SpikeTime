@@ -27,15 +27,20 @@ interface SessionContextType {
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
 export const getSafeDate = (date: string | Date): Date => {
-    const d = new Date(date);
-    if (isNaN(d.getTime())) {
-        const parts = String(date).split(/[-T:]/);
-        if (parts.length >= 3) {
-            return new Date(Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])));
-        }
-        return new Date(); // fallback
+    if (date instanceof Date && !isNaN(date.getTime())) {
+        return date;
     }
-    return d;
+    const d = new Date(date);
+    if (!isNaN(d.getTime())) {
+        // It's a valid date string, but might be off by timezone.
+        // Let's parse it as UTC.
+        const [year, month, day] = String(date).split('T')[0].split('-').map(Number);
+        if (year && month && day) {
+            return new Date(Date.UTC(year, month - 1, day));
+        }
+    }
+    // Fallback for invalid or unparsable dates
+    return new Date();
 };
 
 
@@ -51,8 +56,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       .from('sessions')
       .select(`
         *,
-        players:session_players(profile:profiles(id, name, avatarUrl, skillLevel)),
-        waitlist:session_waitlist(profile:profiles(id, name, avatarUrl, skillLevel))
+        players:session_players(profile:profiles(id, name, avatarUrl, skillLevel, favoritePosition, username, email, role)),
+        waitlist:session_waitlist(profile:profiles(id, name, avatarUrl, skillLevel, favoritePosition, username, email, role))
       `)
       .order('date', { ascending: false });
 
@@ -161,7 +166,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (!session) return false;
     
     // If user is on waitlist, they might be automatically promoted
-    const isOnWaitlist = session.waitlist.some(p => p.id === currentUser.id);
+    const isOnWaitlist = (session.waitlist as User[]).some(p => p.id === currentUser.id);
 
     const { error } = await supabase.from('session_players').insert({
         session_id: sessionId,
@@ -195,8 +200,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     // Now, check if there's someone on the waitlist to promote
     const session = sessions.find(s => s.id === sessionId);
-    if (session && session.waitlist.length > 0) {
-        const nextPlayer = session.waitlist[0];
+    if (session && (session.waitlist as User[]).length > 0) {
+        const nextPlayer = (session.waitlist as User[])[0];
         // Promote nextPlayer (book them and remove from waitlist)
         await supabase.from('session_players').insert({ session_id: sessionId, user_id: nextPlayer.id });
         await supabase.from('session_waitlist').delete().eq('session_id', sessionId).eq('user_id', nextPlayer.id);
@@ -298,3 +303,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    

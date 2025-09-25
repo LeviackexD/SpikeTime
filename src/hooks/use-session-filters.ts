@@ -56,3 +56,5 @@ export function useAvailableSessions(currentUser: User | null, sessions: Session
       .sort((a, b) => getSafeDate(a.date).getTime() - getSafeDate(b.date).getTime());
   }, [currentUser, sessions]);
 }
+
+    

@@ -48,8 +48,8 @@ export default function SessionDetailsModal({
   
   if (!session || !currentUser) return null;
 
-  const players = session.players || [];
-  const waitlist = session.waitlist || [];
+  const players = (session.players || []) as Partial<User>[];
+  const waitlist = (session.waitlist || []) as Partial<User>[];
 
   const spotsFilled = players.length;
   const progressValue = (spotsFilled / session.maxPlayers) * 100;
@@ -166,10 +166,10 @@ export default function SessionDetailsModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {players.map((player) => (
                         <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                          <PlayerAvatar player={player as User} className="h-10 w-10 border-2 border-primary/50" />
+                          <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
                           <div className="flex-grow">
                               <p className="font-semibold text-sm">{player.name}</p>
-                              <p className="text-xs text-muted-foreground">{t(`skillLevels.${player.skillLevel}`)}</p>
+                              <p className="text-xs text-muted-foreground">{player.skillLevel ? t(`skillLevels.${player.skillLevel}`) : ''}</p>
                           </div>
                         </div>
                       ))}
@@ -192,10 +192,10 @@ export default function SessionDetailsModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {waitlist.map((player) => (
                         <div key={player.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                          <PlayerAvatar player={player as User} className="h-10 w-10 border-2 border-primary/50" />
+                          <PlayerAvatar player={player} className="h-10 w-10 border-2 border-primary/50" />
                           <div className="flex-grow">
                               <p className="font-semibold text-sm">{player.name}</p>
-                              <p className="text-xs text-muted-foreground">{t(`skillLevels.${player.skillLevel}`)}</p>
+                               <p className="text-xs text-muted-foreground">{player.skillLevel ? t(`skillLevels.${player.skillLevel}`) : ''}</p>
                           </div>
                         </div>
                       ))}
@@ -258,3 +258,5 @@ export default function SessionDetailsModal({
     </Dialog>
   );
 }
+
+    

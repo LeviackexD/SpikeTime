@@ -258,7 +258,7 @@ export default function AdminPage() {
 
   const handleSaveSession = async (sessionData: Omit<Session, 'id' | 'players' | 'waitlist' | 'messages' | 'date'> & { date: string } | (Omit<Session, 'date' | 'players' | 'waitlist' | 'messages'> & { date: string, id: string, players: User[], waitlist: User[] })) => {
     if ('id' in sessionData) {
-        await updateSession(sessionData);
+        await updateSession(sessionData as any);
     } else {
         await createSession(sessionData);
     }
@@ -325,7 +325,7 @@ export default function AdminPage() {
                     <span>{session.players.length} / {session.maxPlayers}</span>
                     <div className="flex -space-x-2 overflow-hidden">
                       {session.players.slice(0, 3).map(player => (
-                        <PlayerAvatar key={player.id} player={player as User} className="h-6 w-6 border-2 border-chalkboard" />
+                        <PlayerAvatar key={player.id} player={player} className="h-6 w-6 border-2 border-chalkboard" />
                       ))}
                     </div>
                   </div>
@@ -501,3 +501,5 @@ export default function AdminPage() {
     </>
   );
 }
+
+    

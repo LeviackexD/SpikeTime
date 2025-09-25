@@ -61,8 +61,8 @@ export default function SessionListItem({
 
   if (!currentUser) return null;
 
-  const players = session.players || [];
-  const waitlist = session.waitlist || [];
+  const players = (session.players || []) as Partial<User>[];
+  const waitlist = (session.waitlist || []) as Partial<User>[];
 
   const isFull = players.length >= session.maxPlayers;
   const isRegistered = players.some(p => p.id === currentUser.id);
@@ -172,7 +172,7 @@ export default function SessionListItem({
                 <div className="flex justify-between items-center">
                   <div className="flex -space-x-2 overflow-hidden">
                     {players.slice(0, 4).map(player => (
-                      <PlayerAvatar key={player.id} player={player as User} className="h-8 w-8 border-2 border-background" />
+                      <PlayerAvatar key={player.id} player={player} className="h-8 w-8 border-2 border-background" />
                     ))}
                     {players.length > 4 && (
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
@@ -243,3 +243,5 @@ export default function SessionListItem({
     </Card>
   );
 }
+
+    
