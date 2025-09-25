@@ -42,6 +42,7 @@ const CalendarPage: NextPage = () => {
 
   const filteredSessions = sessions.filter(session => {
     const sessionDate = getSafeDate(session.date);
+    // Compare date strings to ignore time and timezone differences
     return sessionDate.toDateString() === selectedDate.toDateString();
   }).sort((a,b) => a.startTime.localeCompare(b.startTime));
   
