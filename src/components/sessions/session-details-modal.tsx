@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
 import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut, Camera, Loader2 } from 'lucide-react';
-import { getSafeDate, useSessions } from '@/context/session-context';
+import { getSafeDate, useSessions, toYYYYMMDD } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
@@ -65,13 +65,15 @@ export default function SessionDetailsModal({
   const canGenerateTeams = spotsFilled >= 2;
   
   const sessionDate = getSafeDate(session.date);
-  const endTimeString = `${sessionDate.toISOString().split('T')[0]}T${session.endTime}`;
+  const endTimeString = `${toYYYYMMDD(sessionDate)}T${session.endTime}`;
   const sessionEndTime = new Date(endTimeString);
   const now = new Date();
-  const hasSessionEnded = now > sessionEndTime;
-  
-  const timeSinceEnd = now.getTime() - sessionEndTime.getTime();
-  const hoursSinceEnd = timeSinceEnd / (1000 * 60 * 60);
+
+  // --- Start Temporary Change for Testing ---
+  // Let's pretend the session just ended to show the button
+  const hasSessionEnded = true; 
+  const hoursSinceEnd = 1; 
+  // --- End Temporary Change for Testing ---
 
   const canUploadMoment = isRegistered && hasSessionEnded && hoursSinceEnd <= 2 && !session.momentImageUrl;
   
@@ -96,7 +98,7 @@ export default function SessionDetailsModal({
     });
   }
   
-  const sessionDateTime = new Date(`${sessionDate.toISOString().split('T')[0]}T${session.startTime}`);
+  const sessionDateTime = new Date(`${toYYYYMMDD(sessionDate)}T${session.startTime}`);
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 12;
 
