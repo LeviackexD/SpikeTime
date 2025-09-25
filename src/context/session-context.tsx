@@ -27,16 +27,18 @@ interface SessionContextType {
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
 export const getSafeDate = (date: string | Date): Date => {
+  // Handles date strings like '2024-10-02'. Replacing dashes with slashes
+  // makes JavaScript treat it as a local date, not UTC, preventing timezone shifts.
+  if (typeof date === 'string') {
+    const dateString = date.includes('T') ? date : date.replace(/-/g, '/');
+    const d = new Date(dateString);
+    if (!isNaN(d.getTime())) {
+      return d;
+    }
+  }
+  // If it's already a valid Date object, return it.
   if (date instanceof Date && !isNaN(date.getTime())) {
     return date;
-  }
-  // Handles date strings like '2024-10-02'. Appending 'T00:00:00Z' ensures it's parsed as midnight UTC.
-  // This is the most reliable way to prevent timezone shifts.
-  const dateString = String(date);
-  const d = new Date(dateString.includes('T') ? dateString : `${dateString}T00:00:00Z`);
-  
-  if (!isNaN(d.getTime())) {
-    return d;
   }
   // Fallback for invalid dates
   return new Date();

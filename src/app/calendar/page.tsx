@@ -23,6 +23,15 @@ const SessionCalendar = dynamic(() => import('@/components/dashboard/session-cal
   loading: () => <Skeleton className="h-[420px] w-full" />,
 });
 
+/**
+ * Converts a Date object to a 'YYYY-MM-DD' string, ignoring timezone.
+ */
+const toDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
 const CalendarPage: NextPage = () => {
   const { sessions, bookSession, cancelBooking, joinWaitlist, leaveWaitlist } = useSessions();
@@ -41,15 +50,12 @@ const CalendarPage: NextPage = () => {
   }
 
   const filteredSessions = sessions.filter(session => {
-    const sessionDate = getSafeDate(session.date);
-    const selected = selectedDate || new Date();
-    // Compare dates by year, month, and day in UTC to avoid timezone issues.
-    return sessionDate.getUTCFullYear() === selected.getUTCFullYear() &&
-           sessionDate.getUTCMonth() === selected.getUTCMonth() &&
-           sessionDate.getUTCDate() === selected.getUTCDate();
+    const selectedDateString = toDateString(selectedDate);
+    const sessionDateString = toDateString(getSafeDate(session.date));
+    return sessionDateString === selectedDateString;
   }).sort((a,b) => a.startTime.localeCompare(b.startTime));
   
-  const formattedDate = selectedDate.toLocaleDateString(locale, { month: 'long', day: 'numeric', timeZone: 'UTC' });
+  const formattedDate = selectedDate.toLocaleDateString(locale, { month: 'long', day: 'numeric' });
 
   return (
     <div className="space-y-8 animate-fade-in">

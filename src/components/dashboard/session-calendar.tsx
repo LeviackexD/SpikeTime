@@ -16,11 +16,21 @@ interface SessionCalendarProps {
   onDateChange: (date: Date | undefined) => void;
 }
 
+/**
+ * Converts a Date object to a 'YYYY-MM-DD' string, ignoring timezone.
+ */
+const toDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+
 export default function SessionCalendar({ sessions, selectedDate, onDateChange }: SessionCalendarProps) {
   const sessionsByDate = React.useMemo(() => {
     return sessions.reduce((acc, session) => {
-      // Use toISOString and split to get 'YYYY-MM-DD', which is timezone-agnostic.
-      const dateKey = getSafeDate(session.date).toISOString().split('T')[0];
+      const dateKey = toDateString(getSafeDate(session.date));
       if (!acc[dateKey]) {
         acc[dateKey] = [];
       }
@@ -39,8 +49,7 @@ export default function SessionCalendar({ sessions, selectedDate, onDateChange }
         className="p-0"
         modifiers={{
             hasSessions: (day) => {
-                // Also use 'YYYY-MM-DD' for comparison here to ensure consistency.
-                const dayKey = day.toISOString().split('T')[0];
+                const dayKey = toDateString(day);
                 return !!sessionsByDate[dayKey];
             }
         }}
