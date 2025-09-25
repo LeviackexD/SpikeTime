@@ -36,11 +36,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchSessions = React.useCallback(async () => {
-    // 1. Fetch all sessions that do not have a momentImageUrl yet.
+    // We only fetch sessions that are not older than 2 hours
+    const twoHoursAgo = new Date();
+    twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
+
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
       .select('*')
-      .is('momentImageUrl', null) // Only fetch sessions without a memory.
+      .gte('end_datetime', twoHoursAgo.toISOString())
       .order('date', { ascending: false });
 
     if (sessionError) {
@@ -137,8 +140,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
   const createSession = async (sessionData: any) => {
     if (!currentUser) return;
+    
+    const start_datetime = new Date(`${sessionData.date}T${sessionData.startTime}`).toISOString();
+    const end_datetime = new Date(`${sessionData.date}T${sessionData.endTime}`).toISOString();
+
     const { error } = await supabase.from('sessions').insert({
         ...sessionData,
+        start_datetime,
+        end_datetime,
         createdBy: currentUser.id,
     });
     if(error) {
@@ -151,7 +160,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const updateSession = async (sessionData: Partial<Session> & { id: string }) => {
      const { id, ...updateData } = sessionData;
-     const { error } = await supabase.from('sessions').update(updateData).eq('id', id);
+     const start_datetime = new Date(`${updateData.date}T${updateData.startTime}`).toISOString();
+     const end_datetime = new Date(`${updateData.date}T${updateData.endTime}`).toISOString();
+
+     const { error } = await supabase.from('sessions').update({
+        ...updateData,
+        start_datetime,
+        end_datetime
+     }).eq('id', id);
 
      if(error) {
         console.error("Error updating session:", error);
