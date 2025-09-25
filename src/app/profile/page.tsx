@@ -48,14 +48,9 @@ const StatCard = ({ icon: Icon, label, value, badge }: { icon: React.ElementType
 
 
 export default function ProfilePage() {
-  const { user: currentUser, updateUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-
-  const handleSaveProfile = (updatedUser: User) => {
-    updateUser(updatedUser);
-    setIsModalOpen(false);
-  };
   
   if (!currentUser) {
     return (
@@ -138,7 +133,6 @@ export default function ProfilePage() {
       <EditProfileModal 
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSave={handleSaveProfile}
           user={currentUser}
       />
     )}

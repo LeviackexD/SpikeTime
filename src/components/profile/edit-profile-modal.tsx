@@ -32,7 +32,6 @@ import { supabase } from '@/lib/supabase-client';
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (user: Partial<User>) => void;
   user: User | null;
 }
 
