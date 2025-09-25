@@ -40,7 +40,7 @@ const ImageViewer = ({ user, onClose }: { user: Partial<User>; onClose: () => vo
 
   return (
     <div 
-      className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center animate-fade-in"
+      className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center animate-fade-in"
       onClick={onClose}
     >
       <div className="relative w-80 h-80 sm:w-96 sm:h-96">
@@ -55,6 +55,7 @@ const ImageViewer = ({ user, onClose }: { user: Partial<User>; onClose: () => vo
         <Button
             variant="ghost"
             size="icon"
+            onClick={onClose}
             className="absolute top-0 right-0 text-white hover:bg-white/20 hover:text-white"
         >
             <X className="h-6 w-6" />
