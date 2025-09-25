@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import GenerateTeamsButton from './generate-teams-button';
+import { formatTime } from '@/lib/utils';
 
 
 interface SessionDetailsModalProps {
@@ -193,7 +194,7 @@ export default function SessionDetailsModal({
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>{session.startTime} - {session.endTime}</span>
+              <span>{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
             </div>
           </div>
           
@@ -278,3 +279,5 @@ export default function SessionDetailsModal({
     </Dialog>
   );
 }
+
+    

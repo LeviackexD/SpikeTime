@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
+import { formatTime } from '@/lib/utils';
 
 interface SessionListItemProps {
   session: Session;
@@ -221,7 +222,7 @@ export default function SessionListItem({
 
       <CardContent className="p-4 flex-grow space-y-4">
           <div className="space-y-1 text-sm text-muted-foreground">
-             <p>{session.startTime} - {session.endTime}</p>
+             <p>{formatTime(session.startTime)} - {formatTime(session.endTime)}</p>
              <p>{session.location}</p>
           </div>
         
@@ -260,3 +261,5 @@ export default function SessionListItem({
     </Card>
   );
 }
+
+    

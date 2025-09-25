@@ -15,7 +15,7 @@ import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { getSafeDate } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, formatTime } from '@/lib/utils';
 import PlayerAvatar from './player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
@@ -179,7 +179,7 @@ export default function SessionNoteCard({
             <div className="space-y-2 text-sm border-t border-dashed border-brown-light/30 pt-3">
                 <div className="flex items-center gap-2 text-brown-dark">
                     <Clock className="h-4 w-4" />
-                    <span className="font-semibold">{session.startTime} - {session.endTime}</span>
+                    <span className="font-semibold">{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-brown-dark">
                     <MapPin className="h-4 w-4" />
@@ -194,3 +194,5 @@ export default function SessionNoteCard({
     </div>
   );
 }
+
+    

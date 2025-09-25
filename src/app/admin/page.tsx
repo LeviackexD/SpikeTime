@@ -38,7 +38,7 @@ import { useSessions, getSafeDate } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import type { Session, Announcement } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, formatTime } from '@/lib/utils';
 import PlayerAvatar from '@/components/sessions/player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
@@ -82,7 +82,7 @@ const SessionCards = ({
             <div>
               <h3 className="handwriting text-xl font-bold text-brown mb-1">{t(`skillLevels.${session.level}`)}</h3>
               <div className="text-xs text-brown-light">
-                {formatDate(session.date, locale)} - {session.startTime}
+                {formatDate(session.date, locale)} - {formatTime(session.startTime)}
               </div>
             </div>
             <DropdownMenu>
@@ -320,7 +320,7 @@ export default function AdminPage() {
               <TableCell className="text-chalk/90">
                 <div className="font-medium">{formatDate(session.date, locale)}</div>
                 <div className="text-sm text-chalk/60">
-                  {session.startTime} - {session.endTime}
+                  {formatTime(session.startTime)} - {formatTime(session.endTime)}
                 </div>
               </TableCell>
               <TableCell className="text-chalk/90">{t(`skillLevels.${session.level}`)}</TableCell>
@@ -506,5 +506,7 @@ export default function AdminPage() {
     </>
   );
 }
+
+    
 
     
