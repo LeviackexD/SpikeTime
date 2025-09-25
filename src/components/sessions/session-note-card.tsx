@@ -95,7 +95,7 @@ export default function SessionNoteCard({
           variant="outline"
           onClick={handleCancel}
           disabled={!canCancel}
-          title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
+          title={!canCancel ? t('toasts.cancellationFailedTime') : t('modals.sessionDetails.cancelSpot')}
         >
           <XCircle className="mr-2 h-4 w-4" />
           {t('modals.sessionDetails.cancelSpot')}
@@ -123,15 +123,15 @@ export default function SessionNoteCard({
     // 3. User is not registered or on the waitlist
     if (!isFull) {
       return (
-        <>
+        <div className="w-full flex flex-col gap-2">
           <Button size="sm" onClick={handleBook} className="bg-brown text-cream button-hover">
             {t('modals.sessionDetails.bookSpot')}
           </Button>
-          <Button size="sm" variant="outline" className="mt-2" onClick={handleJoinWaitlist}>
+          <Button size="sm" variant="outline" onClick={handleJoinWaitlist}>
             <UserPlus className="mr-2 h-4 w-4" />
             {t('modals.sessionDetails.joinWaitlist')}
           </Button>
-        </>
+        </div>
       );
     } else {
       // Session is full, and user is not involved

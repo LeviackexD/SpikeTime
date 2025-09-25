@@ -134,7 +134,7 @@ export default function SessionListItem({
           variant="outline"
           onClick={handleCancel}
           disabled={!canCancel}
-          title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
+          title={!canCancel ? t('toasts.cancellationFailedTime') : t('modals.sessionDetails.cancelSpot')}
         >
           <XCircle className="mr-2 h-4 w-4" />
           {t('modals.sessionDetails.cancelSpot')}

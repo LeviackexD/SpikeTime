@@ -128,7 +128,7 @@ export default function SessionDetailsModal({
           variant="outline"
           onClick={cancelAction}
           disabled={!canCancel}
-          title={!canCancel ? t('modals.sessionDetails.cancellationTooltip') : t('modals.sessionDetails.cancelSpot')}
+          title={!canCancel ? t('toasts.cancellationFailedTime') : t('modals.sessionDetails.cancelSpot')}
         >
           <XCircle className="mr-2 h-4 w-4" /> {t('modals.sessionDetails.cancelSpot')}
         </Button>
@@ -138,7 +138,7 @@ export default function SessionDetailsModal({
     // 2. User is on the waitlist
     if (isOnWaitlist) {
       return (
-        <>
+        <div className="flex items-center gap-2 flex-wrap">
           {!isFull && (
             <Button onClick={bookAction}>
               {t('modals.sessionDetails.bookSpot')}
@@ -148,14 +148,14 @@ export default function SessionDetailsModal({
             <LogOut className="mr-2 h-4 w-4" />
             {t('modals.sessionDetails.leaveWaitlist')}
           </Button>
-        </>
+        </div>
       );
     }
   
     // 3. User is not registered or on the waitlist
     if (!isFull) {
       return (
-        <>
+        <div className="flex items-center gap-2 flex-wrap">
           <Button onClick={bookAction}>
             {t('modals.sessionDetails.bookSpot')}
           </Button>
@@ -163,7 +163,7 @@ export default function SessionDetailsModal({
             <UserPlus className="mr-2 h-4 w-4" />
             {t('modals.sessionDetails.joinWaitlist')}
           </Button>
-        </>
+        </div>
       );
     } else {
       // Session is full, and user is not involved
