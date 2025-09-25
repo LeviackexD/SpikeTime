@@ -16,16 +16,13 @@ import { getSafeDate } from '@/lib/utils';
  */
 export function useUpcomingSessions(currentUser: User | null, sessions: Session[]): Session[] {
   return React.useMemo(() => {
-    const now = new Date();
+    if (!currentUser) return [];
 
     return sessions
       .filter(session => {
-        const sessionEndDate = getSafeDate(`${session.date}T${session.endTime}`);
         const players = session.players as User[];
         const waitlist = session.waitlist as User[];
-        const isUserInvolved = currentUser && (players.some(p => p.id === currentUser.id) || waitlist.some(w => w.id === currentUser.id));
-        
-        return isUserInvolved && sessionEndDate > now;
+        return players.some(p => p.id === currentUser.id) || waitlist.some(w => w.id === currentUser.id);
       })
       .sort((a, b) => getSafeDate(`${a.date}T${a.startTime}`).getTime() - getSafeDate(`${b.date}T${b.startTime}`).getTime());
   }, [currentUser, sessions]);
@@ -40,17 +37,13 @@ export function useUpcomingSessions(currentUser: User | null, sessions: Session[
  */
 export function useAvailableSessions(currentUser: User | null, sessions: Session[]): Session[] {
   return React.useMemo(() => {
-    const now = new Date();
+    if (!currentUser) return [];
 
     return sessions
       .filter(session => {
-        const sessionEndDate = getSafeDate(`${session.date}T${session.endTime}`);
-
         const players = session.players as User[];
         const waitlist = session.waitlist as User[];
-        const isUserInvolved = currentUser && (players.some(p => p.id === currentUser?.id) || waitlist.some(w => w.id === currentUser?.id));
-        
-        return !isUserInvolved && sessionEndDate > now;
+        return !players.some(p => p.id === currentUser.id) && !waitlist.some(w => w.id === currentUser.id);
       })
       .sort((a, b) => getSafeDate(`${a.date}T${a.startTime}`).getTime() - getSafeDate(`${b.date}T${b.startTime}`).getTime());
   }, [currentUser, sessions]);

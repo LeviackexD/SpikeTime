@@ -36,10 +36,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchSessions = React.useCallback(async () => {
-    // 1. Fetch all sessions
+    // 1. Fetch all sessions that do not have a momentImageUrl yet.
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
       .select('*')
+      .is('momentImageUrl', null) // Only fetch sessions without a memory.
       .order('date', { ascending: false });
 
     if (sessionError) {
@@ -48,26 +49,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       return;
     }
 
-    if (!sessionData) {
+    if (!sessionData || sessionData.length === 0) {
       setSessions([]);
       return;
     }
     
-    const now = new Date();
-    // 2-hour grace period after a session ends
-    const gracePeriodEnd = new Date(now.getTime() - 2 * 60 * 60 * 1000); 
-
-    const activeSessions = sessionData.filter(s => {
-      const sessionEndDate = getSafeDate(`${s.date}T${s.endTime}`);
-      return sessionEndDate > gracePeriodEnd;
-    });
-    
-    const sessionIds = activeSessions.map(s => s.id);
-
-    if (sessionIds.length === 0) {
-      setSessions([]);
-      return;
-    }
+    const sessionIds = sessionData.map(s => s.id);
 
     // 2. Fetch all players for the active sessions
     const { data: playersData, error: playersError } = await supabase
@@ -92,7 +79,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
 
     // 4. Combine the data on the client side
-    const sessionsWithPlayers = activeSessions.map(session => {
+    const sessionsWithData = sessionData.map(session => {
         const players = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) as User[] || [];
         const waitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) as User[] || [];
         return {
@@ -103,7 +90,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         };
     });
 
-    setSessions(sessionsWithPlayers);
+    setSessions(sessionsWithData);
   }, []);
 
 
@@ -283,7 +270,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       console.error('Error adding moment to session:', error);
       return false;
     }
-    // The real-time subscription will handle updating the state
+    // The real-time subscription will automatically call fetchSessions,
+    // which will now filter out this session, making it disappear from the UI.
     return true;
   };
   
