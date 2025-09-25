@@ -85,10 +85,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     initialFetch();
 
     const handleRealtimeUpdate = (payload: any) => {
+      console.log('Realtime change detected, refetching sessions:', payload);
       fetchSessions();
     };
     
     const handleAnnouncementUpdate = (payload: any) => {
+        console.log('Realtime announcement change detected, refetching announcements:', payload);
         fetchAnnouncements();
     }
 
@@ -331,6 +333,8 @@ export const useSessions = () => {
   return context;
 };
     
+    
+
     
 
     
