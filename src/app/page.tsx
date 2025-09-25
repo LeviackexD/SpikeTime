@@ -100,7 +100,7 @@ const DashboardPage: NextPage = () => {
               {sessionsLoading ? (
                 <div className="text-center py-16"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary"/></div>
               ) : upcomingSessions.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {upcomingSessions.map((session, index) => (
                     <SessionListItem
                       key={session.id}
@@ -136,7 +136,7 @@ const DashboardPage: NextPage = () => {
                {sessionsLoading ? (
                 <div className="text-center py-16"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary"/></div>
               ) : availableSessions.length > 0 ? (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {availableSessions.map((session, index) => (
                     <SessionListItem
                       key={session.id}
