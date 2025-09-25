@@ -36,14 +36,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchSessions = React.useCallback(async () => {
-    // We only fetch sessions that are not older than 2 hours
+    // 1. Fetch all sessions that haven't ended more than 2 hours ago
     const twoHoursAgo = new Date();
     twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
 
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
       .select('*')
-      .gte('end_datetime', twoHoursAgo.toISOString())
+      .gte('endTime', twoHoursAgo.toTimeString().slice(0, 8)) // Check against end time
       .order('date', { ascending: false });
 
     if (sessionError) {
@@ -82,14 +82,23 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
 
     // 4. Combine the data on the client side
-    const sessionsWithData = sessionData.map(session => {
-        const players = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) as User[] || [];
-        const waitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) as User[] || [];
+    const sessionsWithData: Session[] = sessionData.map((session: any) => {
+        const relatedPlayers = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) as User[] || [];
+        const relatedWaitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) as User[] || [];
         return {
-            ...session,
-            players,
-            waitlist,
-            messages: [], // keep messages property
+            id: session.id,
+            date: session.date,
+            startTime: session.startTime,
+            endTime: session.endTime,
+            location: session.location,
+            level: session.level,
+            maxPlayers: session.maxPlayers,
+            imageUrl: session.imageUrl,
+            momentImageUrl: session.momentImageUrl,
+            createdBy: session.createdBy,
+            players: relatedPlayers,
+            waitlist: relatedWaitlist,
+            messages: [], // Keep messages property
         };
     });
 
@@ -104,7 +113,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
           setAnnouncements([]);
           return;
       }
-      setAnnouncements(data.map(a => ({...a, date: getSafeDate(a.date)})));
+      setAnnouncements(data.map((a: any) => ({...a, date: getSafeDate(a.date)})));
   }, []);
 
   React.useEffect(() => {
@@ -141,13 +150,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const createSession = async (sessionData: any) => {
     if (!currentUser) return;
     
-    const start_datetime = new Date(`${sessionData.date}T${sessionData.startTime}`).toISOString();
-    const end_datetime = new Date(`${sessionData.date}T${sessionData.endTime}`).toISOString();
-
     const { error } = await supabase.from('sessions').insert({
         ...sessionData,
-        start_datetime,
-        end_datetime,
         createdBy: currentUser.id,
     });
     if(error) {
@@ -160,13 +164,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const updateSession = async (sessionData: Partial<Session> & { id: string }) => {
      const { id, ...updateData } = sessionData;
-     const start_datetime = new Date(`${updateData.date}T${updateData.startTime}`).toISOString();
-     const end_datetime = new Date(`${updateData.date}T${updateData.endTime}`).toISOString();
 
      const { error } = await supabase.from('sessions').update({
         ...updateData,
-        start_datetime,
-        end_datetime
      }).eq('id', id);
 
      if(error) {
@@ -191,11 +191,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const { error } = await supabase.rpc('handle_booking', { session_id_arg: sessionId });
+    // Remove from waitlist first if they are on it
+    await supabase.from('session_waitlist').delete().match({ session_id: sessionId, user_id: currentUser.id });
+
+    const { error } = await supabase.from('session_players').insert({
+        session_id: sessionId,
+        user_id: currentUser.id
+    });
     
     if (error) {
-      console.error("Error booking session (RPC):", error);
-      toast({ title: "Booking Failed", description: error.message, variant: "destructive" });
+      console.error("Error booking session:", error);
       return false;
     }
     return true;
@@ -203,13 +208,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const { error } = await supabase.rpc('handle_cancellation', { session_id_arg: sessionId });
+    const { error } = await supabase.from('session_players').delete()
+        .eq('session_id', sessionId)
+        .eq('user_id', currentUser.id);
 
     if (error) {
-        console.error("Error canceling booking (RPC):", error);
-        toast({ title: "Cancellation Failed", description: error.message, variant: "destructive" });
+        console.error("Error canceling booking:", error);
         return false;
     }
+    // Now handle waitlist promotion if applicable
+    await supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId });
     return true;
   };
 
@@ -222,7 +230,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     if (error) {
         console.error("Error joining waitlist:", error);
-        toast({ title: "Failed to Join", description: error.message, variant: "destructive" });
         return false;
     }
     return true;
@@ -236,7 +243,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
      if (error) {
         console.error("Error leaving waitlist:", error);
-        toast({ title: "Action Failed", description: error.message, variant: "destructive" });
         return false;
     }
     return true;
@@ -286,8 +292,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       console.error('Error adding moment to session:', error);
       return false;
     }
-    // The real-time subscription will automatically call fetchSessions,
-    // which will now filter out this session, making it disappear from the UI.
     return true;
   };
   
