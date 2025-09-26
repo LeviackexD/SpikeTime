@@ -93,11 +93,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   if (!user) return null; // Or a dedicated loading/redirect screen
 
   const isAnnouncementsPage = pathname === '/announcements';
+  const isMemoriesPage = pathname === '/memories';
 
   return (
-    <div className={cn("min-h-screen w-full flex flex-col", isAnnouncementsPage ? 'announcements-cork-bg' : 'bg-app-background')}>
+    <div className={cn("min-h-screen w-full flex flex-col", {
+      'announcements-cork-bg': isAnnouncementsPage,
+      'photo-album-bg': isMemoriesPage,
+      'bg-app-background': !isAnnouncementsPage && !isMemoriesPage
+      })}>
       <AppHeader />
-      <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+      <main className={cn("flex-1", {
+          "p-4 sm:p-6 lg:p-8": !isMemoriesPage,
+        })}>{children}</main>
       <Footer />
     </div>
   );
@@ -111,11 +118,14 @@ function AppHeader() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const isAnnouncementsPage = pathname === '/announcements';
+  const isMemoriesPage = pathname === '/memories';
+  
+  const specialHeader = isAnnouncementsPage || isMemoriesPage;
 
   return (
     <header className={cn(
       "sticky top-0 z-30 flex h-16 items-center justify-between gap-4 px-4 backdrop-blur-sm sm:px-6 lg:px-8",
-      isAnnouncementsPage ? 'bg-brown/80 text-cream border-b border-brown-dark' : 'border-b bg-background/80'
+      specialHeader ? 'bg-brown/80 text-cream border-b border-brown-dark' : 'border-b bg-background/80'
       )}>
       <div className="flex items-center gap-4">
         {isMobile ? <MobileNav /> : <Link href="/"><InvernessEaglesLogo className="h-8 w-auto" /></Link>}
@@ -138,6 +148,8 @@ function DesktopNav() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const isAnnouncementsPage = pathname === '/announcements';
+  const isMemoriesPage = pathname === '/memories';
+  const specialHeader = isAnnouncementsPage || isMemoriesPage;
 
   const navItems = getNavItems(t);
 
@@ -156,12 +168,12 @@ function DesktopNav() {
               prefetch={true}
               className={cn(
                 'transition-colors',
-                isAnnouncementsPage 
+                specialHeader
                   ? 'hover:text-white'
                   : 'hover:text-foreground',
                 pathname === item.href 
-                  ? (isAnnouncementsPage ? 'text-white' : 'text-foreground') 
-                  : (isAnnouncementsPage ? 'text-cream/70' : 'text-muted-foreground')
+                  ? (specialHeader ? 'text-white' : 'text-foreground') 
+                  : (specialHeader ? 'text-cream/70' : 'text-muted-foreground')
               )}
             >
               {item.label}
@@ -183,6 +195,8 @@ function MobileNav() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const isAnnouncementsPage = pathname === '/announcements';
+  const isMemoriesPage = pathname === '/memories';
+  const specialHeader = isAnnouncementsPage || isMemoriesPage;
   
   const navItems = getNavItems(t);
 
@@ -190,7 +204,7 @@ function MobileNav() {
     <div className="flex items-center gap-2">
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className={cn("shrink-0", isAnnouncementsPage && "bg-cream/20 border-cream/50 hover:bg-cream/30")}>
+          <Button variant="outline" size="icon" className={cn("shrink-0", specialHeader && "bg-cream/20 border-cream/50 hover:bg-cream/30")}>
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
@@ -228,7 +242,7 @@ function MobileNav() {
       </Sheet>
       
       <Link href="/">
-        <Button variant="outline" size="icon" className={cn("shrink-0", isAnnouncementsPage && "bg-cream/20 border-cream/50 hover:bg-cream/30")}>
+        <Button variant="outline" size="icon" className={cn("shrink-0", specialHeader && "bg-cream/20 border-cream/50 hover:bg-cream/30")}>
           <Home className="h-5 w-5" />
           <span className="sr-only">Go to Home</span>
         </Button>
@@ -247,6 +261,8 @@ function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user'
   const router = useRouter();
   const pathname = usePathname();
   const isAnnouncementsPage = pathname === '/announcements';
+  const isMemoriesPage = pathname === '/memories';
+  const specialHeader = isAnnouncementsPage || isMemoriesPage;
 
   const handleLogout = async () => {
     await logout();
@@ -260,7 +276,7 @@ function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user'
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className={cn("relative h-10 w-10 rounded-full", isAnnouncementsPage && "hover:bg-white/10")}>
+        <Button variant="ghost" className={cn("relative h-10 w-10 rounded-full", specialHeader && "hover:bg-white/10")}>
           <Avatar className="h-10 w-10">
             <AvatarImage src={user.avatarUrl} alt={user.name} />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
