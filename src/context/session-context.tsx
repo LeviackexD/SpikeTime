@@ -176,6 +176,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
+        await fetchAllData();
     }
   };
   
@@ -191,6 +192,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
         toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success", duration: 1500});
+        await fetchAllData();
      }
   };
   
@@ -203,6 +205,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
+        await fetchAllData();
     }
   };
   
@@ -223,7 +226,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       toast({ title: "Booking Error", description: error.message, variant: 'destructive'});
       return false;
     }
-    fetchAllData();
+    await fetchAllData();
     return true;
   };
   
@@ -242,7 +245,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     // After successfully canceling, try to promote someone from the waitlist.
     await supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId });
-    fetchAllData();
+    await fetchAllData();
     return true;
   };
 
@@ -259,7 +262,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
         return false;
     }
-    fetchAllData();
+    await fetchAllData();
     return true;
   };
   
@@ -275,7 +278,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
         return false;
     }
-    fetchAllData();
+    await fetchAllData();
     return true;
   };
 
@@ -290,6 +293,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
+        await fetchAllData();
     }
   };
 
@@ -301,6 +305,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
+        await fetchAllData();
     }
   };
 
@@ -311,6 +316,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
+       await fetchAllData();
     }
   };
   
