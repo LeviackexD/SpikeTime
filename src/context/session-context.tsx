@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -64,21 +63,26 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             return now < oneHourAfterEnd;
         });
 
-        const sessionsWithData: Session[] = visibleSessions.map((session: any) => ({
-          id: session.id,
-          date: session.date,
-          startTime: session.startTime,
-          endTime: session.endTime,
-          location: session.location,
-          level: session.level,
-          maxPlayers: session.maxPlayers,
-          imageUrl: session.imageUrl,
-          momentImageUrl: session.momentImageUrl,
-          createdBy: session.createdBy,
-          players: playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) || [],
-          waitlist: waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) || [],
-          messages: [],
-        }));
+        const sessionsWithData: Session[] = visibleSessions.map((session: any) => {
+            const players = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) || [];
+            const waitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) || [];
+
+            return {
+              id: session.id,
+              date: session.date,
+              startTime: session.startTime,
+              endTime: session.endTime,
+              location: session.location,
+              level: session.level,
+              maxPlayers: session.maxPlayers,
+              imageUrl: session.imageUrl,
+              momentImageUrl: session.momentImageUrl,
+              createdBy: session.createdBy,
+              players: players.filter(Boolean) as Partial<User>[],
+              waitlist: waitlist.filter(Boolean) as Partial<User>[],
+              messages: [],
+            }
+        });
         
         setSessions(sessionsWithData);
         setAnnouncements(announcementData.map((a: any) => ({...a, date: getSafeDate(a.date)})));
@@ -418,6 +422,4 @@ export const useSessions = () => {
   return context;
 };
 
-
     
-  
