@@ -23,82 +23,87 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<User | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(true); // Only for initial load
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
+  const handleUserSession = async (sessionUser: any | null) => {
+    if (sessionUser) {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', sessionUser.id)
+        .single();
+
+      if (error || !profile) {
+        console.error('Error fetching profile or profile not found:', error);
+        setUser({
+          id: sessionUser.id,
+          email: sessionUser.email!,
+          name: sessionUser.email!,
+          username: sessionUser.email!,
+          role: 'user',
+          avatarUrl: '',
+          skillLevel: 'Beginner',
+          favoritePosition: 'Hitter',
+        });
+      } else {
+        const appUser: User = {
+          id: profile.id,
+          name: profile.name,
+          username: profile.username,
+          email: sessionUser.email!,
+          avatarUrl: profile.avatarUrl,
+          role: profile.role,
+          skillLevel: profile.skillLevel,
+          favoritePosition: profile.favoritePosition,
+          stats: { sessionsPlayed: 0, attendanceRate: 0 },
+        };
+        setUser(appUser);
+      }
+    } else {
+      setUser(null);
+    }
+  };
+
   React.useEffect(() => {
+    // Check initial session
+    const checkInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      await handleUserSession(session?.user ?? null);
+      setLoading(false); // End initial loading
+    };
+    
+    checkInitialSession();
+
+    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-        setLoading(true);
-        if (session?.user) {
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-
-            if (error || !profile) {
-                console.error('Error fetching profile or profile not found:', error);
-                // Create a partial user object instead of logging them out.
-                // This prevents the user from being logged out if the profile fetch fails.
-                 setUser({
-                    id: session.user.id,
-                    email: session.user.email!,
-                    name: session.user.email!,
-                    username: session.user.email!,
-                    role: 'user',
-                    avatarUrl: '',
-                    skillLevel: 'Beginner',
-                    favoritePosition: 'Hitter',
-                 });
-
-            } else if (profile) {
-                const appUser: User = {
-                    id: profile.id,
-                    name: profile.name,
-                    username: profile.username,
-                    email: session.user.email!,
-                    avatarUrl: profile.avatarUrl,
-                    role: profile.role,
-                    skillLevel: profile.skillLevel,
-                    favoritePosition: profile.favoritePosition,
-                    stats: {
-                        sessionsPlayed: 0,
-                        attendanceRate: 0,
-                    }
-                };
-                setUser(appUser);
-            }
-        } else {
-            setUser(null);
-        }
-        setLoading(false);
+      // Don't set loading to true here to avoid flicker on token refresh
+      await handleUserSession(session?.user ?? null);
     });
 
     return () => {
-        authListener.subscription.unsubscribe();
+      authListener.subscription.unsubscribe();
     };
-}, []);
+  }, []);
 
   React.useEffect(() => {
     const isAuthPage = pathname === '/login' || pathname === '/register';
     if (loading) return;
 
     if (user && isAuthPage) {
-        router.push('/');
+      router.push('/');
     } else if (!user && !isAuthPage) {
-        router.push('/login');
+      router.push('/login');
     }
   }, [user, loading, pathname]);
 
   const signInWithEmail = async (email: string, pass: string): Promise<void> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
     if (error) {
-        // Throw the error so the UI can catch it.
         throw error;
     }
-    // onAuthStateChange will handle setting the user and redirecting.
   };
 
   const signUpWithEmail = async (email: string, pass: string, data: { name: string, skillLevel: SkillLevel, favoritePosition: PlayerPosition }): Promise<{success: boolean, requiresConfirmation: boolean}> => {
@@ -106,7 +111,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email, 
         password: pass,
         options: {
-            channel: 'email', // Explicitly set channel
+            channel: 'email',
             data: {
                 name: data.name,
                 skillLevel: data.skillLevel,
@@ -120,23 +125,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { success: false, requiresConfirmation: false };
     }
     
-    // If a user is created but session is null, email confirmation is likely needed.
     const requiresConfirmation = !!(signUpData.user && !signUpData.session);
 
     if (requiresConfirmation && signUpData.user) {
-        if (!adminSupabase) {
-             console.log("Admin client not available. Manual confirmation may be needed.");
-        } else {
-            const { data: adminData, error: adminError } = await adminSupabase.auth.admin.updateUserById(
-                signUpData.user.id,
-                { email_confirm: true }
-            );
-            if (adminError) {
-                console.error("Error confirming user email:", adminError);
-                // The signup still succeeded, but auto-confirmation failed.
-            } else {
-                console.log("User email confirmed automatically.");
-            }
+        if (adminSupabase) {
+            await adminSupabase.auth.admin.updateUserById(signUpData.user.id, { email_confirm: true });
         }
     }
     

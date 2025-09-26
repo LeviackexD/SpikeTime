@@ -46,9 +46,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
-import { VolleyballIcon } from '../icons/volleyball-icon';
 import { useToast } from '@/hooks/use-toast';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 // --- NAVIGATION ---
 const getNavItems = (t: (key: string) => string) => [
@@ -67,30 +65,17 @@ const getNavItems = (t: (key: string) => string) => [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
 
   const isAuthPage = pathname === '/login' || pathname === '/register';
-
-  React.useEffect(() => {
-    if (!loading && !user && !isAuthPage) {
-      router.push('/login');
-    }
-  }, [user, loading, isAuthPage, router]);
 
   if (isAuthPage) {
     return <>{children}</>;
   }
   
-  if (loading) {
-    return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground">
-            <VolleyballIcon className="h-12 w-12 animate-spin-slow text-primary" />
-            <p className="mt-4 text-lg font-semibold">SpikeTime</p>
-        </div>
-    )
+  // The loading screen is now handled entirely inside AuthProvider
+  if (loading || !user) {
+    return null;
   }
-
-  if (!user) return null; // Or a dedicated loading/redirect screen
 
   const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
@@ -101,7 +86,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={cn("min-h-screen w-full flex flex-col", {
-      'photo-album-bg': hasCorkBg,
+      'cork-texture': hasCorkBg,
       'bg-app-background': !hasCorkBg
       })}>
       <AppHeader />
@@ -162,32 +147,30 @@ function DesktopNav() {
 
   return (
     <nav className="hidden md:flex flex-1 justify-center md:items-center md:gap-5 lg:gap-6 text-sm lg:text-base font-medium">
-      <TooltipProvider>
-        {navItems.map((item) => {
-          if (item.adminOnly && user?.role !== 'admin') {
-            return null;
-          }
-          
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={true}
-              className={cn(
-                'transition-colors',
-                specialHeader
-                  ? 'hover:text-white'
-                  : 'hover:text-foreground',
-                pathname === item.href 
-                  ? (specialHeader ? 'text-white' : 'text-foreground') 
-                  : (specialHeader ? 'text-cream/70' : 'text-muted-foreground')
-              )}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </TooltipProvider>
+      {navItems.map((item) => {
+        if (item.adminOnly && user?.role !== 'admin') {
+          return null;
+        }
+        
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            prefetch={true}
+            className={cn(
+              'transition-colors',
+              specialHeader
+                ? 'hover:text-white'
+                : 'hover:text-foreground',
+              pathname === item.href 
+                ? (specialHeader ? 'text-white' : 'text-foreground') 
+                : (specialHeader ? 'text-cream/70' : 'text-muted-foreground')
+            )}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
