@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -46,17 +47,30 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       return;
     }
 
-    if (sessionData.length === 0) {
+    // Filter out old sessions (older than 1 hour past endTime)
+    const now = new Date();
+    const visibleSessions = sessionData.filter(session => {
+        const [endHours, endMinutes] = session.endTime.split(':').map(Number);
+        const sessionEndDateTime = getSafeDate(session.date);
+        sessionEndDateTime.setHours(endHours, endMinutes, 0, 0);
+        
+        const oneHourAfterEnd = new Date(sessionEndDateTime.getTime() + 60 * 60 * 1000);
+
+        return now < oneHourAfterEnd;
+    });
+
+
+    if (visibleSessions.length === 0) {
       setSessions([]);
       return;
     }
 
-    const sessionIds = sessionData.map(s => s.id);
+    const sessionIds = visibleSessions.map(s => s.id);
 
     // 2. Fetch all players for these sessions
     const { data: playersData, error: playersError } = await supabase
         .from('session_players')
-        .select('session_id, profiles(*)')
+        .select('session_id, profiles!inner(*)')
         .in('session_id', sessionIds);
 
     if (playersError) {
@@ -66,7 +80,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     // 3. Fetch all waitlisted users for these sessions
     const { data: waitlistData, error: waitlistError } = await supabase
         .from('session_waitlist')
-        .select('session_id, profiles(*)')
+        .select('session_id, profiles!inner(*)')
         .in('session_id', sessionIds);
 
     if (waitlistError) {
@@ -74,7 +88,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
     
     // 4. Combine the data
-    const sessionsWithData: Session[] = sessionData.map((session: any) => {
+    const sessionsWithData: Session[] = visibleSessions.map((session: any) => {
       const sessionPlayers = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) || [];
       const sessionWaitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) || [];
       
@@ -142,7 +156,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
   const createSession = async (sessionData: any) => {
     if (!currentUser) return;
-    
     toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
     const { error } = await supabase.from('sessions').insert({
         ...sessionData,
@@ -151,7 +164,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if(error) {
         console.error("Error creating session:", error);
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
-        fetchSessions(); // Revert optimistic update on failure
     }
   };
   
@@ -323,7 +335,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if(error) {
         console.error("Error creating announcement:", error);
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
-        fetchAnnouncements(); // Revert
     }
   };
 
@@ -384,3 +395,4 @@ export const useSessions = () => {
   }
   return context;
 };
+
