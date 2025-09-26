@@ -32,6 +32,8 @@ import {
   Eye,
   LogOut,
   Check,
+  Clock,
+  MapPin,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
@@ -47,7 +49,16 @@ interface SessionListItemProps {
   onViewPlayers: (session: Session) => void;
   priority?: boolean;
   animationDelay?: number;
+  index: number;
 }
+
+const categoryStyles: Record<string, { bg: string; text: string; pin: string }> = {
+  '0': { bg: 'bg-paper-yellow', text: 'text-red-800', pin: 'bg-red-500' },
+  '1': { bg: 'bg-paper-blue', text: 'text-blue-800', pin: 'bg-blue-500' },
+  '2': { bg: 'bg-paper-pink', text: 'text-purple-800', pin: 'bg-purple-500' },
+  '3': { bg: 'bg-paper-green', text: 'text-green-800', pin: 'bg-green-500' },
+};
+
 
 export default function SessionListItem({
   session,
@@ -58,6 +69,7 @@ export default function SessionListItem({
   onViewPlayers,
   priority = false,
   animationDelay = 0,
+  index,
 }: SessionListItemProps) {
   const { user: currentUser } = useAuth();
   const { t, locale } = useLanguage();
@@ -67,6 +79,9 @@ export default function SessionListItem({
 
   const players = (session.players || []) as Partial<User>[];
   const waitlist = (session.waitlist || []) as Partial<User>[];
+
+  const rotationClass = `note-${(index % 6) + 1}`;
+  const styles = categoryStyles[(index % 4).toString()];
 
   const isFull = players.length >= session.maxPlayers;
   const isRegistered = players.some(p => p.id === currentUser.id);
@@ -182,59 +197,53 @@ export default function SessionListItem({
 
 
   return (
-    <Card 
-      className="flex flex-col overflow-hidden transition-shadow hover:shadow-xl h-full animate-slide-up-and-fade w-full rounded-lg"
+    <div 
+      className={cn('note p-4 rounded-lg shadow-lg relative fade-in flex flex-col h-full', styles.bg, rotationClass)}
       style={{ animationDelay: `${animationDelay}ms`, animationFillMode: 'backwards' }}
     >
-      <CardHeader className="p-0 relative">
-        <Badge
-          variant={isFull ? 'destructive' : 'secondary'}
-          className="absolute top-2 right-2 z-10"
-        >
-          {isFull ? t('components.sessionListItem.full') : t('components.sessionListItem.spotsLeft', { count: spotsLeft })}
-        </Badge>
-        <div className="relative h-40 w-full">
-          <Image
-            src={session.imageUrl || `https://placehold.co/600x400/000000/FFFFFF/png?text=Session`}
-            alt="Volleyball session"
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority={priority}
-            style={{ objectFit: 'cover' }}
-            className="rounded-t-lg"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+      <div className={cn('pushpin', styles.pin)}></div>
+      
+      <div className="flex-grow space-y-3">
+        <div className="flex justify-between items-start mb-2">
+            <div>
+              <h3 className="handwriting text-2xl font-bold text-brown mb-1">{t(`skillLevels.${session.level}`)}</h3>
+              <p className="font-semibold text-brown-dark">{getSafeDate(session.date).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            </div>
+            <Badge
+                variant={isFull ? 'destructive' : 'secondary'}
+                className="text-xs"
+            >
+                {isFull ? t('components.sessionListItem.full') : t('components.sessionListItem.spotsLeft', { count: spotsLeft })}
+            </Badge>
         </div>
-        <div className="absolute bottom-0 p-4">
-            <CardTitle className="font-headline text-lg text-white">
-                {t(`skillLevels.${session.level}`)} Level
-            </CardTitle>
-        </div>
-      </CardHeader>
 
-      <CardContent className="p-4 flex-grow space-y-4 bg-card">
-          <div className="space-y-1 text-base text-muted-foreground">
-             <p className="font-medium text-foreground">{getSafeDate(session.date).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-             <p>{formatTime(session.startTime)} - {formatTime(session.endTime)}</p>
-             <p>{session.location}</p>
-          </div>
+        <div className="space-y-2 text-sm border-t border-dashed border-brown-light/30 pt-3 text-brown-dark">
+            <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span className="font-semibold">{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span className="font-semibold">{session.location}</span>
+            </div>
+        </div>
         
-        <div className="space-y-2">
+        <div className="space-y-2 !mt-4">
              <TooltipProvider>
                 <div className="flex justify-between items-center">
                   <div className="flex -space-x-2 overflow-hidden">
-                    {players.slice(0, 4).map(player => (
-                      <PlayerAvatar key={player.id} player={player} className="h-8 w-8 border-2 border-background" />
+                    {players.slice(0, 5).map(player => (
+                      <PlayerAvatar key={player.id} player={player} className="h-8 w-8 border-2 border-paper" />
                     ))}
-                    {players.length > 4 && (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
-                            +{players.length - 4}
+                    {players.length > 5 && (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-paper">
+                            +{players.length - 5}
                         </div>
                     )}
                   </div>
                   <Tooltip>
                       <TooltipTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onViewPlayers(session)}>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-brown-dark hover:bg-brown/10" onClick={() => onViewPlayers(session)}>
                               <Eye className="h-4 w-4" />
                           </Button>
                       </TooltipTrigger>
@@ -244,13 +253,14 @@ export default function SessionListItem({
                   </Tooltip>
                 </div>
             </TooltipProvider>
-            <Progress value={progressValue} className="h-1" />
+            <Progress value={progressValue} className="h-1 bg-brown/20" indicatorClassName='bg-brown' />
         </div>
-      </CardContent>
+      </div>
 
-      <CardFooter className="p-4 pt-0 mt-auto flex flex-col gap-2 bg-card">
+      <div className="pt-4 mt-auto flex flex-col gap-2">
         {renderActionButtons()}
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }
+

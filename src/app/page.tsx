@@ -1,4 +1,5 @@
 
+
 /**
  * @fileoverview The main dashboard page for authenticated users.
  * Displays a welcome message, a list of the user's upcoming sessions,
@@ -117,6 +118,7 @@ const DashboardPage: NextPage = () => {
                       onViewPlayers={handleViewPlayers}
                       priority={index < 4}
                       animationDelay={index * 100}
+                      index={index}
                     />
                   ))}
                 </div>
@@ -153,6 +155,7 @@ const DashboardPage: NextPage = () => {
                       onViewPlayers={handleViewPlayers}
                       priority={index < 4}
                       animationDelay={index * 100}
+                      index={index + upcomingSessions.length}
                     />
                   ))}
                 </div>
