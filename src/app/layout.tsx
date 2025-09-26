@@ -27,6 +27,7 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: 'SpikeTime - Inverness Eagles',
   description: 'Volleyball session management for the Inverness Eagles club.',
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({

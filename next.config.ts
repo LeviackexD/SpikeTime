@@ -1,5 +1,13 @@
 
 import type {NextConfig} from 'next';
+import withPWA from 'next-pwa';
+
+const pwaConfig = {
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+};
 
 const nextConfig: NextConfig = {
   images: {
@@ -21,9 +29,9 @@ const nextConfig: NextConfig = {
         hostname: 'busqydyuvtgwemjxmylp.supabase.co',
         port: '',
         pathname: '/**',
-      }
+      },
     ],
   },
 };
 
-export default nextConfig;
+export default withPWA(pwaConfig)(nextConfig);
