@@ -35,7 +35,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  const fetchAllData = async () => {
+  const fetchAllData = React.useCallback(async () => {
     // 1. Fetch sessions
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
@@ -97,7 +97,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     } else {
         setAnnouncements(announcementData.map((a: any) => ({...a, date: getSafeDate(a.date)})));
     }
-  };
+  }, []);
 
   // Effect for initial data load and real-time subscriptions
   React.useEffect(() => {
@@ -109,7 +109,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       
       const subscription = channel
         .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-           console.log('Realtime change received:', payload);
+           console.log('Realtime change received, refetching data:', payload);
            fetchAllData();
         })
         .subscribe((status, err) => {
@@ -135,8 +135,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       setSessions([]);
       setAnnouncements([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser, toast]);
+  }, [currentUser, toast, fetchAllData]);
 
 
   const createSession = async (sessionData: any) => {
@@ -178,6 +177,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
+        await fetchAllData();
     }
   };
   
@@ -259,6 +259,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
+        await fetchAllData();
     }
   };
 
@@ -270,6 +271,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
+        await fetchAllData();
     }
   };
 
@@ -280,6 +282,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
+       await fetchAllData();
     }
   };
   
@@ -316,7 +319,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
-
-    
