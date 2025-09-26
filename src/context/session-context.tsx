@@ -55,7 +55,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             supabase.from('sessions').select('*').order('date', { ascending: true }).order('startTime', { ascending: true }),
             supabase.from('session_players').select('session_id, profiles!inner(*)'),
             supabase.from('session_waitlist').select('session_id, profiles!inner(*)'),
-            supabase.from('announcements').select('*').order('created_at', { ascending: false })
+            supabase.from('announcements').select('*').order('date', { ascending: false })
         ]);
 
         if (sessionError) throw sessionError;
@@ -117,9 +117,30 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     const channel = supabase.channel('public-db-changes')
         .on('postgres_changes', 
-            { event: '*', schema: 'public' }, 
+            { event: '*', schema: 'public', table: 'sessions' }, 
             (payload) => {
-              console.log('Realtime change detected', payload);
+              console.log('Realtime change detected on sessions', payload);
+              fetchAllData();
+            }
+        )
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'session_players' }, 
+            (payload) => {
+              console.log('Realtime change detected on session_players', payload);
+              fetchAllData();
+            }
+        )
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'session_waitlist' }, 
+            (payload) => {
+              console.log('Realtime change detected on session_waitlist', payload);
+              fetchAllData();
+            }
+        )
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'announcements' }, 
+            (payload) => {
+              console.log('Realtime change detected on announcements', payload);
               fetchAllData();
             }
         )
@@ -154,7 +175,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
-        fetchAllData();
     }
   };
   
@@ -170,7 +190,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
         toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success", duration: 1500});
-        fetchAllData();
      }
   };
   
@@ -182,40 +201,25 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
-        fetchAllData();
     }
   };
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
-    try {
-      // First, attempt to remove the user from the waitlist for that session.
-      // This won't error if they aren't on it, which is the desired behavior.
-      const { error: waitlistError } = await supabase.from('session_waitlist').delete()
-        .match({ session_id: sessionId, user_id: currentUser.id });
-        
-      if(waitlistError) {
-          console.warn("Error removing from waitlist (this might be ok):", waitlistError);
-      }
-
-      // Then, insert the user into the players list. This is the main action.
-      // Supabase RLS will prevent this if the session is full.
-      const { error: bookError } = await supabase.from('session_players').insert({
-        session_id: sessionId,
-        user_id: currentUser.id
-      });
-      
-      if (bookError) throw bookError; // If this fails, the booking fails.
-
-      await fetchAllData();
-      return true;
-
-    } catch (error: any) {
-        console.error("Error booking session:", JSON.stringify(error, null, 2));
-        toast({ title: "Booking Error", description: error.message || "Could not book your spot. The session might be full or an error occurred.", variant: 'destructive'});
-        return false;
+    const { error } = await supabase.rpc('book_session_and_leave_waitlist', {
+      p_session_id: sessionId,
+      p_user_id: currentUser.id
+    });
+    
+    if (error) {
+      console.error("Error booking session:", JSON.stringify(error, null, 2));
+      toast({ title: "Booking Error", description: error.message || "Could not book your spot. The session might be full or an error occurred.", variant: 'destructive'});
+      return false;
     }
+
+    await fetchAllData();
+    return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
@@ -283,7 +287,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
-        fetchAllData();
     }
   };
 
@@ -295,7 +298,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
-        fetchAllData();
     }
   };
 
@@ -306,7 +308,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
-       fetchAllData();
     }
   };
   
@@ -343,9 +344,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
-
-    
-
-

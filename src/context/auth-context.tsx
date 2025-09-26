@@ -6,7 +6,7 @@ import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
-import { supabase, adminSupabase } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -111,7 +111,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email, 
         password: pass,
         options: {
-            channel: 'email',
             data: {
                 name: data.name,
                 skillLevel: data.skillLevel,
@@ -125,15 +124,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { success: false, requiresConfirmation: false };
     }
     
+    // A user is returned, but a session is not. This means email confirmation is required.
     const requiresConfirmation = !!(signUpData.user && !signUpData.session);
-
-    if (requiresConfirmation && signUpData.user) {
-        if (adminSupabase) {
-            await adminSupabase.auth.admin.updateUserById(signUpData.user.id, { email_confirm: true });
-        }
-    }
     
-    return { success: !!signUpData.user, requiresConfirmation: false };
+    return { success: !!signUpData.user, requiresConfirmation };
   };
 
   const logout = async (): Promise<void> => {
@@ -218,5 +212,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    
