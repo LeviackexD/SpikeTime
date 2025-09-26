@@ -27,7 +27,6 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: 'SpikeTime - Inverness Eagles',
   description: 'Volleyball session management for the Inverness Eagles club.',
-  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({
@@ -38,7 +37,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.webmanifest" />
       </head>
       <body className={`${poppins.variable} ${caveat.variable} font-body antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
