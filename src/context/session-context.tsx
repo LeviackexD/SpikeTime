@@ -35,7 +35,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  const fetchAllData = React.useCallback(async () => {
+  const fetchAllData = async () => {
     // 1. Fetch sessions
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
@@ -59,14 +59,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
             const { data: playersData, error: playersError } = await supabase
                 .from('session_players')
-                .select('session_id, profiles!inner(*)')
-                .in('session_id', sessionIds);
+                .select('session_id, profiles!inner(*)');
+
             if (playersError) console.error("Error fetching session players:", playersError);
 
             const { data: waitlistData, error: waitlistError } = await supabase
                 .from('session_waitlist')
-                .select('session_id, profiles!inner(*)')
-                .in('session_id', sessionIds);
+                .select('session_id, profiles!inner(*)');
             if (waitlistError) console.error("Error fetching session waitlist:", waitlistError);
             
             const sessionsWithData: Session[] = visibleSessions.map((session: any) => ({
@@ -98,7 +97,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     } else {
         setAnnouncements(announcementData.map((a: any) => ({...a, date: getSafeDate(a.date)})));
     }
-  }, []);
+  };
 
   // Effect for initial data load and real-time subscriptions
   React.useEffect(() => {
@@ -136,7 +135,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       setSessions([]);
       setAnnouncements([]);
     }
-  }, [currentUser, fetchAllData, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, toast]);
 
 
   const createSession = async (sessionData: any) => {
@@ -172,12 +172,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const deleteSession = async (sessionId: string) => {
     if (!currentUser) return;
-    setSessions(prev => prev.filter(s => s.id !== sessionId));
     const { error } = await supabase.from('sessions').delete().eq('id', sessionId);
     if(error) {
         console.error("Error deleting session:", error);
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
-        await fetchAllData();
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
     }
@@ -261,7 +259,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
-        await fetchAllData();
     }
   };
 
@@ -273,17 +270,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
-        await fetchAllData();
     }
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
-    setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
     const { error } = await supabase.from('announcements').delete().eq('id', announcementId);
      if(error) {
         console.error("Error deleting announcement:", error);
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
-        await fetchAllData();
     } else {
        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
     }
@@ -322,5 +316,7 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
 
     
