@@ -136,19 +136,28 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
     initialFetch();
 
-    const sessionChanges = supabase.channel('realtime-sessions-all-new')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, () => fetchSessions())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, () => fetchSessions())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, () => fetchSessions())
-      .subscribe();
+    const handleDbChange = (payload: any) => {
+      console.log('Change received!', payload);
+      fetchSessions();
+      fetchAnnouncements();
+    }
 
-    const announcementChanges = supabase.channel('realtime-announcements-all-new')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => fetchAnnouncements())
-        .subscribe();
+    const sessionChanges = supabase.channel('realtime:sessions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleDbChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, handleDbChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, handleDbChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleDbChange)
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Real-time channel subscribed!');
+        }
+        if (status === 'CHANNEL_ERROR') {
+          console.error('Real-time channel error:', err);
+        }
+      });
     
     return () => {
         supabase.removeChannel(sessionChanges);
-        supabase.removeChannel(announcementChanges);
     }
 
   }, [currentUser, fetchSessions, fetchAnnouncements]);
