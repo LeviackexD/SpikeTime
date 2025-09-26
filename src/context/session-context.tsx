@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -137,16 +136,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     initialFetch();
 
     const handleDbChange = (payload: any) => {
-      // Refetch all data on any change for simplicity and consistency
       fetchAllData();
     }
 
-    const channel = supabase.channel('spiketime-db-changes')
+    const channel = supabase.channel('realtime:all');
+    
+    channel
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleDbChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, handleDbChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, handleDbChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleDbChange)
       .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Real-time channel subscribed');
+        }
         if (status === 'CHANNEL_ERROR') {
           console.error('Real-time channel error:', err);
         }
@@ -203,13 +206,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const originalSessions = sessions;
+    const originalSessions = [...sessions];
 
     // Optimistic update
     setSessions(prevSessions =>
         prevSessions.map(s => {
             if (s.id === sessionId) {
-                // Add user to players, remove from waitlist
                 const newPlayers = s.players.some(p => p.id === currentUser.id)
                     ? s.players
                     : [...s.players, currentUser];
@@ -220,7 +222,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         })
     );
 
-    // DB operation
     const { error } = await supabase.from('session_players').insert({
         session_id: sessionId,
         user_id: currentUser.id
@@ -229,11 +230,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
       console.error("Error booking session:", error);
       toast({ title: "Booking Error", description: error.message, variant: 'destructive'});
-      setSessions(originalSessions); // Revert on error
+      setSessions(originalSessions);
       return false;
     }
 
-    // Also remove from waitlist in DB if they were there
     await supabase.from('session_waitlist').delete().match({ session_id: sessionId, user_id: currentUser.id });
     
     return true;
@@ -241,9 +241,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const originalSessions = sessions;
+    const originalSessions = [...sessions];
 
-    // Optimistic update
     setSessions(prevSessions =>
       prevSessions.map(s =>
         s.id === sessionId
@@ -252,7 +251,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       )
     );
 
-    // DB operation
     const { error } = await supabase.from('session_players').delete()
         .eq('session_id', sessionId)
         .eq('user_id', currentUser.id);
@@ -260,11 +258,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error canceling booking:", error);
         toast({ title: "Cancellation Error", description: error.message, variant: 'destructive'});
-        setSessions(originalSessions); // Revert on error
+        setSessions(originalSessions);
         return false;
     }
     
-    // Trigger waitlist promotion
     await supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId });
     
     return true;
@@ -272,18 +269,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    const originalSessions = sessions;
+    const originalSessions = [...sessions];
 
-    // Optimistic update
     setSessions(prevSessions =>
       prevSessions.map(s =>
-        s.id === sessionId
+        s.id === sessionId && !s.waitlist.some(p=>p.id === currentUser.id)
           ? { ...s, waitlist: [...s.waitlist, currentUser] }
           : s
       )
     );
     
-    // DB operation
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
         user_id: currentUser.id
@@ -292,7 +287,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
-        setSessions(originalSessions); // Revert on error
+        setSessions(originalSessions);
         return false;
     }
     return true;
@@ -300,9 +295,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
-     const originalSessions = sessions;
+     const originalSessions = [...sessions];
 
-     // Optimistic update
      setSessions(prevSessions =>
       prevSessions.map(s =>
         s.id === sessionId
@@ -311,7 +305,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       )
     );
 
-     // DB operation
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
         .eq('user_id', currentUser.id);
@@ -319,7 +312,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
-        setSessions(originalSessions); // Revert on error
+        setSessions(originalSessions);
         return false;
     }
     return true;
@@ -395,3 +388,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
