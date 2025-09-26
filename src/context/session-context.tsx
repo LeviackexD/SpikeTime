@@ -137,21 +137,24 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     initialFetch();
 
     const handleDbChange = (payload: any) => {
-      console.log('Real-time change received!', payload);
+      console.log('Real-time change detected, refetching data:', payload);
       fetchAllData();
     }
 
-    const channel = supabase.channel('spiketime-realtime-channel')
-      .on('postgres_changes', { event: '*', schema: 'public' }, handleDbChange)
+    const channel = supabase.channel('spiketime-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleDbChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, handleDbChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, handleDbChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleDbChange)
       .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Real-time channel subscribed!');
+          console.log('Subscribed to real-time channel!');
         }
         if (status === 'CHANNEL_ERROR') {
           console.error('Real-time channel error:', err);
         }
          if (status === 'TIMED_OUT') {
-          console.warn('Real-time channel timed out.');
+          console.warn('Real-time channel subscription timed out.');
         }
       });
     
