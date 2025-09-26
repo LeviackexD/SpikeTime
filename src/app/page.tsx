@@ -107,14 +107,16 @@ const DashboardPage: NextPage = () => {
               ) : upcomingSessions.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {upcomingSessions.map((session, index) => (
-                    <SessionNoteCard
+                    <SessionListItem
                       key={session.id}
                       session={session}
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
                       onLeaveWaitlist={leaveWaitlist}
-                      index={index}
+                      onViewPlayers={handleViewPlayers}
+                      priority={index < 4}
+                      animationDelay={index * 100}
                     />
                   ))}
                 </div>
@@ -141,14 +143,16 @@ const DashboardPage: NextPage = () => {
               ) : availableSessions.length > 0 ? (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {availableSessions.map((session, index) => (
-                    <SessionNoteCard
+                     <SessionListItem
                       key={session.id}
                       session={session}
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
                       onLeaveWaitlist={leaveWaitlist}
-                      index={index}
+                      onViewPlayers={handleViewPlayers}
+                      priority={index < 4}
+                      animationDelay={index * 100}
                     />
                   ))}
                 </div>

@@ -63,15 +63,7 @@ export default function SessionListItem({
   const { user: currentUser } = useAuth();
   const { t, locale } = useLanguage();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
-
-  // --- Swipe Gesture State ---
-  const [touchStart, setTouchStart] = React.useState(0);
-  const [isSwiping, setIsSwiping] = React.useState(false);
-  const [swipeOffset, setSwipeOffset] = React.useState(0);
-  const swipeThreshold = 75; // pixels to swipe before action triggers
-
-
+  
   if (!currentUser) return null;
 
   const players = (session.players || []) as Partial<User>[];
@@ -129,46 +121,6 @@ export default function SessionListItem({
     { title: t('toasts.waitlistLeaveFailedTitle'), description: t('toasts.waitlistLeaveFailedDescription') }
   );
   
-  const canSwipeRight = !isRegistered && !isFull;
-  const canSwipeLeft = isRegistered && canCancel;
-
-  // --- Swipe Handlers ---
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isMobile || (!canSwipeLeft && !canSwipeRight)) return;
-    setTouchStart(e.targetTouches[0].clientX);
-    setIsSwiping(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isMobile || !isSwiping) return;
-
-    const currentX = e.targetTouches[0].clientX;
-    let offset = currentX - touchStart;
-
-    // Restrict swipe direction based on available actions
-    if (!canSwipeRight && offset > 0) {
-      offset = 0;
-    }
-    if (!canSwipeLeft && offset < 0) {
-      offset = 0;
-    }
-
-    setSwipeOffset(offset);
-  };
-
-  const handleTouchEnd = () => {
-    if (!isMobile || !isSwiping) return;
-
-    if (canSwipeRight && swipeOffset > swipeThreshold) {
-      handleBook();
-    } else if (canSwipeLeft && swipeOffset < -swipeThreshold) {
-      handleCancel();
-    }
-    
-    // Reset positions
-    setSwipeOffset(0);
-    setIsSwiping(false);
-  };
 
   const renderActionButtons = () => {
     // 1. User is registered
@@ -228,111 +180,78 @@ export default function SessionListItem({
     );
   };
 
-  const mainAction = isRegistered ? 'cancel' : isFull ? 'waitlist' : 'book';
-  const swipeActionLabel = mainAction === 'book' ? t('modals.sessionDetails.bookSpot') : t('modals.sessionDetails.cancelSpot');
 
   return (
-    <div className="relative overflow-hidden rounded-lg bg-card h-full">
-      {isMobile && (
-        <>
-          {/* Swipe Right to Book Background */}
-          {canSwipeRight && (
-            <div className="absolute inset-0 bg-green-500 flex items-center justify-start px-6 transition-opacity" style={{ opacity: Math.min(1, Math.max(0, swipeOffset / swipeThreshold)) }}>
-              <Check className="h-6 w-6 text-white" />
-              <span className="ml-2 font-semibold text-white">{swipeActionLabel}</span>
-            </div>
-          )}
-          {/* Swipe Left to Cancel Background */}
-          {canSwipeLeft && (
-            <div className="absolute inset-0 bg-red-500 flex items-center justify-end px-6 transition-opacity" style={{ opacity: Math.min(1, Math.max(0, -swipeOffset / swipeThreshold)) }}>
-              <span className="mr-2 font-semibold text-white">{swipeActionLabel}</span>
-              <XCircle className="h-6 w-6 text-white" />
-            </div>
-          )}
-        </>
-      )}
-      <div
-        className="relative h-full"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{ 
-          transform: `translateX(${swipeOffset}px)`,
-          transition: isSwiping ? 'none' : 'transform 0.3s ease',
-        }}
-      >
-        <Card 
-          className="flex flex-col overflow-hidden transition-shadow hover:shadow-xl h-full animate-slide-up-and-fade w-full rounded-lg"
-          style={{ animationDelay: `${animationDelay}ms`, animationFillMode: 'backwards' }}
+    <Card 
+      className="flex flex-col overflow-hidden transition-shadow hover:shadow-xl h-full animate-slide-up-and-fade w-full rounded-lg"
+      style={{ animationDelay: `${animationDelay}ms`, animationFillMode: 'backwards' }}
+    >
+      <CardHeader className="p-0 relative">
+        <Badge
+          variant={isFull ? 'destructive' : 'secondary'}
+          className="absolute top-2 right-2 z-10"
         >
-          <CardHeader className="p-0 relative">
-            <Badge
-              variant={isFull ? 'destructive' : 'secondary'}
-              className="absolute top-2 right-2 z-10"
-            >
-              {isFull ? t('components.sessionListItem.full') : t('components.sessionListItem.spotsLeft', { count: spotsLeft })}
-            </Badge>
-            <div className="relative h-40 w-full">
-              <Image
-                src={session.imageUrl || `https://picsum.photos/seed/${session.id}/400/300`}
-                alt="Volleyball session"
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority={priority}
-                style={{ objectFit: 'cover' }}
-                className="rounded-t-lg"
-                data-ai-hint="volleyball action"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            </div>
-            <div className="absolute bottom-0 p-4">
-                <CardTitle className="font-headline text-lg text-white">
-                    {t(`skillLevels.${session.level}`)} Level
-                </CardTitle>
-            </div>
-          </CardHeader>
+          {isFull ? t('components.sessionListItem.full') : t('components.sessionListItem.spotsLeft', { count: spotsLeft })}
+        </Badge>
+        <div className="relative h-40 w-full">
+          <Image
+            src={session.imageUrl || `https://picsum.photos/seed/${session.id}/400/300`}
+            alt="Volleyball session"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={priority}
+            style={{ objectFit: 'cover' }}
+            className="rounded-t-lg"
+            data-ai-hint="volleyball action"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        </div>
+        <div className="absolute bottom-0 p-4">
+            <CardTitle className="font-headline text-lg text-white">
+                {t(`skillLevels.${session.level}`)} Level
+            </CardTitle>
+        </div>
+      </CardHeader>
 
-          <CardContent className="p-4 flex-grow space-y-4 bg-card">
-              <div className="space-y-1 text-base text-muted-foreground">
-                 <p className="font-medium text-foreground">{getSafeDate(session.date).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                 <p>{formatTime(session.startTime)} - {formatTime(session.endTime)}</p>
-                 <p>{session.location}</p>
-              </div>
-            
-            <div className="space-y-2">
-                 <TooltipProvider>
-                    <div className="flex justify-between items-center">
-                      <div className="flex -space-x-2 overflow-hidden">
-                        {players.slice(0, 4).map(player => (
-                          <PlayerAvatar key={player.id} player={player} className="h-8 w-8 border-2 border-background" />
-                        ))}
-                        {players.length > 4 && (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
-                                +{players.length - 4}
-                            </div>
-                        )}
-                      </div>
-                      <Tooltip>
-                          <TooltipTrigger asChild>
-                              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onViewPlayers(session)}>
-                                  <Eye className="h-4 w-4" />
-                              </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                              <p>{t('components.sessionListItem.viewDetails')}</p>
-                          </TooltipContent>
-                      </Tooltip>
-                    </div>
-                </TooltipProvider>
-                <Progress value={progressValue} className="h-1" />
-            </div>
-          </CardContent>
+      <CardContent className="p-4 flex-grow space-y-4 bg-card">
+          <div className="space-y-1 text-base text-muted-foreground">
+             <p className="font-medium text-foreground">{getSafeDate(session.date).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+             <p>{formatTime(session.startTime)} - {formatTime(session.endTime)}</p>
+             <p>{session.location}</p>
+          </div>
+        
+        <div className="space-y-2">
+             <TooltipProvider>
+                <div className="flex justify-between items-center">
+                  <div className="flex -space-x-2 overflow-hidden">
+                    {players.slice(0, 4).map(player => (
+                      <PlayerAvatar key={player.id} player={player} className="h-8 w-8 border-2 border-background" />
+                    ))}
+                    {players.length > 4 && (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium border-2 border-background">
+                            +{players.length - 4}
+                        </div>
+                    )}
+                  </div>
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onViewPlayers(session)}>
+                              <Eye className="h-4 w-4" />
+                          </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                          <p>{t('components.sessionListItem.viewDetails')}</p>
+                      </TooltipContent>
+                  </Tooltip>
+                </div>
+            </TooltipProvider>
+            <Progress value={progressValue} className="h-1" />
+        </div>
+      </CardContent>
 
-          <CardFooter className="p-4 pt-0 mt-auto flex flex-col gap-2 bg-card">
-            {renderActionButtons()}
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+      <CardFooter className="p-4 pt-0 mt-auto flex flex-col gap-2 bg-card">
+        {renderActionButtons()}
+      </CardFooter>
+    </Card>
   );
 }
