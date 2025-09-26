@@ -95,8 +95,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
+  const isProfilePage = pathname === '/profile';
   
-  const hasCorkBg = isDashboard || isAnnouncementsPage || isMemoriesPage;
+  const hasCorkBg = isDashboard || isAnnouncementsPage || isMemoriesPage || isProfilePage;
 
   return (
     <div className={cn("min-h-screen w-full flex flex-col", {
@@ -122,8 +123,9 @@ function AppHeader() {
   const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
+  const isProfilePage = pathname === '/profile';
   
-  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage;
+  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage || isProfilePage;
 
   return (
     <header className={cn(
@@ -131,7 +133,7 @@ function AppHeader() {
       specialHeader ? 'bg-brown/80 text-cream border-b border-brown-dark' : 'border-b bg-background/80'
       )}>
       <div className="flex items-center gap-4">
-        {isMobile ? <MobileNav /> : <Link href="/"><InvernessEaglesLogo className="h-8 w-auto" /></Link>}
+        {isMobile ? <MobileNav /> : <Link href="/" prefetch={true}><InvernessEaglesLogo className="h-8 w-auto" /></Link>}
       </div>
 
       <DesktopNav />
@@ -153,7 +155,8 @@ function DesktopNav() {
   const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
-  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage;
+  const isProfilePage = pathname === '/profile';
+  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage || isProfilePage;
 
   const navItems = getNavItems(t);
 
@@ -201,7 +204,8 @@ function MobileNav() {
   const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
-  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage;
+  const isProfilePage = pathname === '/profile';
+  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage || isProfilePage;
   
   const navItems = getNavItems(t);
 
@@ -246,7 +250,7 @@ function MobileNav() {
         </SheetContent>
       </Sheet>
       
-      <Link href="/">
+      <Link href="/" prefetch={true}>
         <Button variant="outline" size="icon" className={cn("shrink-0", specialHeader && "bg-cream/20 border-cream/50 hover:bg-cream/30")}>
           <Home className="h-5 w-5" />
           <span className="sr-only">Go to Home</span>
@@ -268,7 +272,8 @@ function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user'
   const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
-  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage;
+  const isProfilePage = pathname === '/profile';
+  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage || isProfilePage;
 
   const handleLogout = async () => {
     await logout();
@@ -298,21 +303,21 @@ function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user'
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/profile">
+          <Link href="/profile" prefetch={true}>
             <User className="mr-2 h-4 w-4" />
             <span>{t('nav.profile')}</span>
           </Link>
         </DropdownMenuItem>
         {user.role === 'admin' && (
           <DropdownMenuItem asChild>
-            <Link href="/admin">
+            <Link href="/admin" prefetch={true}>
               <Shield className="mr-2 h-4 w-4" />
               <span>{t('nav.adminPanel')}</span>
             </Link>
           </DropdownMenuItem>
         )}
         <DropdownMenuItem asChild>
-          <Link href="/settings">
+          <Link href="/settings" prefetch={true}>
             <Settings className="mr-2 h-4 w-4" />
             <span>{t('nav.settings')}</span>
           </Link>
