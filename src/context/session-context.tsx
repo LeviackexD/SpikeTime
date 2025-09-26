@@ -36,12 +36,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchAllData = React.useCallback(async () => {
-    if (!currentUser) {
-        setSessions([]);
-        setAnnouncements([]);
-        setLoading(false);
-        return;
-    }
     setLoading(true);
     try {
         const [
@@ -95,12 +89,18 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     } finally {
         setLoading(false);
     }
-  }, [currentUser, toast]);
+  }, [toast]);
 
 
   React.useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    if (currentUser) {
+        fetchAllData();
+    } else {
+        setLoading(false);
+        setSessions([]);
+        setAnnouncements([]);
+    }
+  }, [currentUser, fetchAllData]);
 
    React.useEffect(() => {
     if (!currentUser) return;
@@ -110,7 +110,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         if (profile) {
           setSessions(prev => prev.map(s => {
             if (s.id === payload.new.session_id) {
-              // Avoid adding duplicates
               if (s.players.some(p => p.id === profile.id)) return s;
               const newPlayers = [...s.players, profile];
               return { ...s, players: newPlayers };
@@ -136,7 +135,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         if (profile) {
           setSessions(prev => prev.map(s => {
             if (s.id === payload.new.session_id) {
-               // Avoid adding duplicates
               if (s.waitlist.some(p => p.id === profile.id)) return s;
               const newWaitlist = [...s.waitlist, profile];
               return { ...s, waitlist: newWaitlist };
@@ -157,14 +155,25 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       }));
     };
     
-    const handleSessionChanges = (payload: any) => {
-      // For simplicity, session creation/deletion/updates will trigger a full refetch
-      // as they are less frequent and have wider-reaching implications.
-      fetchAllData();
+    const handleSessionInsert = (payload: any) => {
+        const newSession: Session = {
+            ...payload.new,
+            players: [],
+            waitlist: [],
+            messages: []
+        };
+        setSessions(prev => [...prev, newSession].sort((a,b) => getSafeDate(`${a.date}T${a.startTime}`).getTime() - getSafeDate(`${b.date}T${b.startTime}`).getTime()));
     };
-    
+
+    const handleSessionUpdate = (payload: any) => {
+        setSessions(prev => prev.map(s => s.id === payload.new.id ? { ...s, ...payload.new } : s));
+    };
+
+    const handleSessionDelete = (payload: any) => {
+        setSessions(prev => prev.filter(s => s.id !== payload.old.id));
+    };
+
     const handleAnnouncementChanges = () => {
-      // Also refetch all data on announcement changes
       fetchAllData();
     }
 
@@ -174,7 +183,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'session_players' }, handlePlayerDelete)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_waitlist' }, handleWaitlistInsert)
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'session_waitlist' }, handleWaitlistDelete)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleSessionChanges)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sessions' }, handleSessionInsert)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sessions' }, handleSessionUpdate)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'sessions' }, handleSessionDelete)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleAnnouncementChanges)
       .subscribe((status, err) => {
         if (status === 'CHANNEL_ERROR' && err) {
@@ -409,3 +420,4 @@ export const useSessions = () => {
 
 
     
+  
