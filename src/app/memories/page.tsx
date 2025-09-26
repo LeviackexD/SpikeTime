@@ -142,15 +142,15 @@ const MemoriesPage: NextPage = () => {
 
             {hasMemories && currentMonth ? (
                 <div className="space-y-8">
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Button onClick={handlePrevMonth} disabled={currentMonthIndex >= sortedMonths.length - 1} variant="outline" size="icon" className="bg-cream/50 order-2 sm:order-1">
+                    <div className="flex flex-row items-center justify-center gap-4">
+                        <Button onClick={handlePrevMonth} disabled={currentMonthIndex >= sortedMonths.length - 1} variant="outline" size="icon" className="bg-cream/50">
                             <ArrowLeft className="h-4 w-4"/>
                             <span className="sr-only">{t('memoriesPage.prevMonth')}</span>
                         </Button>
-                        <h2 className="font-handwriting text-4xl font-bold text-brown-dark text-center whitespace-nowrap order-1 sm:order-2">
+                        <h2 className="font-handwriting text-4xl font-bold text-brown-dark text-center whitespace-nowrap">
                             {currentMonth}
                         </h2>
-                        <Button onClick={handleNextMonth} disabled={currentMonthIndex <= 0} variant="outline" size="icon" className="bg-cream/50 order-3 sm:order-3">
+                        <Button onClick={handleNextMonth} disabled={currentMonthIndex <= 0} variant="outline" size="icon" className="bg-cream/50">
                             <ArrowRight className="h-4 w-4"/>
                             <span className="sr-only">{t('memoriesPage.nextMonth')}</span>
                         </Button>
@@ -180,3 +180,4 @@ const MemoriesPage: NextPage = () => {
 };
 
 export default MemoriesPage;
+
