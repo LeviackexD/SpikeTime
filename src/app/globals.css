@@ -154,23 +154,6 @@ body {
 .note-5 { transform: rotate(-1.5deg); }
 .note-6 { transform: rotate(0.5deg); }
 
-.note:nth-child(odd) {
-  animation: sway1 6s ease-in-out infinite;
-}
-
-.note:nth-child(even) {
-  animation: sway2 8s ease-in-out infinite;
-}
-
-@keyframes sway1 {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
-}
-
-@keyframes sway2 {
-  0%, 100% { transform: rotate(1deg); }
-  50% { transform: rotate(-1deg); }
-}
 
 .pushpin {
   width: 16px;

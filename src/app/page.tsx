@@ -37,7 +37,8 @@ import { useUpcomingSessions, useAvailableSessions } from '@/hooks/use-session-f
 
 // Types
 import type { Session, Announcement } from '@/lib/types';
-import { getSafeDate } from '@/lib/utils';
+import { getSafeDate, cn } from '@/lib/utils';
+import SessionNoteCard from '@/components/sessions/session-note-card';
 
 const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'), {
   loading: () => <Skeleton className="h-[600px] w-full max-w-xl" />,
@@ -89,7 +90,7 @@ const DashboardPage: NextPage = () => {
     <>
       <div className="flex flex-col gap-8 animate-fade-in">
         <div className="text-center">
-          <h1 className="text-3xl font-bold font-headline">{t('dashboard.welcome', { name: currentUser.name })}</h1>
+          <h1 className="text-3xl font-bold font-headline text-brown-dark">{t('dashboard.welcome', { name: currentUser.name })}</h1>
           <p className="text-muted-foreground">{t('dashboard.welcomeSubtitle')}</p>
         </div>
         
@@ -106,16 +107,14 @@ const DashboardPage: NextPage = () => {
               ) : upcomingSessions.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {upcomingSessions.map((session, index) => (
-                    <SessionListItem
+                    <SessionNoteCard
                       key={session.id}
                       session={session}
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
                       onLeaveWaitlist={leaveWaitlist}
-                      onViewPlayers={handleViewPlayers}
-                      priority={index < 4} // Prioritize loading the first images
-                      animationDelay={index * 100}
+                      index={index}
                     />
                   ))}
                 </div>
@@ -142,16 +141,14 @@ const DashboardPage: NextPage = () => {
               ) : availableSessions.length > 0 ? (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {availableSessions.map((session, index) => (
-                    <SessionListItem
+                    <SessionNoteCard
                       key={session.id}
                       session={session}
                       onBook={bookSession}
                       onCancel={cancelBooking}
                       onWaitlist={joinWaitlist}
                       onLeaveWaitlist={leaveWaitlist}
-                      onViewPlayers={handleViewPlayers}
-                      priority={index < 4}
-                      animationDelay={index * 100}
+                      index={index}
                     />
                   ))}
                 </div>
@@ -224,5 +221,3 @@ const DashboardPage: NextPage = () => {
 };
 
 export default DashboardPage;
-
-    

@@ -53,6 +53,13 @@ const formatDate = (date: string | Date, locale: string) => {
   });
 };
 
+const categoryStyles: Record<string, { bg: string; pin: string }> = {
+  '1': { bg: 'bg-paper-yellow', pin: 'bg-red-500' },
+  '2': { bg: 'bg-paper-blue', pin: 'bg-blue-500' },
+  '3': { bg: 'bg-paper-pink', pin: 'bg-purple-500' },
+  '4': { bg: 'bg-paper-green', pin: 'bg-green-500' },
+};
+
 
 // --- Sub-components for Mobile View ---
 
@@ -73,12 +80,14 @@ const SessionCards = ({
 }) => (
   <div className="space-y-4">
     {sessions.map((session, index) => {
+      const styleKey = (index % 4) + 1;
+      const styles = categoryStyles[styleKey.toString()];
       const rotationClass = `note-${(index % 4) + 1}`;
       const players = session.players || [];
       const waitlist = session.waitlist || [];
       return (
-      <div key={session.id} className={cn('note bg-paper-yellow p-4 rounded-lg shadow-lg relative', rotationClass)}>
-         <div className={cn('pushpin bg-red-500')}></div>
+      <div key={session.id} className={cn('note p-4 rounded-lg shadow-lg relative', styles.bg, rotationClass)}>
+         <div className={cn('pushpin', styles.pin)}></div>
          <div className="flex justify-between items-start mb-2">
             <div>
               <h3 className="handwriting text-xl font-bold text-brown mb-1">{t(`skillLevels.${session.level}`)}</h3>

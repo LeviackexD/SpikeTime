@@ -55,19 +55,29 @@ const MemoriesPage: NextPage = () => {
     const moments = sessions.filter(s => s.momentImageUrl);
     
     if (moments.length === 0) {
-        moments.push({
-            id: 'sample-1',
-            date: new Date().toISOString(),
-            startTime: '18:00',
-            endTime: '20:00',
-            location: 'The Rec Hall',
-            level: 'Intermediate',
-            maxPlayers: 12,
-            players: [],
-            waitlist: [],
-            messages: [],
-            momentImageUrl: `https://picsum.photos/seed/101/600/600`
-        })
+        const sampleDate = new Date();
+        const sampleMoments = [
+            { id: 'sample-1', level: 'Intermediate', location: 'The Rec Hall', seed: 101 },
+            { id: 'sample-2', level: 'Advanced', location: 'Main Gym', seed: 102 },
+            { id: 'sample-3', level: 'Beginner', location: 'South Court', seed: 103 },
+            { id: 'sample-4', level: 'Intermediate', location: 'The Rec Hall', seed: 104 },
+        ];
+        
+        sampleMoments.forEach(moment => {
+            moments.push({
+                id: moment.id,
+                date: sampleDate.toISOString(),
+                startTime: '18:00',
+                endTime: '20:00',
+                location: moment.location,
+                level: moment.level as 'Beginner' | 'Intermediate' | 'Advanced',
+                maxPlayers: 12,
+                players: [],
+                waitlist: [],
+                messages: [],
+                momentImageUrl: `https://picsum.photos/seed/${moment.seed}/600/600`
+            })
+        });
     }
 
     const groupedByMonth = moments.reduce((acc: MemoriesByMonth, session) => {
@@ -85,7 +95,11 @@ const MemoriesPage: NextPage = () => {
   }, [sessions, locale]);
   
   const sortedMonths = React.useMemo(() => {
-    return Object.keys(memoriesByMonth).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    return Object.keys(memoriesByMonth).sort((a, b) => {
+        const dateA = new Date(a);
+        const dateB = new Date(b);
+        return dateB.getTime() - dateA.getTime();
+    });
   }, [memoriesByMonth]);
 
   React.useEffect(() => {
