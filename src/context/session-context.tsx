@@ -179,17 +179,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
-    // This RPC function in Supabase will handle the logic of leaving the waitlist and booking.
-    // It's a cleaner way to handle transactional logic.
-    const { error } = await supabase.rpc('book_session_and_leave_waitlist', { 
-        p_session_id: sessionId, 
-        p_user_id: currentUser.id 
-    });
+    // First, try to remove the user from the waitlist for that session
+    await supabase.from('session_waitlist').delete()
+        .match({ session_id: sessionId, user_id: currentUser.id });
 
+    // Then, attempt to book the spot
+    const { error } = await supabase.from('session_players').insert({
+        session_id: sessionId,
+        user_id: currentUser.id
+    });
+    
     if (error) {
-      console.error("Error booking session:", JSON.stringify(error, null, 2));
-      toast({ title: "Booking Error", description: error.message, variant: 'destructive'});
-      return false;
+        console.error("Error booking session:", JSON.stringify(error, null, 2));
+        toast({ title: "Booking Error", description: error.message, variant: 'destructive'});
+        return false;
     }
     
     fetchAllData();
@@ -315,3 +318,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
