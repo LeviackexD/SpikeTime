@@ -1,4 +1,5 @@
 
+
 /**
  * @fileoverview Admin management page for volleyball sessions and club announcements.
  * Allows administrators to create, view, update, and delete sessions and announcements.
@@ -75,7 +76,7 @@ const SessionCards = ({
   handleEditSession: (session: Session) => void;
   handleViewPlayers: (session: Session) => void;
   handleDeleteSessionClick: (session: Session) => void;
-  t: (key: string) => string;
+  t: (key: string, values?: Record<string, string | number>) => string;
   locale: string;
 }) => (
   <div className="space-y-4">
