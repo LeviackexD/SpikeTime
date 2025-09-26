@@ -35,15 +35,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchAllData = React.useCallback(async () => {
-    if (!currentUser) {
-        setLoading(false);
-        return;
-    };
-    
-    // Only set loading to true on the very first fetch
-    // Subsequent fetches (from realtime) shouldn't show a loading spinner
-    setLoading((prevLoading) => !sessions.length && !announcements.length);
-    
+    setLoading(true);
     try {
         const [
             { data: sessionData, error: sessionError },
@@ -96,7 +88,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     } finally {
         setLoading(false);
     }
-  }, [currentUser, toast, sessions.length, announcements.length]);
+  }, [toast]);
   
   React.useEffect(() => {
     if (currentUser) {
@@ -113,7 +105,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (!currentUser) return;
 
     const handleRealtimeUpdate = (payload: any) => {
-        console.log('Real-time change detected, re-fetching data...', payload);
         fetchAllData();
     };
 
@@ -126,15 +117,20 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
           if (status === 'SUBSCRIBED') {
             console.log('Real-time channel subscribed successfully.');
           }
-          if (status === 'CHANNEL_ERROR') {
+          if (status === 'CHANNEL_ERROR' && err) {
             console.error('Real-time channel subscription error:', JSON.stringify(err, null, 2));
+            toast({
+                title: 'Real-time Connection Error',
+                description: 'Could not sync data in real-time. Please refresh the page.',
+                variant: 'destructive',
+            });
           }
         });
         
         return () => {
             supabase.removeChannel(channel);
         };
-  }, [currentUser, fetchAllData]);
+  }, [currentUser, fetchAllData, toast]);
 
 
   const createSession = async (sessionData: any) => {
@@ -148,7 +144,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
-        // fetchAllData(); // Realtime will handle this
+        fetchAllData();
     }
   };
   
@@ -164,7 +160,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
         toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success", duration: 1500});
-        // fetchAllData(); // Realtime will handle this
+        fetchAllData();
      }
   };
   
@@ -176,17 +172,19 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
-        // fetchAllData(); // Realtime will handle this
+        fetchAllData();
     }
   };
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
-    // Leave waitlist first, then book
-    await supabase.from('session_waitlist').delete().match({ session_id: sessionId, user_id: currentUser.id });
-    
-    const { error } = await supabase.from('session_players').insert({ session_id: sessionId, user_id: currentUser.id });
+    // This RPC function in Supabase will handle the logic of leaving the waitlist and booking.
+    // It's a cleaner way to handle transactional logic.
+    const { error } = await supabase.rpc('book_session_and_leave_waitlist', { 
+        p_session_id: sessionId, 
+        p_user_id: currentUser.id 
+    });
 
     if (error) {
       console.error("Error booking session:", JSON.stringify(error, null, 2));
@@ -194,7 +192,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       return false;
     }
     
-    // fetchAllData(); // Realtime will handle this
+    fetchAllData();
     return true;
   };
   
@@ -216,7 +214,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         if(error) console.error("Error promoting from waitlist:", JSON.stringify(error, null, 2));
     });
     
-    // fetchAllData(); // Realtime will handle this
+    fetchAllData();
     return true;
   };
 
@@ -233,7 +231,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
         return false;
     }
-    // fetchAllData(); // Realtime will handle this
+    fetchAllData();
     return true;
   };
   
@@ -248,7 +246,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
         return false;
     }
-    // fetchAllData(); // Realtime will handle this
+    fetchAllData();
     return true;
   };
 
@@ -263,7 +261,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
-        // fetchAllData(); // Realtime will handle this
+        fetchAllData();
     }
   };
 
@@ -275,7 +273,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
-        // fetchAllData(); // Realtime will handle this
+        fetchAllData();
     }
   };
 
@@ -286,7 +284,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
-       // fetchAllData(); // Realtime will handle this
+       fetchAllData();
     }
   };
   
@@ -323,7 +321,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
-
-    
