@@ -185,7 +185,7 @@ const AnnouncementCards = ({
 
 // --- Main Admin Page Component ---
 
-export default function AdminPage() {
+export default function AdminPageComponent() {
   // --- HOOKS ---
   const { user } = useAuth();
   const { t, locale } = useLanguage();

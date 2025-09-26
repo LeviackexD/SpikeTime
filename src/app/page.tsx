@@ -39,7 +39,6 @@ import { useUpcomingSessions, useAvailableSessions } from '@/hooks/use-session-f
 // Types
 import type { Session, Announcement } from '@/lib/types';
 import { getSafeDate, cn } from '@/lib/utils';
-import SessionNoteCard from '@/components/sessions/session-note-card';
 
 const SessionDetailsModal = dynamic(() => import('@/components/sessions/session-details-modal'), {
   loading: () => <Skeleton className="h-[600px] w-full max-w-xl" />,
