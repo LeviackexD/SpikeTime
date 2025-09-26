@@ -93,45 +93,38 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   React.useEffect(() => {
     if (currentUser) {
       fetchAllData();
+
+      const handleRealtimeUpdate = (payload: any) => {
+        toast({
+            title: 'Updating...',
+            description: 'New data is available, refreshing.',
+            duration: 1000,
+        });
+        fetchAllData();
+      };
+
+      const channel = supabase.channel('public-db-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleRealtimeUpdate)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, handleRealtimeUpdate)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, handleRealtimeUpdate)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleRealtimeUpdate)
+          .subscribe((status, err) => {
+            if (status === 'CHANNEL_ERROR' && err) {
+              console.error('Real-time channel subscription error:', JSON.stringify(err, null, 2));
+            }
+          });
+      
+      return () => {
+          supabase.removeChannel(channel);
+      };
+
     } else {
-      // Clear data when user logs out
+      // Clear data and set loading to false if there is no user
       setSessions([]);
       setAnnouncements([]);
       setLoading(false);
     }
-  }, [currentUser, fetchAllData]);
-  
-  React.useEffect(() => {
-     if (!currentUser) return;
-
-    const handleRealtimeUpdate = (payload: any) => {
-        fetchAllData();
-    };
-
-    const channel = supabase.channel('public-db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleRealtimeUpdate)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, handleRealtimeUpdate)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, handleRealtimeUpdate)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleRealtimeUpdate)
-        .subscribe((status, err) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('Real-time channel subscribed successfully.');
-          }
-          if (status === 'CHANNEL_ERROR' && err) {
-            console.error('Real-time channel subscription error:', JSON.stringify(err, null, 2));
-            toast({
-                title: 'Real-time Connection Error',
-                description: 'Could not sync data in real-time. Please refresh the page.',
-                variant: 'destructive',
-            });
-          }
-        });
-        
-        return () => {
-            supabase.removeChannel(channel);
-        };
   }, [currentUser, fetchAllData, toast]);
-
 
   const createSession = async (sessionData: any) => {
     if (!currentUser) return;
@@ -318,5 +311,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
