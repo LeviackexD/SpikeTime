@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview A modal dialog (lightbox) for viewing a single photo in a larger format.
  * It's used on the Memories page.
@@ -10,6 +11,9 @@ import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 
@@ -26,6 +30,12 @@ export default function PhotoViewerModal({ isOpen, onClose, imageUrl, alt }: Pho
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-transparent border-none shadow-none w-full max-w-4xl p-2 sm:p-4">
+        {/* Accessibility Title for Screen Readers */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>{alt}</DialogTitle>
+          <DialogDescription>A larger view of the selected memory photo.</DialogDescription>
+        </DialogHeader>
+
         <div className="relative aspect-square w-full h-auto max-h-[90vh]">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
