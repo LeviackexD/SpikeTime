@@ -13,7 +13,11 @@
     },
     "memoriesPage": {
         "title": "Memories",
-        "subtitle": "A collection of unique moments from past sessions."
+        "subtitle": "A collection of unique moments from past sessions.",
+        "prevMonth": "Previous",
+        "nextMonth": "Next",
+        "noMemories": "No memories captured yet.",
+        "noMemoriesHint": "After a session ends, players will have a chance to upload a unique moment. Check back later!"
     },
     "dashboard": {
         "welcome": "Welcome back, {name}!",

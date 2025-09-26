@@ -13,7 +13,11 @@
     },
      "memoriesPage": {
         "title": "Recuerdos",
-        "subtitle": "Una colección de momentos únicos de sesiones pasadas."
+        "subtitle": "Una colección de momentos únicos de sesiones pasadas.",
+        "prevMonth": "Anterior",
+        "nextMonth": "Siguiente",
+        "noMemories": "Aún no se han capturado recuerdos.",
+        "noMemoriesHint": "Cuando una sesión termina, los jugadores podrán subir un momento único. ¡Vuelve más tarde!"
     },
     "dashboard": {
         "welcome": "¡Bienvenido de nuevo, {name}!",
