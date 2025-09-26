@@ -43,7 +43,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       return;
     }
 
-    const fetchInitialData = async () => {
+    const fetchAllData = async () => {
         setLoading(true);
         try {
             const [
@@ -98,22 +98,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         }
     };
     
-    fetchInitialData();
+    fetchAllData();
     
-    // The realtime subscription no longer triggers a full reload, improving performance.
-    // Optimistic updates provide instant feedback, and this channel keeps other clients in sync.
     const channel = supabase.channel('public-db-changes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, (payload) => {
-              // console.log('Sessions change received!', payload)
-          })
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, (payload) => {
-              // console.log('Players change received!', payload)
-          })
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, (payload) => {
-              // console.log('Waitlist change received!', payload)
-          })
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, (payload) => {
-              // console.log('Announcements change received!', payload)
+          .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+              fetchAllData();
           })
           .subscribe((status, err) => {
             if (status === 'CHANNEL_ERROR' && err) {
@@ -139,7 +128,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
-        // We let the realtime channel handle the update for all clients
     }
   };
   
@@ -165,7 +153,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if(error) {
         console.error("Error deleting session:", error);
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
-        // Note: No easy revert for this, but realtime would eventually correct it.
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
     }
@@ -176,7 +163,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     const originalSessions = sessions;
     
-    // Optimistic UI update
     setSessions(prevSessions => prevSessions.map(s => {
         if (s.id === sessionId) {
             const newPlayers = s.players.some(p => p.id === currentUser.id) ? s.players : [...s.players, currentUser];
@@ -219,12 +205,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     try {
         const { error } = await supabase.from('session_players').delete().match({ session_id: sessionId, user_id: currentUser.id });
         if (error) throw error;
-        
-        // This RPC call was identified as a source of errors because the function doesn't exist in the DB.
-        // We leave it commented out to prevent the error.
-        // supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId }).then(({error}) => {
-        //     if(error) console.error("Error promoting from waitlist:", JSON.stringify(error, null, 2));
-        // });
         
         return true;
     } catch (error: any) {
