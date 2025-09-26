@@ -122,7 +122,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         )
         .subscribe((status, err) => {
           if (status === 'SUBSCRIBED') {
-            console.log('Real-time channel subscribed successfully.');
+            // console.log('Real-time channel subscribed successfully.');
           }
           if (status === 'CHANNEL_ERROR') {
             console.error('Real-time channel subscription error:', err);
@@ -191,19 +191,30 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
-    const { error } = await supabase.rpc('book_session_and_leave_waitlist', {
-      p_session_id: sessionId,
-      p_user_id: currentUser.id
-    });
-    
-    if (error) {
-      console.error("Error booking session:", error);
-      toast({ title: "Booking Error", description: error.message, variant: 'destructive'});
-      return false;
+    try {
+      // First, optimistically try to remove from waitlist (it's okay if this fails, e.g., not on waitlist)
+      await supabase.from('session_waitlist').delete()
+        .match({ session_id: sessionId, user_id: currentUser.id });
+
+      // Then, insert into the players list
+      const { error: bookError } = await supabase.from('session_players').insert({
+        session_id: sessionId,
+        user_id: currentUser.id
+      });
+      
+      if (bookError) {
+        // This is the primary error we care about (e.g., session is full, already booked)
+        throw bookError;
+      }
+      
+      await fetchAllData();
+      return true;
+
+    } catch (error: any) {
+        console.error("Error booking session:", JSON.stringify(error, null, 2));
+        toast({ title: "Booking Error", description: error.message || "Could not book your spot.", variant: 'destructive'});
+        return false;
     }
-    
-    await fetchAllData();
-    return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
@@ -218,7 +229,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         return false;
     }
     
+    // After a successful cancellation, try to promote a user from the waitlist
     await supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId });
+    
     await fetchAllData();
     return true;
   };
@@ -326,3 +339,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
