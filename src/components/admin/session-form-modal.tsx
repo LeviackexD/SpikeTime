@@ -28,6 +28,8 @@ import {
 import type { Session, SkillLevel } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
 import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
+import placeholderImages from '@/lib/placeholder-images.json';
+
 
 type FormData = {
   date: string;
@@ -36,7 +38,6 @@ type FormData = {
   location: string;
   level: SkillLevel;
   maxPlayers: number;
-  imageUrl: string;
 };
 
 const getTodayString = () => toYYYYMMDD(new Date());
@@ -48,7 +49,6 @@ const emptyFormData: FormData = {
   location: '',
   level: 'Intermediate',
   maxPlayers: 12,
-  imageUrl: '',
 };
 
 interface SessionFormModalProps {
@@ -72,7 +72,6 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                     location: session.location,
                     level: session.level,
                     maxPlayers: session.maxPlayers,
-                    imageUrl: session.imageUrl || '',
                 });
             } else {
                 setFormData(emptyFormData);
@@ -97,10 +96,10 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
         let dataToSave: any = { ...formData };
         if (session) {
             dataToSave.id = session.id;
-        }
-        if (!dataToSave.imageUrl) {
-            const randomId = Math.floor(Math.random() * 1000);
-            dataToSave.imageUrl = `https://picsum.photos/seed/${randomId}/600/400`;
+            dataToSave.imageUrl = session.imageUrl;
+        } else {
+            const randomIndex = Math.floor(Math.random() * placeholderImages.sessionCovers.length);
+            dataToSave.imageUrl = placeholderImages.sessionCovers[randomIndex].url;
         }
         onSave(dataToSave);
     }
@@ -131,10 +130,6 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                 <div className="col-span-2 space-y-2">
                     <Label htmlFor="location" className="text-brown font-semibold">{t('modals.sessionForm.location')}</Label>
                     <Input id="location" value={formData.location} onChange={handleChange} placeholder={t('modals.sessionForm.location')} required className="bg-cream border-brown-light focus:border-brown"/>
-                </div>
-                 <div className="col-span-2 space-y-2">
-                    <Label htmlFor="imageUrl" className="text-brown font-semibold">{t('modals.sessionForm.coverImageUrl')}</Label>
-                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="Optional, otherwise random image is used" className="bg-cream border-brown-light focus:border-brown"/>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="level" className="text-brown font-semibold">{t('modals.sessionForm.level')}</Label>
