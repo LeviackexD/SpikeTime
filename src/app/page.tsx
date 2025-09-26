@@ -108,7 +108,7 @@ const DashboardPage: NextPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {upcomingSessions.map((session, index) => (
                     <SessionListItem
-                      key={session.id}
+                      key={`my-${session.id}`}
                       session={session}
                       onBook={bookSession}
                       onCancel={cancelBooking}
@@ -145,7 +145,7 @@ const DashboardPage: NextPage = () => {
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {availableSessions.map((session, index) => (
                      <SessionListItem
-                      key={session.id}
+                      key={`available-${session.id}`}
                       session={session}
                       onBook={bookSession}
                       onCancel={cancelBooking}
