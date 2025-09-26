@@ -211,6 +211,19 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
+    // Optimistic UI update
+    setSessions(prevSessions => {
+        return prevSessions.map(s => {
+            if (s.id === sessionId) {
+                const players = s.players.filter(p => p.id !== currentUser.id).concat(currentUser);
+                const waitlist = s.waitlist.filter(p => p.id !== currentUser.id);
+                return { ...s, players, waitlist };
+            }
+            return s;
+        });
+    });
+
+
     // Remove from waitlist first (if exists)
     await supabase.from('session_waitlist').delete().match({ session_id: sessionId, user_id: currentUser.id });
 
@@ -226,12 +239,23 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       fetchAllData(); // Re-fetch to ensure UI is correct
       return false;
     }
-    // No optimistic update here, let the real-time push handle it
+    // Let the real-time push handle broadcasting to others, but our UI is already updated.
     return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+
+     // Optimistic UI update
+    setSessions(prevSessions => {
+        return prevSessions.map(s => {
+            if (s.id === sessionId) {
+                const players = s.players.filter(p => p.id !== currentUser.id);
+                return { ...s, players };
+            }
+            return s;
+        });
+    });
 
     const { error } = await supabase.from('session_players').delete()
         .eq('session_id', sessionId)
@@ -253,6 +277,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
+    // Optimistic UI update
+    setSessions(prevSessions => {
+        return prevSessions.map(s => {
+            if (s.id === sessionId && !s.waitlist.some(p => p.id === currentUser.id)) {
+                const waitlist = s.waitlist.concat(currentUser);
+                return { ...s, waitlist };
+            }
+            return s;
+        });
+    });
+
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
         user_id: currentUser.id
@@ -269,6 +304,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
+
+    // Optimistic UI update
+    setSessions(prevSessions => {
+        return prevSessions.map(s => {
+            if (s.id === sessionId) {
+                const waitlist = s.waitlist.filter(p => p.id !== currentUser.id);
+                return { ...s, waitlist };
+            }
+            return s;
+        });
+    });
 
      const { error } = await supabase.from('session_waitlist').delete()
         .eq('session_id', sessionId)
@@ -350,3 +396,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
