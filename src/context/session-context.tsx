@@ -28,9 +28,9 @@ interface SessionContextType {
 
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
-// --- IMPORTANT ---
-// Real-time functionality requires you to enable replication on the tables in Supabase.
-// Go to your Supabase project's SQL Editor and run the following commands:
+// --- IMPORTANTE ---
+// La funcionalidad en tiempo real requiere que habilites la replicación en las tablas de Supabase.
+// Ve al SQL Editor de tu proyecto Supabase y ejecuta los siguientes comandos si no lo has hecho:
 //
 // ALTER PUBLICATION supabase_realtime ADD TABLE sessions;
 // ALTER PUBLICATION supabase_realtime ADD TABLE session_players;
@@ -137,18 +137,15 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     initialFetch();
 
     const handleDbChange = (payload: any) => {
-      console.log('Real-time change detected, refetching data:', payload);
+      // console.log('Real-time change detected, refetching data:', payload);
       fetchAllData();
     }
 
     const channel = supabase.channel('spiketime-db-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleDbChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, handleDbChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, handleDbChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleDbChange)
+      .on('postgres_changes', { event: '*', schema: 'public' }, handleDbChange)
       .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Subscribed to real-time channel!');
+          // console.log('Subscribed to real-time channel!');
         }
         if (status === 'CHANNEL_ERROR') {
           console.error('Real-time channel error:', err);
