@@ -28,6 +28,73 @@ interface SessionContextType {
 
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
+const fetchAllData = async (
+  setSessions: React.Dispatch<React.SetStateAction<Session[]>>,
+  setAnnouncements: React.Dispatch<React.SetStateAction<Announcement[]>>
+) => {
+  // 1. Fetch sessions
+  const { data: sessionData, error: sessionError } = await supabase
+    .from('sessions')
+    .select('*');
+
+  if (sessionError) {
+    console.error("Error fetching sessions:", sessionError);
+    setSessions([]);
+  } else {
+    const now = new Date();
+    const visibleSessions = sessionData.filter(session => {
+        const [endHours, endMinutes] = session.endTime.split(':').map(Number);
+        const sessionEndDateTime = getSafeDate(session.date);
+        sessionEndDateTime.setHours(endHours, endMinutes, 0, 0);
+        const oneHourAfterEnd = new Date(sessionEndDateTime.getTime() + 60 * 60 * 1000);
+        return now < oneHourAfterEnd;
+    });
+
+    if (visibleSessions.length > 0) {
+      const sessionIds = visibleSessions.map(s => s.id);
+
+      const { data: playersData, error: playersError } = await supabase
+        .from('session_players')
+        .select('session_id, profiles!inner(*)');
+      if (playersError) console.error("Error fetching session players:", playersError);
+
+      const { data: waitlistData, error: waitlistError } = await supabase
+        .from('session_waitlist')
+        .select('session_id, profiles!inner(*)');
+      if (waitlistError) console.error("Error fetching session waitlist:", waitlistError);
+      
+      const sessionsWithData: Session[] = visibleSessions.map((session: any) => ({
+        id: session.id,
+        date: session.date,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        location: session.location,
+        level: session.level,
+        maxPlayers: session.maxPlayers,
+        imageUrl: session.imageUrl,
+        momentImageUrl: session.momentImageUrl,
+        createdBy: session.createdBy,
+        players: playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) || [],
+        waitlist: waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) || [],
+        messages: [],
+      })).sort((a, b) => getSafeDate(`${a.date}T${a.startTime}`).getTime() - getSafeDate(`${b.date}T${b.startTime}`).getTime());
+      setSessions(sessionsWithData);
+    } else {
+      setSessions([]);
+    }
+  }
+  
+  // Fetch announcements
+  const { data: announcementData, error: announcementError } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
+  if(announcementError) {
+      console.error("Error fetching announcements:", announcementError);
+      setAnnouncements([]);
+  } else {
+      setAnnouncements(announcementData.map((a: any) => ({...a, date: getSafeDate(a.date)})));
+  }
+};
+
+
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
@@ -35,82 +102,27 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   
-  const fetchAllData = React.useCallback(async () => {
-    // 1. Fetch sessions
-    const { data: sessionData, error: sessionError } = await supabase
-      .from('sessions')
-      .select('*');
-
-    if (sessionError) {
-      console.error("Error fetching sessions:", sessionError);
-      setSessions([]);
-    } else {
-        const now = new Date();
-        const visibleSessions = sessionData.filter(session => {
-            const [endHours, endMinutes] = session.endTime.split(':').map(Number);
-            const sessionEndDateTime = getSafeDate(session.date);
-            sessionEndDateTime.setHours(endHours, endMinutes, 0, 0);
-            const oneHourAfterEnd = new Date(sessionEndDateTime.getTime() + 60 * 60 * 1000);
-            return now < oneHourAfterEnd;
-        });
-
-        if (visibleSessions.length > 0) {
-            const sessionIds = visibleSessions.map(s => s.id);
-
-            const { data: playersData, error: playersError } = await supabase
-                .from('session_players')
-                .select('session_id, profiles!inner(*)');
-
-            if (playersError) console.error("Error fetching session players:", playersError);
-
-            const { data: waitlistData, error: waitlistError } = await supabase
-                .from('session_waitlist')
-                .select('session_id, profiles!inner(*)');
-            if (waitlistError) console.error("Error fetching session waitlist:", waitlistError);
-            
-            const sessionsWithData: Session[] = visibleSessions.map((session: any) => ({
-              id: session.id,
-              date: session.date,
-              startTime: session.startTime,
-              endTime: session.endTime,
-              location: session.location,
-              level: session.level,
-              maxPlayers: session.maxPlayers,
-              imageUrl: session.imageUrl,
-              momentImageUrl: session.momentImageUrl,
-              createdBy: session.createdBy,
-              players: playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) || [],
-              waitlist: waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) || [],
-              messages: [],
-            })).sort((a, b) => getSafeDate(`${a.date}T${a.startTime}`).getTime() - getSafeDate(`${b.date}T${b.startTime}`).getTime());
-            setSessions(sessionsWithData);
-        } else {
-            setSessions([]);
-        }
-    }
-    
-    // Fetch announcements
-    const { data: announcementData, error: announcementError } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
-    if(announcementError) {
-        console.error("Error fetching announcements:", announcementError);
-        setAnnouncements([]);
-    } else {
-        setAnnouncements(announcementData.map((a: any) => ({...a, date: getSafeDate(a.date)})));
-    }
-  }, []);
-
-  // Effect for initial data load and real-time subscriptions
   React.useEffect(() => {
     if (currentUser) {
       setLoading(true);
-      fetchAllData().finally(() => setLoading(false));
+      fetchAllData(setSessions, setAnnouncements).finally(() => setLoading(false));
 
-      const channel = supabase.channel('public-db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public' }, 
-          (payload) => {
-              console.log('Realtime change received, refetching data:', payload);
-              fetchAllData();
-          }
+      const subscription = supabase.channel('public-db-changes')
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'sessions' }, 
+            () => fetchAllData(setSessions, setAnnouncements)
+        )
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'session_players' }, 
+            () => fetchAllData(setSessions, setAnnouncements)
+        )
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'session_waitlist' }, 
+            () => fetchAllData(setSessions, setAnnouncements)
+        )
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'announcements' }, 
+            () => fetchAllData(setSessions, setAnnouncements)
         )
         .subscribe((status, err) => {
           if (status === 'SUBSCRIBED') {
@@ -127,15 +139,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         });
         
         return () => {
-            console.log('Unsubscribing from real-time channel.');
-            supabase.removeChannel(channel);
+            supabase.removeChannel(subscription);
         };
     } else {
       setLoading(false);
       setSessions([]);
       setAnnouncements([]);
     }
-  }, [currentUser, fetchAllData, toast]);
+  }, [currentUser, toast]);
 
 
   const createSession = async (sessionData: any) => {
@@ -149,6 +160,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
+        fetchAllData(setSessions, setAnnouncements);
     }
   };
   
@@ -164,6 +176,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
         toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success", duration: 1500});
+        fetchAllData(setSessions, setAnnouncements);
      }
   };
   
@@ -175,6 +188,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
+        fetchAllData(setSessions, setAnnouncements);
     }
   };
   
@@ -187,12 +201,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     });
     
     if (error) {
-      console.error("Error booking session:", JSON.stringify(error, null, 2));
+      console.error("Error booking session:", error);
       toast({ title: "Booking Error", description: error.message, variant: 'destructive'});
       return false;
     }
     
-    await fetchAllData();
+    fetchAllData(setSessions, setAnnouncements);
     return true;
   };
   
@@ -209,7 +223,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
     
     await supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId });
-    await fetchAllData();
+    fetchAllData(setSessions, setAnnouncements);
     return true;
   };
 
@@ -226,7 +240,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
         return false;
     }
-    await fetchAllData();
+    fetchAllData(setSessions, setAnnouncements);
     return true;
   };
   
@@ -241,7 +255,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
         return false;
     }
-    await fetchAllData();
+    fetchAllData(setSessions, setAnnouncements);
     return true;
   };
 
@@ -256,6 +270,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
+        fetchAllData(setSessions, setAnnouncements);
     }
   };
 
@@ -267,6 +282,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
+        fetchAllData(setSessions, setAnnouncements);
     }
   };
 
@@ -277,6 +293,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
+       fetchAllData(setSessions, setAnnouncements);
     }
   };
   
@@ -313,5 +330,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
