@@ -15,6 +15,7 @@ import type { Session } from '@/lib/types';
 import Image from 'next/image';
 import { getSafeDate, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import placeholderImages from '@/lib/placeholder-images.json';
 
 interface MemoriesByMonth {
   [monthYear: string]: Session[];
@@ -22,18 +23,23 @@ interface MemoriesByMonth {
 
 const PolaroidCard = ({ session, index, t, locale }: { session: Session; index: number; t: (key: string) => string; locale: 'en' | 'es' }) => {
     const rotationClass = `polaroid-${(index % 6) + 1}`;
+    const placeholder = React.useMemo(() => {
+        const hash = session.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return placeholderImages.sessionMoments[hash % placeholderImages.sessionMoments.length];
+    }, [session.id]);
     
     return (
         <div className={cn("polaroid", rotationClass)}>
             <div className="tape" style={{top: '-10px', left: `calc(50% - 48px)`, transform: `rotate(${(Math.random() - 0.5) * 20}deg)` }}></div>
             <div className="relative aspect-square w-full bg-gray-200">
                  <Image 
-                    src={session.momentImageUrl!} 
+                    src={session.momentImageUrl || placeholder.url} 
                     alt={`Moment from ${session.level} session on ${getSafeDate(session.date).toLocaleDateString()}`}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     style={{ objectFit: 'cover' }}
                     className="group-hover:brightness-105 transition-all"
+                    data-ai-hint={placeholder.hint}
                 />
             </div>
              <div className="absolute bottom-4 left-4 right-4 text-center">
@@ -52,32 +58,24 @@ const MemoriesPage: NextPage = () => {
   const [currentMonthIndex, setCurrentMonthIndex] = React.useState(0);
 
   const memoriesByMonth = React.useMemo(() => {
-    const moments = sessions.filter(s => s.momentImageUrl);
+    let moments = sessions.filter(s => s.momentImageUrl);
     
-    if (moments.length === 0) {
+    // If there are no real moments, create sample data for demonstration
+    if (moments.length === 0 && !loading) {
         const sampleDate = new Date();
-        const sampleMoments = [
-            { id: 'sample-1', level: 'Intermediate', location: 'The Rec Hall', seed: 101 },
-            { id: 'sample-2', level: 'Advanced', location: 'Main Gym', seed: 102 },
-            { id: 'sample-3', level: 'Beginner', location: 'South Court', seed: 103 },
-            { id: 'sample-4', level: 'Intermediate', location: 'The Rec Hall', seed: 104 },
-        ];
-        
-        sampleMoments.forEach(moment => {
-            moments.push({
-                id: moment.id,
-                date: sampleDate.toISOString(),
-                startTime: '18:00',
-                endTime: '20:00',
-                location: moment.location,
-                level: moment.level as 'Beginner' | 'Intermediate' | 'Advanced',
-                maxPlayers: 12,
-                players: [],
-                waitlist: [],
-                messages: [],
-                momentImageUrl: `https://picsum.photos/seed/${moment.seed}/600/600`
-            })
-        });
+        moments = placeholderImages.sessionMoments.slice(0, 4).map((img, index) => ({
+            id: `sample-moment-${index}`,
+            date: sampleDate.toISOString(),
+            startTime: '18:00',
+            endTime: '20:00',
+            location: 'The Rec Hall',
+            level: 'Intermediate',
+            maxPlayers: 12,
+            players: [],
+            waitlist: [],
+            messages: [],
+            momentImageUrl: img.url
+        }));
     }
 
     const groupedByMonth = moments.reduce((acc: MemoriesByMonth, session) => {
@@ -92,19 +90,22 @@ const MemoriesPage: NextPage = () => {
     }, {});
     
     return groupedByMonth;
-  }, [sessions, locale]);
+  }, [sessions, locale, loading]);
   
   const sortedMonths = React.useMemo(() => {
     return Object.keys(memoriesByMonth).sort((a, b) => {
-        const dateA = new Date(a);
-        const dateB = new Date(b);
+        // Create date objects ensuring they are parsed correctly, assuming "Month Year" format
+        const dateA = new Date(`1 ${a}`);
+        const dateB = new Date(`1 ${b}`);
         return dateB.getTime() - dateA.getTime();
     });
   }, [memoriesByMonth]);
 
+
   React.useEffect(() => {
-    // Reset to the first month whenever the data changes
-    setCurrentMonthIndex(0);
+    if (sortedMonths.length > 0) {
+        setCurrentMonthIndex(0);
+    }
   }, [sortedMonths.length]);
   
   if (loading) {
@@ -180,4 +181,3 @@ const MemoriesPage: NextPage = () => {
 };
 
 export default MemoriesPage;
-

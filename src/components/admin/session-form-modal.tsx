@@ -28,6 +28,7 @@ import {
 import type { Session, SkillLevel } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
 import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
+import placeholderImages from '@/lib/placeholder-images.json';
 
 type FormData = {
   date: string;
@@ -98,6 +99,10 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
         if (session) {
             dataToSave.id = session.id;
         }
+        if (!dataToSave.imageUrl) {
+            const randomIndex = Math.floor(Math.random() * placeholderImages.sessionCovers.length);
+            dataToSave.imageUrl = placeholderImages.sessionCovers[randomIndex].url;
+        }
         onSave(dataToSave);
     }
     
@@ -130,7 +135,7 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
                 </div>
                  <div className="col-span-2 space-y-2">
                     <Label htmlFor="imageUrl" className="text-brown font-semibold">{t('modals.sessionForm.coverImageUrl')}</Label>
-                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://picsum.photos/seed/1/400/300" className="bg-cream border-brown-light focus:border-brown"/>
+                    <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="Optional, otherwise random image is used" className="bg-cream border-brown-light focus:border-brown"/>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="level" className="text-brown font-semibold">{t('modals.sessionForm.level')}</Label>
