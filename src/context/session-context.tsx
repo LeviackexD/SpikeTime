@@ -36,6 +36,15 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchAllData = React.useCallback(async () => {
+    if (!currentUser) {
+        setLoading(false);
+        setSessions([]);
+        setAnnouncements([]);
+        return;
+    };
+    
+    setLoading(true);
+    
     // 1. Fetch sessions
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
@@ -96,33 +105,54 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     } else {
         setAnnouncements(announcementData.map((a: any) => ({...a, date: getSafeDate(a.date)})));
     }
-  }, []);
+    
+    setLoading(false);
+  }, [currentUser]);
   
   React.useEffect(() => {
+    // Initial fetch when user logs in
     if (currentUser) {
-      setLoading(true);
-      fetchAllData().finally(() => setLoading(false));
+      fetchAllData();
+    } else {
+      // Clear data when user logs out
+      setSessions([]);
+      setAnnouncements([]);
+      setLoading(false);
+    }
 
-      const subscription = supabase.channel('public-db-changes')
+    // Set up real-time subscriptions
+    const subscription = supabase.channel('public-db-changes')
         .on('postgres_changes', 
             { event: '*', schema: 'public', table: 'sessions' }, 
-            () => fetchAllData()
+            (payload) => {
+              console.log('Realtime change detected in sessions', payload);
+              fetchAllData();
+            }
         )
         .on('postgres_changes', 
             { event: '*', schema: 'public', table: 'session_players' }, 
-            () => fetchAllData()
+             (payload) => {
+              console.log('Realtime change detected in session_players', payload);
+              fetchAllData();
+            }
         )
         .on('postgres_changes', 
             { event: '*', schema: 'public', table: 'session_waitlist' }, 
-            () => fetchAllData()
+             (payload) => {
+              console.log('Realtime change detected in session_waitlist', payload);
+              fetchAllData();
+            }
         )
         .on('postgres_changes', 
             { event: '*', schema: 'public', table: 'announcements' }, 
-            () => fetchAllData()
+             (payload) => {
+              console.log('Realtime change detected in announcements', payload);
+              fetchAllData();
+            }
         )
         .subscribe((status, err) => {
           if (status === 'SUBSCRIBED') {
-            // console.log('Real-time channel subscribed successfully.');
+            console.log('Real-time channel subscribed successfully.');
           }
           if (status === 'CHANNEL_ERROR') {
             console.error('Real-time channel subscription error:', err);
@@ -137,11 +167,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         return () => {
             supabase.removeChannel(subscription);
         };
-    } else {
-      setLoading(false);
-      setSessions([]);
-      setAnnouncements([]);
-    }
   }, [currentUser, fetchAllData, toast]);
 
 
@@ -211,8 +236,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     
     try {
       // First, remove from waitlist (if exists)
-      await supabase.from('session_waitlist').delete()
+      const { error: waitlistError } = await supabase.from('session_waitlist').delete()
         .match({ session_id: sessionId, user_id: currentUser.id });
+        
+      if(waitlistError) console.warn("Could not remove from waitlist (may not have been on it):", waitlistError.message);
 
       // Then, insert into players
       const { error: bookError } = await supabase.from('session_players').insert({
@@ -220,10 +247,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         user_id: currentUser.id
       });
       
-      if (bookError) throw bookError; // Throw to be caught by the catch block
+      if (bookError) throw bookError;
 
-      // No need to fetchAllData here, optimistic update is enough for current user
-      // and realtime will update for others.
       return true;
 
     } catch (error: any) {
@@ -261,7 +286,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     
     // After a successful cancellation, trigger RPC to promote from waitlist.
     // We don't need to await this or handle its result in the UI.
-    supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId }).then();
+    supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId }).then(({error}) => {
+        if(error) console.error("Error promoting from waitlist:", error);
+    });
     
     return true;
   };
@@ -391,5 +418,7 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
 
     
