@@ -99,48 +99,42 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, []);
 
-  // Effect for initial data load
+  // Effect for initial data load and real-time subscriptions
   React.useEffect(() => {
     if (currentUser) {
       setLoading(true);
       fetchAllData().finally(() => setLoading(false));
+
+      const channel = supabase.channel('public-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public' }, 
+          (payload) => {
+              console.log('Realtime change received, refetching data:', payload);
+              fetchAllData();
+          }
+        )
+        .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Real-time channel subscribed successfully.');
+          }
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Real-time channel subscription error:', err);
+            toast({
+              title: "Real-time connection error",
+              description: "Could not connect to live updates. Please refresh the page.",
+              variant: "destructive",
+            });
+          }
+        });
+        
+        return () => {
+            console.log('Unsubscribing from real-time channel.');
+            supabase.removeChannel(channel);
+        };
     } else {
       setLoading(false);
       setSessions([]);
       setAnnouncements([]);
     }
-  }, [currentUser, fetchAllData]);
-  
-  // Effect for Real-time subscriptions
-  React.useEffect(() => {
-    if (!currentUser) return;
-
-    const channel = supabase.channel('public-db-changes')
-      .on('postgres_changes', { event: '*', schema: 'public' }, 
-        (payload) => {
-            console.log('Realtime change received, refetching data:', payload);
-            fetchAllData();
-        }
-      )
-      .subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Real-time channel subscribed successfully.');
-        }
-        if (status === 'CHANNEL_ERROR') {
-          console.error('Real-time channel subscription error:', err);
-          toast({
-            title: "Real-time connection error",
-            description: "Could not connect to live updates. Please refresh the page.",
-            variant: "destructive",
-          });
-        }
-      });
-      
-      return () => {
-          console.log('Unsubscribing from real-time channel.');
-          supabase.removeChannel(channel);
-      };
-
   }, [currentUser, fetchAllData, toast]);
 
 
@@ -193,7 +187,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     });
     
     if (error) {
-      console.error("Error booking session:", error);
+      console.error("Error booking session:", JSON.stringify(error, null, 2));
       toast({ title: "Booking Error", description: error.message, variant: 'destructive'});
       return false;
     }
