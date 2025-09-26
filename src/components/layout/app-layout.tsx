@@ -47,6 +47,7 @@ import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from 'next-themes';
 
 // --- NAVIGATION ---
 const getNavItems = (t: (key: string) => string) => [
@@ -65,6 +66,10 @@ const getNavItems = (t: (key: string) => string) => [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => setMounted(true), []);
 
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
@@ -75,6 +80,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   // The loading screen is now handled entirely inside AuthProvider
   if (loading || !user) {
     return null;
+  }
+
+  if (!mounted) {
+    // Return null or a simple loader to prevent FOUC, but null is fine for a quick flash.
+    return null; 
   }
 
   const isDashboard = pathname === '/';
@@ -88,7 +98,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className={cn("min-h-screen w-full flex flex-col", {
       'cork-texture': hasCorkBg,
       'bg-app-background': !hasCorkBg
-      })}>
+      })} data-theme={resolvedTheme}>
       <AppHeader />
       <main className={cn("flex-1", {
           "p-4 sm:p-6 lg:p-8": !isMemoriesPage,
