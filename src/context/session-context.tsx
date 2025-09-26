@@ -38,8 +38,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const fetchAllData = React.useCallback(async () => {
     if (!currentUser) {
         setLoading(false);
-        setSessions([]);
-        setAnnouncements([]);
         return;
     };
     
@@ -94,12 +92,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     } catch (error: any) {
         console.error("Error fetching all data:", error);
         toast({ title: "Error", description: "Could not load data from the server.", variant: "destructive" });
-        setSessions([]);
-        setAnnouncements([]);
     } finally {
         setLoading(false);
     }
-
   }, [currentUser, toast]);
   
   React.useEffect(() => {
@@ -115,35 +110,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   React.useEffect(() => {
      if (!currentUser) return;
 
+    const handleRealtimeUpdate = (payload: any) => {
+        console.log('Real-time change detected', payload);
+        fetchAllData();
+    };
+
     const channel = supabase.channel('public-db-changes')
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'sessions' }, 
-            (payload) => {
-              console.log('Realtime change detected on sessions', payload);
-              fetchAllData();
-            }
-        )
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'session_players' }, 
-            (payload) => {
-              console.log('Realtime change detected on session_players', payload);
-              fetchAllData();
-            }
-        )
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'session_waitlist' }, 
-            (payload) => {
-              console.log('Realtime change detected on session_waitlist', payload);
-              fetchAllData();
-            }
-        )
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'announcements' }, 
-            (payload) => {
-              console.log('Realtime change detected on announcements', payload);
-              fetchAllData();
-            }
-        )
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleRealtimeUpdate)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players' }, handleRealtimeUpdate)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, handleRealtimeUpdate)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleRealtimeUpdate)
         .subscribe((status, err) => {
           if (status === 'SUBSCRIBED') {
             console.log('Real-time channel subscribed successfully.');
@@ -207,23 +183,64 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
-    const { error } = await supabase.rpc('book_session_and_leave_waitlist', {
-      p_session_id: sessionId,
-      p_user_id: currentUser.id
+    // --- Start optimistic update ---
+    const originalSessions = sessions;
+    const newSessions = sessions.map(s => {
+        if (s.id === sessionId) {
+            // Remove from waitlist if present
+            const newWaitlist = s.waitlist.filter(p => p.id !== currentUser.id);
+            // Add to players list
+            const newPlayers = [...s.players, currentUser];
+            return { ...s, players: newPlayers, waitlist: newWaitlist };
+        }
+        return s;
     });
+    setSessions(newSessions);
+    // --- End optimistic update ---
     
-    if (error) {
-      console.error("Error booking session:", JSON.stringify(error, null, 2));
-      toast({ title: "Booking Error", description: error.message || "Could not book your spot. The session might be full or an error occurred.", variant: 'destructive'});
-      return false;
-    }
+    try {
+        // Step 1: Leave waitlist (if on it)
+        const { error: waitlistError } = await supabase.from('session_waitlist').delete()
+            .match({ session_id: sessionId, user_id: currentUser.id });
+        
+        if (waitlistError) console.warn("Could not leave waitlist, might not have been on it.", waitlistError);
+        
+        // Step 2: Book the session
+        const { error: bookingError } = await supabase.from('session_players').insert({
+            session_id: sessionId,
+            user_id: currentUser.id
+        });
 
-    await fetchAllData();
-    return true;
+        if (bookingError) {
+          throw bookingError;
+        }
+
+        return true;
+    } catch (error: any) {
+        console.error("Error booking session:", JSON.stringify(error, null, 2));
+        toast({ title: "Booking Error", description: error.message || "Could not book your spot. The session might be full or an error occurred.", variant: 'destructive'});
+        
+        // Revert on error
+        setSessions(originalSessions);
+        
+        return false;
+    }
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+
+    // --- Start optimistic update ---
+    const originalSessions = sessions;
+    const newSessions = sessions.map(s => {
+        if (s.id === sessionId) {
+            const newPlayers = s.players.filter(p => p.id !== currentUser.id);
+            return { ...s, players: newPlayers };
+        }
+        return s;
+    });
+    setSessions(newSessions);
+    // --- End optimistic update ---
     
     const { error } = await supabase.from('session_players').delete()
         .match({ session_id: sessionId, user_id: currentUser.id });
@@ -231,6 +248,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error canceling booking:", error);
         toast({ title: "Cancellation Error", description: error.message, variant: 'destructive'});
+        setSessions(originalSessions); // Revert
         return false;
     }
     
@@ -240,12 +258,23 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         if(error) console.error("Error promoting from waitlist:", JSON.stringify(error, null, 2));
     });
     
-    await fetchAllData();
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
+
+     // --- Start optimistic update ---
+    const originalSessions = sessions;
+    const newSessions = sessions.map(s => {
+        if (s.id === sessionId) {
+            const newWaitlist = [...s.waitlist, currentUser];
+            return { ...s, waitlist: newWaitlist };
+        }
+        return s;
+    });
+    setSessions(newSessions);
+    // --- End optimistic update ---
     
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
@@ -255,14 +284,26 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
+        setSessions(originalSessions); // Revert
         return false;
     }
-    await fetchAllData();
     return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
+
+     // --- Start optimistic update ---
+    const originalSessions = sessions;
+    const newSessions = sessions.map(s => {
+        if (s.id === sessionId) {
+            const newWaitlist = s.waitlist.filter(p => p.id !== currentUser.id);
+            return { ...s, waitlist: newWaitlist };
+        }
+        return s;
+    });
+    setSessions(newSessions);
+    // --- End optimistic update ---
      
      const { error } = await supabase.from('session_waitlist').delete()
         .match({ session_id: sessionId, user_id: currentUser.id });
@@ -270,9 +311,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
+        setSessions(originalSessions); // Revert
         return false;
     }
-    await fetchAllData();
     return true;
   };
 
@@ -344,3 +385,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
