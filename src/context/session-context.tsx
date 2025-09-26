@@ -287,7 +287,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     // After a successful cancellation, trigger RPC to promote from waitlist.
     // We don't need to await this or handle its result in the UI.
     supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId }).then(({error}) => {
-        if(error) console.error("Error promoting from waitlist:", error);
+        if(error) console.error("Error promoting from waitlist:", JSON.stringify(error, null, 2));
     });
     
     return true;
@@ -422,3 +422,4 @@ export const useSessions = () => {
     
 
     
+
