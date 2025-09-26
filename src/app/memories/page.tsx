@@ -31,7 +31,7 @@ const PolaroidCard = ({ session, index, t, locale }: { session: Session; index: 
                     src={session.momentImageUrl!} 
                     alt={`Moment from ${session.level} session on ${getSafeDate(session.date).toLocaleDateString()}`}
                     fill
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     style={{ objectFit: 'cover' }}
                     className="group-hover:brightness-105 transition-all"
                 />
@@ -128,8 +128,8 @@ const MemoriesPage: NextPage = () => {
 
 
   return (
-    <div className="w-full min-h-full -m-8 p-8 photo-album-bg">
-        <div className="max-w-7xl mx-auto space-y-12">
+    <div className="w-full min-h-full -m-4 sm:-m-8 p-4 sm:p-8 photo-album-bg">
+        <div className="max-w-7xl mx-auto space-y-8 sm:space-y-12">
             <div className="text-center pt-8 pb-4">
                 <h1 className="text-5xl font-bold font-handwriting text-brown-dark flex items-center justify-center gap-4">
                     <BookHeart className="h-12 w-12 text-brown" />
@@ -142,18 +142,18 @@ const MemoriesPage: NextPage = () => {
 
             {hasMemories && currentMonth ? (
                 <div className="space-y-8">
-                    <div className="flex items-center justify-center gap-4">
-                         <Button onClick={handlePrevMonth} disabled={currentMonthIndex >= sortedMonths.length - 1} variant="outline" className="bg-cream/50">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <Button onClick={handlePrevMonth} disabled={currentMonthIndex >= sortedMonths.length - 1} variant="outline" className="bg-cream/50 order-2 sm:order-1">
                             <ArrowLeft className="h-4 w-4 mr-2"/> {t('memoriesPage.prevMonth')}
-                         </Button>
-                        <h2 className="font-handwriting text-4xl font-bold text-brown-dark text-center whitespace-nowrap">
+                        </Button>
+                        <h2 className="font-handwriting text-4xl font-bold text-brown-dark text-center whitespace-nowrap order-1 sm:order-2">
                             {currentMonth}
                         </h2>
-                         <Button onClick={handleNextMonth} disabled={currentMonthIndex <= 0} variant="outline" className="bg-cream/50">
+                        <Button onClick={handleNextMonth} disabled={currentMonthIndex <= 0} variant="outline" className="bg-cream/50 order-3 sm:order-3">
                             {t('memoriesPage.nextMonth')} <ArrowRight className="h-4 w-4 ml-2"/>
-                         </Button>
+                        </Button>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-16">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-x-8 sm:gap-y-16">
                         {memoriesByMonth[currentMonth].map((session, index) => (
                             <PolaroidCard
                                 key={session.id}
@@ -178,3 +178,5 @@ const MemoriesPage: NextPage = () => {
 };
 
 export default MemoriesPage;
+
+    
