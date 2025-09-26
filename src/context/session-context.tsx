@@ -45,37 +45,33 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     
     setLoading(true);
     
-    // 1. Fetch sessions
-    const { data: sessionData, error: sessionError } = await supabase
-      .from('sessions')
-      .select('*');
+    try {
+        const [
+            { data: sessionData, error: sessionError },
+            { data: playersData, error: playersError },
+            { data: waitlistData, error: waitlistError },
+            { data: announcementData, error: announcementError }
+        ] = await Promise.all([
+            supabase.from('sessions').select('*').order('date', { ascending: true }).order('startTime', { ascending: true }),
+            supabase.from('session_players').select('session_id, profiles!inner(*)'),
+            supabase.from('session_waitlist').select('session_id, profiles!inner(*)'),
+            supabase.from('announcements').select('*').order('created_at', { ascending: false })
+        ]);
 
-    if (sessionError) {
-      console.error("Error fetching sessions:", sessionError);
-      setSessions([]);
-    } else {
-      const now = new Date();
-      const visibleSessions = sessionData.filter(session => {
-          const [endHours, endMinutes] = session.endTime.split(':').map(Number);
-          const sessionEndDateTime = getSafeDate(session.date);
-          sessionEndDateTime.setHours(endHours, endMinutes, 0, 0);
-          const oneHourAfterEnd = new Date(sessionEndDateTime.getTime() + 60 * 60 * 1000);
-          return now < oneHourAfterEnd;
-      });
-
-      if (visibleSessions.length > 0) {
-        const sessionIds = visibleSessions.map(s => s.id);
-
-        const { data: playersData, error: playersError } = await supabase
-          .from('session_players')
-          .select('session_id, profiles!inner(*)');
-        if (playersError) console.error("Error fetching session players:", playersError);
-
-        const { data: waitlistData, error: waitlistError } = await supabase
-          .from('session_waitlist')
-          .select('session_id, profiles!inner(*)');
-        if (waitlistError) console.error("Error fetching session waitlist:", waitlistError);
+        if (sessionError) throw sessionError;
+        if (playersError) throw playersError;
+        if (waitlistError) throw waitlistError;
+        if (announcementError) throw announcementError;
         
+        const now = new Date();
+        const visibleSessions = sessionData.filter(session => {
+            const [endHours, endMinutes] = session.endTime.split(':').map(Number);
+            const sessionEndDateTime = getSafeDate(session.date);
+            sessionEndDateTime.setHours(endHours, endMinutes, 0, 0);
+            const oneHourAfterEnd = new Date(sessionEndDateTime.getTime() + 60 * 60 * 1000);
+            return now < oneHourAfterEnd;
+        });
+
         const sessionsWithData: Session[] = visibleSessions.map((session: any) => ({
           id: session.id,
           date: session.date,
@@ -90,63 +86,40 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
           players: playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) || [],
           waitlist: waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) || [],
           messages: [],
-        })).sort((a, b) => getSafeDate(`${a.date}T${a.startTime}`).getTime() - getSafeDate(`${b.date}T${b.startTime}`).getTime());
+        }));
+        
         setSessions(sessionsWithData);
-      } else {
-        setSessions([]);
-      }
-    }
-    
-    // Fetch announcements
-    const { data: announcementData, error: announcementError } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
-    if(announcementError) {
-        console.error("Error fetching announcements:", announcementError);
-        setAnnouncements([]);
-    } else {
         setAnnouncements(announcementData.map((a: any) => ({...a, date: getSafeDate(a.date)})));
-    }
     
-    setLoading(false);
-  }, [currentUser]);
+    } catch (error: any) {
+        console.error("Error fetching all data:", error);
+        toast({ title: "Error", description: "Could not load data from the server.", variant: "destructive" });
+        setSessions([]);
+        setAnnouncements([]);
+    } finally {
+        setLoading(false);
+    }
+
+  }, [currentUser, toast]);
   
   React.useEffect(() => {
-    // Initial fetch when user logs in
     if (currentUser) {
       fetchAllData();
     } else {
-      // Clear data when user logs out
       setSessions([]);
       setAnnouncements([]);
       setLoading(false);
     }
+  }, [currentUser, fetchAllData]);
+  
+  React.useEffect(() => {
+     if (!currentUser) return;
 
-    // Set up real-time subscriptions
-    const subscription = supabase.channel('public-db-changes')
+    const channel = supabase.channel('public-db-changes')
         .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'sessions' }, 
+            { event: '*', schema: 'public' }, 
             (payload) => {
-              console.log('Realtime change detected in sessions', payload);
-              fetchAllData();
-            }
-        )
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'session_players' }, 
-             (payload) => {
-              console.log('Realtime change detected in session_players', payload);
-              fetchAllData();
-            }
-        )
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'session_waitlist' }, 
-             (payload) => {
-              console.log('Realtime change detected in session_waitlist', payload);
-              fetchAllData();
-            }
-        )
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'announcements' }, 
-             (payload) => {
-              console.log('Realtime change detected in announcements', payload);
+              console.log('Realtime change detected', payload);
               fetchAllData();
             }
         )
@@ -155,7 +128,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             console.log('Real-time channel subscribed successfully.');
           }
           if (status === 'CHANNEL_ERROR') {
-            console.error('Real-time channel subscription error:', err);
+            console.error('Real-time channel subscription error:', JSON.stringify(err, null, 2));
             toast({
               title: "Real-time connection error",
               description: "Could not connect to live updates. Please refresh the page.",
@@ -165,7 +138,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         });
         
         return () => {
-            supabase.removeChannel(subscription);
+            supabase.removeChannel(channel);
         };
   }, [currentUser, fetchAllData, toast]);
 
@@ -215,47 +188,32 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-
-    const originalSessions = sessions;
-    const sessionToUpdate = originalSessions.find(s => s.id === sessionId);
-    
-    if (!sessionToUpdate) return false;
-
-    // Optimistic UI update
-    const updatedSessions = originalSessions.map(s => {
-      if (s.id === sessionId) {
-        return {
-          ...s,
-          players: [...s.players, currentUser],
-          waitlist: s.waitlist.filter(p => p.id !== currentUser.id)
-        };
-      }
-      return s;
-    });
-    setSessions(updatedSessions);
     
     try {
-      // First, remove from waitlist (if exists)
+      // First, attempt to remove the user from the waitlist for that session.
+      // This won't error if they aren't on it, which is the desired behavior.
       const { error: waitlistError } = await supabase.from('session_waitlist').delete()
         .match({ session_id: sessionId, user_id: currentUser.id });
         
-      if(waitlistError) console.warn("Could not remove from waitlist (may not have been on it):", waitlistError.message);
+      if(waitlistError) {
+          console.warn("Error removing from waitlist (this might be ok):", waitlistError);
+      }
 
-      // Then, insert into players
+      // Then, insert the user into the players list. This is the main action.
+      // Supabase RLS will prevent this if the session is full.
       const { error: bookError } = await supabase.from('session_players').insert({
         session_id: sessionId,
         user_id: currentUser.id
       });
       
-      if (bookError) throw bookError;
+      if (bookError) throw bookError; // If this fails, the booking fails.
 
+      await fetchAllData();
       return true;
 
     } catch (error: any) {
         console.error("Error booking session:", JSON.stringify(error, null, 2));
-        toast({ title: "Booking Error", description: error.message || "Could not book your spot.", variant: 'destructive'});
-        // Revert UI on error
-        setSessions(originalSessions);
+        toast({ title: "Booking Error", description: error.message || "Could not book your spot. The session might be full or an error occurred.", variant: 'destructive'});
         return false;
     }
   };
@@ -263,24 +221,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
-    const originalSessions = sessions;
-    
-    // Optimistic UI update
-    setSessions(prevSessions =>
-      prevSessions.map(s =>
-        s.id === sessionId
-          ? { ...s, players: s.players.filter(p => p.id !== currentUser.id) }
-          : s
-      )
-    );
-
     const { error } = await supabase.from('session_players').delete()
         .match({ session_id: sessionId, user_id: currentUser.id });
 
     if (error) {
         console.error("Error canceling booking:", error);
         toast({ title: "Cancellation Error", description: error.message, variant: 'destructive'});
-        setSessions(originalSessions); // Revert on error
         return false;
     }
     
@@ -290,23 +236,13 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         if(error) console.error("Error promoting from waitlist:", JSON.stringify(error, null, 2));
     });
     
+    await fetchAllData();
     return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
-    const originalSessions = sessions;
-    
-    // Optimistic UI update
-    setSessions(prevSessions =>
-        prevSessions.map(s =>
-            s.id === sessionId
-            ? { ...s, waitlist: [...s.waitlist, currentUser] }
-            : s
-        )
-    );
-
     const { error } = await supabase.from('session_waitlist').insert({
         session_id: sessionId,
         user_id: currentUser.id
@@ -315,35 +251,24 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (error) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
-        setSessions(originalSessions); // Revert on error
         return false;
     }
+    await fetchAllData();
     return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
      
-     const originalSessions = sessions;
-
-     // Optimistic UI update
-     setSessions(prevSessions =>
-        prevSessions.map(s =>
-            s.id === sessionId
-            ? { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) }
-            : s
-        )
-     );
-
      const { error } = await supabase.from('session_waitlist').delete()
         .match({ session_id: sessionId, user_id: currentUser.id });
 
      if (error) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
-        setSessions(originalSessions); // Revert on error
         return false;
     }
+    await fetchAllData();
     return true;
   };
 
@@ -422,4 +347,5 @@ export const useSessions = () => {
     
 
     
+
 
