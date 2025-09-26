@@ -32,7 +32,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSessions } from '@/context/session-context';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
-import type { Session, Announcement } from '@/lib/types';
+import type { Announcement, Session } from '@/lib/types';
 import { cn, formatTime, getSafeDate } from '@/lib/utils';
 import PlayerAvatar from '@/components/sessions/player-avatar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -148,7 +148,7 @@ const AnnouncementCards = ({
   handleEditAnnouncement: (announcement: Announcement) => void;
   handleDeleteAnnouncementClick: (announcement: Announcement) => void;
   t: (key: string) => string;
-  locale: string;
+  locale: 'en' | 'es';
 }) => (
   <div className="space-y-4">
     {announcements.map((ann, index) => {
@@ -507,3 +507,5 @@ export default function AdminPageComponent() {
     </>
   );
 }
+
+    
