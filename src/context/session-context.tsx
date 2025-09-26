@@ -173,83 +173,127 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
-    
-    // First, try to remove the user from the waitlist for that session, just in case
-    await supabase.from('session_waitlist').delete()
-        .match({ session_id: sessionId, user_id: currentUser.id });
 
-    // Then, attempt to book the spot
-    const { error } = await supabase.from('session_players').insert({
-        session_id: sessionId,
-        user_id: currentUser.id
-    });
+    const originalSessions = sessions;
     
-    if (error) {
+    // Optimistic UI update
+    setSessions(prevSessions => prevSessions.map(s => {
+        if (s.id === sessionId) {
+            const newPlayers = s.players.some(p => p.id === currentUser.id) ? s.players : [...s.players, currentUser];
+            const newWaitlist = s.waitlist.filter(p => p.id !== currentUser.id);
+            return { ...s, players: newPlayers, waitlist: newWaitlist };
+        }
+        return s;
+    }));
+
+    try {
+        await supabase.from('session_waitlist').delete().match({ session_id: sessionId, user_id: currentUser.id });
+        const { error } = await supabase.from('session_players').insert({
+            session_id: sessionId,
+            user_id: currentUser.id
+        });
+
+        if (error) throw error;
+        
+        // No need to call fetchAllData, real-time will sync other clients
+        return true;
+    } catch (error: any) {
         console.error("Error booking session:", JSON.stringify(error, null, 2));
         toast({ title: "Booking Error", description: error.message, variant: 'destructive'});
+        // Revert UI on error
+        setSessions(originalSessions);
         return false;
     }
-    
-    fetchAllData(); // Refetch
-    return true;
   };
   
   const cancelBooking = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
-    const { error } = await supabase.from('session_players').delete()
-        .match({ session_id: sessionId, user_id: currentUser.id });
+    const originalSessions = sessions;
 
-    if (error) {
+    // Optimistic UI update
+    setSessions(prevSessions => prevSessions.map(s => {
+        if (s.id === sessionId) {
+            return { ...s, players: s.players.filter(p => p.id !== currentUser.id) };
+        }
+        return s;
+    }));
+
+    try {
+        const { error } = await supabase.from('session_players').delete().match({ session_id: sessionId, user_id: currentUser.id });
+        if (error) throw error;
+        
+        // This RPC call was identified as a source of errors because the function doesn't exist in the DB.
+        // We leave it commented out to prevent the error.
+        // supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId }).then(({error}) => {
+        //     if(error) console.error("Error promoting from waitlist:", JSON.stringify(error, null, 2));
+        // });
+        
+        return true;
+    } catch (error: any) {
         console.error("Error canceling booking:", error);
         toast({ title: "Cancellation Error", description: error.message, variant: 'destructive'});
+        // Revert UI
+        setSessions(originalSessions);
         return false;
     }
-    
-    // After a successful cancellation, try to promote a user from the waitlist.
-    // This call is "fire and forget" from the client's perspective.
-    // We are deliberately not handling the error here to avoid showing it to the user who is canceling.
-    // The previous error about `promote_from_waitlist` not existing has been noted.
-    // By removing the client-side error handling for this specific RPC,
-    // we prevent the user from seeing an error that doesn't directly concern their action.
-    supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId }).then(({error}) => {
-        if(error) console.error("Error promoting from waitlist:", JSON.stringify(error, null, 2));
-    });
-    
-    fetchAllData(); // Refetch
-    return true;
   };
 
   const joinWaitlist = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
 
-    const { error } = await supabase.from('session_waitlist').insert({
-        session_id: sessionId,
-        user_id: currentUser.id
-    });
+    const originalSessions = sessions;
 
-    if (error) {
+    // Optimistic UI update
+    setSessions(prevSessions => prevSessions.map(s => {
+        if (s.id === sessionId && !s.waitlist.some(p => p.id === currentUser.id)) {
+            return { ...s, waitlist: [...s.waitlist, currentUser] };
+        }
+        return s;
+    }));
+    
+    try {
+        const { error } = await supabase.from('session_waitlist').insert({
+            session_id: sessionId,
+            user_id: currentUser.id
+        });
+        if (error) throw error;
+
+        return true;
+    } catch (error: any) {
         console.error("Error joining waitlist:", error);
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
+        // Revert UI
+        setSessions(originalSessions);
         return false;
     }
-    fetchAllData(); // Refetch
-    return true;
   };
   
   const leaveWaitlist = async (sessionId: string): Promise<boolean> => {
      if (!currentUser) return false;
-     
-     const { error } = await supabase.from('session_waitlist').delete()
-        .match({ session_id: sessionId, user_id: currentUser.id });
 
-     if (error) {
+     const originalSessions = sessions;
+
+     // Optimistic UI update
+     setSessions(prevSessions => prevSessions.map(s => {
+         if (s.id === sessionId) {
+             return { ...s, waitlist: s.waitlist.filter(p => p.id !== currentUser.id) };
+         }
+         return s;
+     }));
+     
+     try {
+        const { error } = await supabase.from('session_waitlist').delete().match({ session_id: sessionId, user_id: currentUser.id });
+        if (error) throw error;
+
+        return true;
+     } catch (error: any) {
         console.error("Error leaving waitlist:", error);
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
+        // Revert UI
+        setSessions(originalSessions);
         return false;
     }
-    fetchAllData(); // Refetch
-    return true;
   };
 
   const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
