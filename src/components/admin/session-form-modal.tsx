@@ -28,7 +28,6 @@ import {
 import type { Session, SkillLevel } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
 import { getSafeDate, toYYYYMMDD } from '@/lib/utils';
-import placeholderImages from '@/lib/placeholder-images.json';
 
 type FormData = {
   date: string;
@@ -100,8 +99,8 @@ export default function SessionFormModal({ isOpen, onClose, onSave, session }: S
             dataToSave.id = session.id;
         }
         if (!dataToSave.imageUrl) {
-            const randomIndex = Math.floor(Math.random() * placeholderImages.sessionCovers.length);
-            dataToSave.imageUrl = placeholderImages.sessionCovers[randomIndex].url;
+            const randomId = Math.floor(Math.random() * 1000);
+            dataToSave.imageUrl = `https://picsum.photos/seed/${randomId}/600/400`;
         }
         onSave(dataToSave);
     }

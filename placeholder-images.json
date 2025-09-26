@@ -1,0 +1,62 @@
+{
+  "sessionCovers": [
+    {
+      "url": "https://picsum.photos/seed/vball-1/600/400",
+      "hint": "volleyball match"
+    },
+    {
+      "url": "https://picsum.photos/seed/vball-2/600/400",
+      "hint": "volleyball net"
+    },
+    {
+      "url": "https://picsum.photos/seed/vball-3/600/400",
+      "hint": "beach volleyball"
+    },
+    {
+      "url": "https://picsum.photos/seed/vball-4/600/400",
+      "hint": "volleyball serve"
+    },
+    {
+      "url": "https://picsum.photos/seed/vball-5/600/400",
+      "hint": "volleyball court"
+    },
+    {
+      "url": "https://picsum.photos/seed/vball-6/600/400",
+      "hint": "player setting"
+    },
+    {
+      "url": "https://picsum.photos/seed/vball-7/600/400",
+      "hint": "player spiking"
+    },
+    {
+      "url": "https://picsum.photos/seed/vball-8/600/400",
+      "hint": "team huddle"
+    }
+  ],
+  "sessionMoments": [
+    {
+      "url": "https://picsum.photos/seed/moment-1/600/600",
+      "hint": "volleyball team"
+    },
+    {
+      "url": "https://picsum.photos/seed/moment-2/600/600",
+      "hint": "high five"
+    },
+    {
+      "url": "https://picsum.photos/seed/moment-3/600/600",
+      "hint": "volleyball action"
+    },
+    {
+      "url": "https://picsum.photos/seed/moment-4/600/600",
+      "hint": "group photo"
+    },
+    {
+      "url": "https://picsum.photos/seed/moment-5/600/600",
+      "hint": "post game"
+    },
+    {
+      "url": "https://picsum.photos/seed/moment-6/600/600",
+      "hint": "celebration"
+    }
+  ]
+}

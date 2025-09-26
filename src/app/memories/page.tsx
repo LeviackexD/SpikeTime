@@ -15,7 +15,6 @@ import type { Session } from '@/lib/types';
 import Image from 'next/image';
 import { getSafeDate, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import placeholderImages from '@/lib/placeholder-images.json';
 
 interface MemoriesByMonth {
   [monthYear: string]: Session[];
@@ -23,23 +22,19 @@ interface MemoriesByMonth {
 
 const PolaroidCard = ({ session, index, t, locale }: { session: Session; index: number; t: (key: string) => string; locale: 'en' | 'es' }) => {
     const rotationClass = `polaroid-${(index % 6) + 1}`;
-    const placeholder = React.useMemo(() => {
-        const hash = session.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        return placeholderImages.sessionMoments[hash % placeholderImages.sessionMoments.length];
-    }, [session.id]);
     
     return (
         <div className={cn("polaroid", rotationClass)}>
             <div className="tape" style={{top: '-10px', left: `calc(50% - 48px)`, transform: `rotate(${(Math.random() - 0.5) * 20}deg)` }}></div>
             <div className="relative aspect-square w-full bg-gray-200">
                  <Image 
-                    src={session.momentImageUrl || placeholder.url} 
+                    src={session.momentImageUrl || `https://picsum.photos/seed/${session.id}/600/600`}
                     alt={`Moment from ${session.level} session on ${getSafeDate(session.date).toLocaleDateString()}`}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     style={{ objectFit: 'cover' }}
                     className="group-hover:brightness-105 transition-all"
-                    data-ai-hint={placeholder.hint}
+                    data-ai-hint="volleyball action"
                 />
             </div>
              <div className="absolute bottom-4 left-4 right-4 text-center">
@@ -63,7 +58,7 @@ const MemoriesPage: NextPage = () => {
     // If there are no real moments, create sample data for demonstration
     if (moments.length === 0 && !loading) {
         const sampleDate = new Date();
-        moments = placeholderImages.sessionMoments.slice(0, 4).map((img, index) => ({
+        moments = Array.from({length: 4}).map((_, index) => ({
             id: `sample-moment-${index}`,
             date: sampleDate.toISOString(),
             startTime: '18:00',
@@ -74,7 +69,7 @@ const MemoriesPage: NextPage = () => {
             players: [],
             waitlist: [],
             messages: [],
-            momentImageUrl: img.url
+            momentImageUrl: `https://picsum.photos/seed/moment-demo-${index}/600/600`
         }));
     }
 

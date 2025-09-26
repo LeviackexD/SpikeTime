@@ -36,7 +36,6 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { formatTime, cn, getSafeDate } from '@/lib/utils';
-import placeholderImages from '@/lib/placeholder-images.json';
 
 
 interface SessionListItemProps {
@@ -81,12 +80,6 @@ export default function SessionListItem({
   const hoursUntilSession = (sessionDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const canCancel = hoursUntilSession > 6;
   
-    // Determine which placeholder image to use
-  const placeholder = React.useMemo(() => {
-    const hash = session.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return placeholderImages.sessionCovers[hash % placeholderImages.sessionCovers.length];
-  }, [session.id]);
-
 
   // --- Action Handlers ---
   const handleAction = async (action: (id: string) => Promise<boolean>, successToast: { title: string, description: string, duration?: number }, failureToast: { title: string, description: string }) => {
@@ -202,14 +195,13 @@ export default function SessionListItem({
         </Badge>
         <div className="relative h-40 w-full">
           <Image
-            src={session.imageUrl || placeholder.url}
+            src={session.imageUrl || `https://placehold.co/600x400/000000/FFFFFF/png?text=Session`}
             alt="Volleyball session"
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority={priority}
             style={{ objectFit: 'cover' }}
             className="rounded-t-lg"
-            data-ai-hint={placeholder.hint}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         </div>
