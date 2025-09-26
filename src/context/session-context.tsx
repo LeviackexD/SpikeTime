@@ -27,16 +27,6 @@ interface SessionContextType {
 
 const SessionContext = React.createContext<SessionContextType | undefined>(undefined);
 
-// --- IMPORTANTE ---
-// La funcionalidad en tiempo real requiere que habilites la replicación en las tablas de Supabase.
-// Ve al SQL Editor de tu proyecto Supabase y ejecuta los siguientes comandos si no lo has hecho:
-//
-// ALTER PUBLICATION supabase_realtime ADD TABLE sessions;
-// ALTER PUBLICATION supabase_realtime ADD TABLE session_players;
-// ALTER PUBLICATION supabase_realtime ADD TABLE session_waitlist;
-// ALTER PUBLICATION supabase_realtime ADD TABLE announcements;
-// -----------------
-
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
@@ -54,58 +44,45 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       console.error("Error fetching sessions:", sessionError);
       setSessions([]);
     } else {
-        // Filter out old sessions (older than 1 hour past endTime)
         const now = new Date();
         const visibleSessions = sessionData.filter(session => {
             const [endHours, endMinutes] = session.endTime.split(':').map(Number);
             const sessionEndDateTime = getSafeDate(session.date);
             sessionEndDateTime.setHours(endHours, endMinutes, 0, 0);
-            
             const oneHourAfterEnd = new Date(sessionEndDateTime.getTime() + 60 * 60 * 1000);
-
             return now < oneHourAfterEnd;
         });
 
         if (visibleSessions.length > 0) {
             const sessionIds = visibleSessions.map(s => s.id);
 
-            // 2. Fetch all players for these sessions
             const { data: playersData, error: playersError } = await supabase
                 .from('session_players')
                 .select('session_id, profiles!inner(*)')
                 .in('session_id', sessionIds);
-
             if (playersError) console.error("Error fetching session players:", playersError);
 
-            // 3. Fetch all waitlisted users for these sessions
             const { data: waitlistData, error: waitlistError } = await supabase
                 .from('session_waitlist')
                 .select('session_id, profiles!inner(*)')
                 .in('session_id', sessionIds);
-
             if (waitlistError) console.error("Error fetching session waitlist:", waitlistError);
             
-            // 4. Combine the data
-            const sessionsWithData: Session[] = visibleSessions.map((session: any) => {
-              const sessionPlayers = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) || [];
-              const sessionWaitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) || [];
-              
-              return {
-                id: session.id,
-                date: session.date,
-                startTime: session.startTime,
-                endTime: session.endTime,
-                location: session.location,
-                level: session.level,
-                maxPlayers: session.maxPlayers,
-                imageUrl: session.imageUrl,
-                momentImageUrl: session.momentImageUrl,
-                createdBy: session.createdBy,
-                players: sessionPlayers,
-                waitlist: sessionWaitlist,
-                messages: [],
-              };
-            });
+            const sessionsWithData: Session[] = visibleSessions.map((session: any) => ({
+              id: session.id,
+              date: session.date,
+              startTime: session.startTime,
+              endTime: session.endTime,
+              location: session.location,
+              level: session.level,
+              maxPlayers: session.maxPlayers,
+              imageUrl: session.imageUrl,
+              momentImageUrl: session.momentImageUrl,
+              createdBy: session.createdBy,
+              players: playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) || [],
+              waitlist: waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) || [],
+              messages: [],
+            }));
             setSessions(sessionsWithData);
         } else {
             setSessions([]);
@@ -122,24 +99,25 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, []);
 
+  // Effect for initial data load
   React.useEffect(() => {
-    if (!currentUser) {
-      setLoading(false);
-      return;
-    };
-    
-    const initialFetch = async () => {
+    if (currentUser) {
       setLoading(true);
-      await fetchAllData();
+      fetchAllData().finally(() => setLoading(false));
+    } else {
       setLoading(false);
     }
-    initialFetch();
-
+  }, [currentUser, fetchAllData]);
+  
+  // Effect for real-time subscriptions
+  React.useEffect(() => {
+    if (!currentUser) return;
+    
     const handleDbChange = (payload: any) => {
       fetchAllData();
-    }
+    };
 
-    const channel = supabase.channel('realtime:all');
+    const channel = supabase.channel('realtime:public');
     
     channel
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, handleDbChange)
@@ -157,8 +135,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     
     return () => {
         supabase.removeChannel(channel);
-    }
-
+    };
   }, [currentUser, fetchAllData]);
 
 
@@ -193,12 +170,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   const deleteSession = async (sessionId: string) => {
     if (!currentUser) return;
-    setSessions(prev => prev.filter(s => s.id !== sessionId));
     const { error } = await supabase.from('sessions').delete().eq('id', sessionId);
     if(error) {
         console.error("Error deleting session:", error);
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
-        fetchAllData(); // Revert on error
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
     }
@@ -208,7 +183,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     if (!currentUser) return false;
     const originalSessions = [...sessions];
 
-    // Optimistic update
     setSessions(prevSessions =>
         prevSessions.map(s => {
             if (s.id === sessionId) {
@@ -344,12 +318,10 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
-     setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
     const { error } = await supabase.from('announcements').delete().eq('id', announcementId);
      if(error) {
         console.error("Error deleting announcement:", error);
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
-        fetchAllData(); // Revert on error
     } else {
        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
     }
@@ -388,5 +360,7 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
 
     
