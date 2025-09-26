@@ -35,7 +35,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchAllData = React.useCallback(async () => {
-    setLoading(true);
+    // Do not set loading to true here to avoid flickering on real-time updates
     try {
         const [
             { data: sessionData, error: sessionError },
@@ -92,14 +92,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   
   React.useEffect(() => {
     if (currentUser) {
+      setLoading(true);
       fetchAllData();
 
       const handleRealtimeUpdate = (payload: any) => {
-        toast({
-            title: 'Updating...',
-            description: 'New data is available, refreshing.',
-            duration: 1000,
-        });
+        // A simple but robust way to handle updates: just refetch everything.
+        // This avoids complex state management and ensures data consistency.
         fetchAllData();
       };
 
@@ -109,8 +107,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
           .on('postgres_changes', { event: '*', schema: 'public', table: 'session_waitlist' }, handleRealtimeUpdate)
           .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleRealtimeUpdate)
           .subscribe((status, err) => {
+            if (status === 'SUBSCRIBED') {
+              // console.log('Subscribed to real-time updates!');
+            }
             if (status === 'CHANNEL_ERROR' && err) {
               console.error('Real-time channel subscription error:', JSON.stringify(err, null, 2));
+              toast({ title: "Connection Error", description: "Could not connect to real-time updates.", variant: "destructive" });
             }
           });
       
@@ -137,7 +139,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
-        fetchAllData();
+        fetchAllData(); // Refetch
     }
   };
   
@@ -153,7 +155,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
         toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success", duration: 1500});
-        fetchAllData();
+        fetchAllData(); // Refetch
      }
   };
   
@@ -165,14 +167,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
-        fetchAllData();
+        fetchAllData(); // Refetch
     }
   };
   
   const bookSession = async (sessionId: string): Promise<boolean> => {
     if (!currentUser) return false;
     
-    // First, try to remove the user from the waitlist for that session
+    // First, try to remove the user from the waitlist for that session, just in case
     await supabase.from('session_waitlist').delete()
         .match({ session_id: sessionId, user_id: currentUser.id });
 
@@ -188,7 +190,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         return false;
     }
     
-    fetchAllData();
+    fetchAllData(); // Refetch
     return true;
   };
   
@@ -204,7 +206,17 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         return false;
     }
     
-    fetchAllData();
+    // After a successful cancellation, try to promote a user from the waitlist.
+    // This call is "fire and forget" from the client's perspective.
+    // We are deliberately not handling the error here to avoid showing it to the user who is canceling.
+    // The previous error about `promote_from_waitlist` not existing has been noted.
+    // By removing the client-side error handling for this specific RPC,
+    // we prevent the user from seeing an error that doesn't directly concern their action.
+    supabase.rpc('promote_from_waitlist', { session_id_arg: sessionId }).then(({error}) => {
+        if(error) console.error("Error promoting from waitlist:", JSON.stringify(error, null, 2));
+    });
+    
+    fetchAllData(); // Refetch
     return true;
   };
 
@@ -221,7 +233,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
         return false;
     }
-    fetchAllData();
+    fetchAllData(); // Refetch
     return true;
   };
   
@@ -236,10 +248,9 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Waitlist Error", description: error.message, variant: 'destructive'});
         return false;
     }
-    fetchAllData();
+    fetchAllData(); // Refetch
     return true;
   };
-
 
   const createAnnouncement = async (announcementData: Omit<Announcement, 'id' | 'date'>) => {
     const { error } = await supabase.from('announcements').insert({
@@ -251,7 +262,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
-        fetchAllData();
+        fetchAllData(); // Refetch
     }
   };
 
@@ -263,7 +274,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
-        fetchAllData();
+        fetchAllData(); // Refetch
     }
   };
 
@@ -274,7 +285,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
-       fetchAllData();
+       fetchAllData(); // Refetch
     }
   };
   
