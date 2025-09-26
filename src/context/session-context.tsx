@@ -34,7 +34,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const [loading, setLoading] = React.useState(true);
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
-
+  
   const fetchAllData = React.useCallback(async () => {
     // 1. Fetch sessions
     const { data: sessionData, error: sessionError } = await supabase
@@ -99,43 +99,49 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, []);
 
-  // Effect for initial data load and real-time subscriptions
+  // Effect for initial data load
   React.useEffect(() => {
     if (currentUser) {
       setLoading(true);
       fetchAllData().finally(() => setLoading(false));
-
-      const channel = supabase.channel('public-db-changes');
-      
-      const subscription = channel
-        .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-           console.log('Realtime change received, refetching data:', payload);
-           fetchAllData();
-        })
-        .subscribe((status, err) => {
-            if (status === 'SUBSCRIBED') {
-                console.log('Real-time channel subscribed successfully.');
-            }
-            if (status === 'CHANNEL_ERROR') {
-                console.error('Real-time channel subscription error:', err);
-                toast({
-                    title: "Real-time connection error",
-                    description: "Could not connect to live updates. Please refresh the page.",
-                    variant: "destructive",
-                });
-            }
-        });
-
-      return () => {
-          console.log('Unsubscribing from real-time channel.');
-          supabase.removeChannel(channel);
-      };
     } else {
       setLoading(false);
       setSessions([]);
       setAnnouncements([]);
     }
-  }, [currentUser, toast, fetchAllData]);
+  }, [currentUser, fetchAllData]);
+  
+  // Effect for Real-time subscriptions
+  React.useEffect(() => {
+    if (!currentUser) return;
+
+    const channel = supabase.channel('public-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public' }, 
+        (payload) => {
+            console.log('Realtime change received, refetching data:', payload);
+            fetchAllData();
+        }
+      )
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Real-time channel subscribed successfully.');
+        }
+        if (status === 'CHANNEL_ERROR') {
+          console.error('Real-time channel subscription error:', err);
+          toast({
+            title: "Real-time connection error",
+            description: "Could not connect to live updates. Please refresh the page.",
+            variant: "destructive",
+          });
+        }
+      });
+      
+      return () => {
+          console.log('Unsubscribing from real-time channel.');
+          supabase.removeChannel(channel);
+      };
+
+  }, [currentUser, fetchAllData, toast]);
 
 
   const createSession = async (sessionData: any) => {
@@ -149,7 +155,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Created!", description: "The new session has been added.", variant: "success", duration: 1500});
-        await fetchAllData();
     }
   };
   
@@ -165,7 +170,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the session.", variant: "destructive"});
      } else {
         toast({ title: "Session Updated", description: "The session details have been saved.", variant: "success", duration: 1500});
-        await fetchAllData();
      }
   };
   
@@ -177,7 +181,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the session.", variant: "destructive"});
     } else {
         toast({ title: "Session Deleted", description: "The session has been removed.", variant: "success", duration: 1500});
-        await fetchAllData();
     }
   };
   
@@ -259,7 +262,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not create the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Created!", description: "The new announcement is now live.", variant: "success", duration: 1500});
-        await fetchAllData();
     }
   };
 
@@ -271,7 +273,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not update the announcement.", variant: "destructive"});
     } else {
         toast({ title: "Announcement Updated", description: "The announcement has been saved.", variant: "success", duration: 1500});
-        await fetchAllData();
     }
   };
 
@@ -282,7 +283,6 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         toast({ title: "Error", description: "Could not delete the announcement.", variant: "destructive"});
     } else {
        toast({ title: "Announcement Deleted", description: "The announcement has been removed.", variant: "success", duration: 1500});
-       await fetchAllData();
     }
   };
   
@@ -319,3 +319,5 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
