@@ -92,14 +92,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!user) return null; // Or a dedicated loading/redirect screen
 
+  const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
+  
+  const hasCorkBg = isDashboard || isAnnouncementsPage || isMemoriesPage;
 
   return (
     <div className={cn("min-h-screen w-full flex flex-col", {
-      'announcements-cork-bg': isAnnouncementsPage,
-      'photo-album-bg': isMemoriesPage,
-      'bg-app-background': !isAnnouncementsPage && !isMemoriesPage
+      'photo-album-bg': hasCorkBg,
+      'bg-app-background': !hasCorkBg
       })}>
       <AppHeader />
       <main className={cn("flex-1", {
@@ -117,10 +119,11 @@ function AppHeader() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const pathname = usePathname();
+  const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
   
-  const specialHeader = isAnnouncementsPage || isMemoriesPage;
+  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage;
 
   return (
     <header className={cn(
@@ -147,9 +150,10 @@ function DesktopNav() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
-  const specialHeader = isAnnouncementsPage || isMemoriesPage;
+  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage;
 
   const navItems = getNavItems(t);
 
@@ -194,9 +198,10 @@ function MobileNav() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
-  const specialHeader = isAnnouncementsPage || isMemoriesPage;
+  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage;
   
   const navItems = getNavItems(t);
 
@@ -260,9 +265,10 @@ function UserNav({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user'
   const { t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
+  const isDashboard = pathname === '/';
   const isAnnouncementsPage = pathname === '/announcements';
   const isMemoriesPage = pathname === '/memories';
-  const specialHeader = isAnnouncementsPage || isMemoriesPage;
+  const specialHeader = isDashboard || isAnnouncementsPage || isMemoriesPage;
 
   const handleLogout = async () => {
     await logout();
