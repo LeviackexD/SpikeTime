@@ -138,7 +138,14 @@ export default function SessionDetailsCard({
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin className="h-4 w-4" />
-                    <span className="font-semibold">{session.location}</span>
+                     <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline hover:text-foreground transition-colors"
+                    >
+                      {session.location}
+                    </a>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />

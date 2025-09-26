@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Session, User } from '@/lib/types';
-import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut } from 'lucide-react';
+import { Users, Calendar, Clock, X, CheckCircle, UserPlus, XCircle, LogOut, MapPin } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
@@ -173,7 +173,7 @@ export default function SessionDetailsModal({
           </DialogDescription>
         </DialogHeader>
         <div className="flex-grow overflow-y-auto pr-4 -mr-4 space-y-6">
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span>{getSafeDate(session.date).toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
@@ -181,6 +181,17 @@ export default function SessionDetailsModal({
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span>{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
+            </div>
+             <div className="flex items-center gap-2 col-span-1 sm:col-span-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground transition-colors"
+              >
+                {session.location}
+              </a>
             </div>
           </div>
           
