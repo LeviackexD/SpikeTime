@@ -8,6 +8,7 @@ import { useAuth } from './auth-context';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
 import { getSafeDate } from '@/lib/utils';
+import { type AuthChangeEvent, type Session as SupabaseSession } from '@supabase/supabase-js';
 
 interface SessionContextType {
   sessions: Session[];
@@ -66,8 +67,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
         const sessionsWithData: Session[] = visibleSessions.map((session: any) => {
             const players: Partial<User>[] = (playersData || [])
-                .filter(p => p.session_id === session.id)
-                .reduce((acc: Partial<User>[], current) => {
+                .filter((p: any) => p.session_id === session.id)
+                .reduce((acc: Partial<User>[], current: any) => {
                     if (current.profiles) {
                         acc.push(current.profiles as Partial<User>);
                     }
@@ -75,8 +76,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
                 }, []);
             
             const waitlist: Partial<User>[] = (waitlistData || [])
-                .filter(w => w.session_id === session.id)
-                .reduce((acc: Partial<User>[], current) => {
+                .filter((w: any) => w.session_id === session.id)
+                .reduce((acc: Partial<User>[], current: any) => {
                     if (current.profiles) {
                         acc.push(current.profiles as Partial<User>);
                     }
