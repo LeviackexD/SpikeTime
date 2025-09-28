@@ -217,7 +217,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, handleAnnouncementInsert)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'announcements' }, handleAnnouncementUpdate)
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'announcements' }, handleAnnouncementDelete)
-      .subscribe((status, err) => {
+      .subscribe((status: string, err?: Error) => {
         if (status === 'SUBSCRIBED') {
           console.log('Real-time connection established.');
         }
