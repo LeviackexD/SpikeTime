@@ -128,7 +128,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
 
     // --- Granular update handlers ---
     const handlePlayerInsert = (payload: any) => {
-      supabase.from('profiles').select('*').eq('id', payload.new.user_id).single().then(({data: profile}) => {
+      supabase.from('profiles').select('*').eq('id', payload.new.user_id).single().then(({data: profile}: {data: any}) => {
         if (profile) {
           setSessions(prev => prev.map(s => {
             if (s.id === payload.new.session_id) {
@@ -153,7 +153,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     };
 
     const handleWaitlistInsert = (payload: any) => {
-       supabase.from('profiles').select('*').eq('id', payload.new.user_id).single().then(({data: profile}) => {
+       supabase.from('profiles').select('*').eq('id', payload.new.user_id).single().then(({data: profile}: {data: any}) => {
         if (profile) {
           setSessions(prev => prev.map(s => {
             if (s.id === payload.new.session_id) {
