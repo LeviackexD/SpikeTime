@@ -64,8 +64,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         });
 
         const sessionsWithData: Session[] = visibleSessions.map((session: any) => {
-            const players = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles) || [];
-            const waitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles) || [];
+            const players = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles).filter(Boolean) || [];
+            const waitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles).filter(Boolean) || [];
 
             return {
               id: session.id,
@@ -78,8 +78,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
               imageUrl: session.imageUrl,
               momentImageUrl: session.momentImageUrl,
               createdBy: session.createdBy,
-              players: players.filter(Boolean),
-              waitlist: waitlist.filter(Boolean),
+              players: players,
+              waitlist: waitlist,
               messages: [],
             }
         });
@@ -433,5 +433,7 @@ export const useSessions = () => {
   }
   return context;
 };
+
+    
 
     
