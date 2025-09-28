@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -55,7 +56,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         if (announcementError) throw announcementError;
 
         const now = new Date();
-        const visibleSessions = sessionData.filter(session => {
+        const visibleSessions = sessionData.filter((session: any) => {
             const [endHours, endMinutes] = session.endTime.split(':').map(Number);
             const sessionEndDateTime = getSafeDate(session.date);
             sessionEndDateTime.setHours(endHours, endMinutes, 0, 0);
