@@ -66,21 +66,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else {
       setUser(null);
     }
+    setLoading(false);
   };
 
   React.useEffect(() => {
-    // Check initial session
-    const checkInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      await handleUserSession(session?.user ?? null);
-      setLoading(false); // End initial loading
-    };
-    
-    checkInitialSession();
-
-    // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      // Don't set loading to true here to avoid flicker on token refresh
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       await handleUserSession(session?.user ?? null);
     });
 
@@ -98,7 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else if (!user && !isAuthPage) {
       router.push('/login');
     }
-  }, [user, loading, pathname]);
+  }, [user, loading, pathname, router]);
 
   const signInWithEmail = async (email: string, pass: string): Promise<void> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
