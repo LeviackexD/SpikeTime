@@ -27,6 +27,7 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: 'SpikeTime - Inverness Eagles',
   description: 'Volleyball session management for the Inverness Eagles club.',
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({
@@ -37,6 +38,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="application-name" content="SpikeTime" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="SpikeTime" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#8B4513" />
       </head>
       <body className={`${poppins.variable} ${caveat.variable} font-body antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
