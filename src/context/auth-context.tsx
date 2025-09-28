@@ -8,6 +8,7 @@ import type { User, SkillLevel, PlayerPosition } from '@/lib/types';
 import { VolleyballIcon } from '@/components/icons/volleyball-icon';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
+import { type AuthChangeEvent, type Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -78,7 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkInitialSession();
 
     // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       // Don't set loading to true here to avoid flicker on token refresh
       await handleUserSession(session?.user ?? null);
     });
