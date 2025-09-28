@@ -44,8 +44,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
             { data: announcementData, error: announcementError }
         ] = await Promise.all([
             supabase.from('sessions').select('*').order('date', { ascending: true }).order('startTime', { ascending: true }),
-            supabase.from('session_players').select('session_id, user_id, profiles!inner(*)'),
-            supabase.from('session_waitlist').select('session_id, user_id, profiles!inner(*)'),
+            supabase.from('session_players').select('session_id, profiles!inner(*)'),
+            supabase.from('session_waitlist').select('session_id, profiles!inner(*)'),
             supabase.from('announcements').select('*').order('date', { ascending: false })
         ]);
 
@@ -78,8 +78,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
               imageUrl: session.imageUrl,
               momentImageUrl: session.momentImageUrl,
               createdBy: session.createdBy,
-              players: players.filter(Boolean) as Partial<User>[],
-              waitlist: waitlist.filter(Boolean) as Partial<User>[],
+              players: players.filter(Boolean),
+              waitlist: waitlist.filter(Boolean),
               messages: [],
             }
         });
@@ -109,6 +109,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
    React.useEffect(() => {
     if (!currentUser) return;
 
+    // --- Granular update handlers ---
     const handlePlayerInsert = (payload: any) => {
       supabase.from('profiles').select('*').eq('id', payload.new.user_id).single().then(({data: profile}) => {
         if (profile) {
@@ -177,8 +178,14 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         setSessions(prev => prev.filter(s => s.id !== payload.old.id));
     };
 
-    const handleAnnouncementChanges = () => {
-      fetchAllData();
+    const handleAnnouncementInsert = (payload: any) => {
+      setAnnouncements(prev => [payload.new, ...prev]);
+    }
+    const handleAnnouncementUpdate = (payload: any) => {
+      setAnnouncements(prev => prev.map(a => a.id === payload.new.id ? payload.new : a));
+    }
+    const handleAnnouncementDelete = (payload: any) => {
+      setAnnouncements(prev => prev.filter(a => a.id !== payload.old.id));
     }
 
 
@@ -190,11 +197,16 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sessions' }, handleSessionInsert)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sessions' }, handleSessionUpdate)
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'sessions' }, handleSessionDelete)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, handleAnnouncementChanges)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, handleAnnouncementInsert)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'announcements' }, handleAnnouncementUpdate)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'announcements' }, handleAnnouncementDelete)
       .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Real-time connection established.');
+        }
         if (status === 'CHANNEL_ERROR' && err) {
           console.error('Real-time channel subscription error:', JSON.stringify(err, null, 2));
-          toast({ title: "Connection Error", description: "Could not connect to real-time updates.", variant: "destructive" });
+          toast({ title: "Connection Error", description: "Real-time updates have been paused. Reconnecting...", variant: "destructive" });
         }
       });
 
@@ -202,7 +214,7 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       supabase.removeChannel(channel);
     };
 
-  }, [currentUser, toast, fetchAllData]);
+  }, [currentUser, toast]);
 
   const createSession = async (sessionData: any) => {
     if (!currentUser) return;
