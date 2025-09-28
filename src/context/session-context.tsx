@@ -64,8 +64,23 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
         });
 
         const sessionsWithData: Session[] = visibleSessions.map((session: any) => {
-            const players = playersData?.filter(p => p.session_id === session.id).map(p => p.profiles).filter(Boolean) || [];
-            const waitlist = waitlistData?.filter(w => w.session_id === session.id).map(w => w.profiles).filter(Boolean) || [];
+            const players: Partial<User>[] = (playersData || [])
+                .filter(p => p.session_id === session.id)
+                .reduce((acc: Partial<User>[], current) => {
+                    if (current.profiles) {
+                        acc.push(current.profiles as Partial<User>);
+                    }
+                    return acc;
+                }, []);
+            
+            const waitlist: Partial<User>[] = (waitlistData || [])
+                .filter(w => w.session_id === session.id)
+                .reduce((acc: Partial<User>[], current) => {
+                    if (current.profiles) {
+                        acc.push(current.profiles as Partial<User>);
+                    }
+                    return acc;
+                }, []);
 
             return {
               id: session.id,
@@ -433,7 +448,3 @@ export const useSessions = () => {
   }
   return context;
 };
-
-    
-
-    
