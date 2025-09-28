@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Entry point for the /admin route.
  * This page acts as a wrapper and security gateway for the main admin panel component.
@@ -12,6 +13,8 @@ import AdminPageComponent from '@/components/admin/page';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { Loader2 } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
