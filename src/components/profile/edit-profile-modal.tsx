@@ -80,7 +80,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
             const { data: files, error: listError } = await supabase.storage.from('avatars').list(user.id);
             if (listError) console.error('Error listing old avatars:', listError);
             if (files && files.length > 0) {
-                const filesToRemove = files.map((f) => `${user.id}/${f.name}`);
+                const filesToRemove = files.map((f: { name: string }) => `${user.id}/${f.name}`);
                 const { error: removeError } = await supabase.storage.from('avatars').remove(filesToRemove);
                 if (removeError) console.error('Error removing old avatars:', removeError);
             }
@@ -222,3 +222,5 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
     </Dialog>
   );
 }
+
+    
